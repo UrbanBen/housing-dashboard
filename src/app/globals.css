@@ -46,7 +46,7 @@
   }
 }
 
-/* Fallback styles with actual colors */
+/* Enhanced styles with better contrast and animations */
 body {
   background-color: hsl(240, 10%, 3.9%) !important;
   color: hsl(0, 0%, 98%) !important;
@@ -58,6 +58,13 @@ body {
 
 .bg-card {
   background-color: hsl(240, 10%, 8%) !important;
+  transition: all 0.2s ease-in-out;
+}
+
+.bg-card:hover {
+  background-color: hsl(240, 10%, 10%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .text-foreground {
@@ -72,6 +79,49 @@ body {
   color: hsl(142, 72%, 29%) !important;
 }
 
+.text-highlight {
+  color: hsl(120, 100%, 50%) !important;
+  text-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
+}
+
 .border-border {
   border-color: hsl(240, 4%, 15%) !important;
+}
+
+/* Enhanced button styles */
+button, [role="button"] {
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover, [role="button"]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(21, 127, 60, 0.2);
+}
+
+/* Loading animation for charts */
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg, #transparent 0%, rgba(21, 127, 60, 0.1) 50%, transparent 100%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  .grid {
+    gap: 1rem !important;
+  }
+  
+  .text-4xl {
+    font-size: 2rem !important;
+  }
 }

@@ -15,8 +15,8 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground">Market Intelligence Dashboard</p>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-xs bg-highlight/10 text-highlight px-3 py-1 rounded-full font-medium">
-                LIVE DATA
+              <span className="text-xs bg-highlight/10 text-highlight px-3 py-1 rounded-full font-medium animate-pulse">
+                ● LIVE DATA
               </span>
             </div>
           </div>
@@ -149,7 +149,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex justify-between items-center p-3 rounded-lg bg-highlight/5 border border-highlight/10">
                   <span className="text-sm font-medium text-foreground">Confidence Level</span>
-                  <span className="font-bold text-lg text-highlight">85%</span>
+                  <span className="font-bold text-xl text-highlight animate-pulse">85%</span>
                 </div>
               </div>
             </CardContent>
