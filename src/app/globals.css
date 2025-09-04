@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  :root {
+    /* Dark Analytics Theme */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 8%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 10% 8%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 142 72% 29%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4% 15%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 240 5% 11%;
+    --muted-foreground: 240 5% 64%;
+    --accent: 142 72% 29%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 15%;
+    --input: 240 4% 15%;
+    --ring: 142 72% 29%;
+    --radius: 0.5rem;
+    
+    /* Custom Analytics Colors */
+    --chart-1: 142 72% 29%;
+    --chart-2: 160 84% 25%;
+    --chart-3: 120 50% 40%;
+    --chart-4: 142 50% 20%;
+    --chart-5: 100 30% 30%;
+    --highlight: 120 100% 50%;
+    --grid: 240 4% 12%;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Fallback styles with actual colors */
+body {
+  background-color: hsl(240, 10%, 3.9%) !important;
+  color: hsl(0, 0%, 98%) !important;
+}
+
+.bg-background {
+  background-color: hsl(240, 10%, 3.9%) !important;
+}
+
+.bg-card {
+  background-color: hsl(240, 10%, 8%) !important;
+}
+
+.text-foreground {
+  color: hsl(0, 0%, 98%) !important;
+}
+
+.text-muted-foreground {
+  color: hsl(240, 5%, 64%) !important;
+}
+
+.text-primary {
+  color: hsl(142, 72%, 29%) !important;
+}
+
+.border-border {
+  border-color: hsl(240, 4%, 15%) !important;
+}
