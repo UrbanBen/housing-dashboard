@@ -1,7 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Activity, Home, DollarSign } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Home, DollarSign, Building } from "lucide-react";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { MarketOverview } from "@/components/dashboard/MarketOverview";
+import { DataSourceInfo } from "@/components/ui/data-source-info";
+import { ABSDataService } from "@/lib/abs-data";
 
 export default function DashboardPage() {
   return (
@@ -99,13 +101,18 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
           <Card className="shadow-lg border border-border/50">
             <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <TrendingUp className="h-6 w-6 text-primary" />
-                Housing Price Trends
-              </CardTitle>
-              <CardDescription className="text-base">
-                12-month median home price progression with forecasting models
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Building className="h-6 w-6 text-primary" />
+                  <div>
+                    <CardTitle className="text-xl">Building Approvals Trends</CardTitle>
+                    <CardDescription className="text-base mt-1">
+                      Monthly dwelling unit approvals across Australia (ABS Data)
+                    </CardDescription>
+                  </div>
+                </div>
+                <DataSourceInfo dataSource={ABSDataService.getDataSource()} />
+              </div>
             </CardHeader>
             <CardContent className="pt-2">
               <TrendChart />
@@ -216,7 +223,7 @@ export default function DashboardPage() {
         <div className="mt-12 pt-8 border-t border-border">
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
-              Last updated: {new Date().toLocaleDateString()} • Data sources: Multiple MLS feeds, Census Bureau, Federal Reserve
+              Last updated: {new Date().toLocaleDateString()} • Data sources: Australian Bureau of Statistics (ABS), Multiple MLS feeds, Census Bureau, Federal Reserve
             </p>
           </div>
         </div>
