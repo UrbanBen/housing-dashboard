@@ -12,9 +12,16 @@ export default function DashboardPage() {
       <nav className="border-b border-border bg-card/50 backdrop-blur">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">Housing Analytics</h2>
-              <p className="text-sm text-muted-foreground">Market Intelligence Dashboard</p>
+            <div className="flex items-center gap-4">
+              <img 
+                src="/mosaic-logo.svg" 
+                alt="MOSAIC By Mecone Logo" 
+                className="h-10 w-40"
+              />
+              <div>
+                <h2 className="text-lg font-semibold text-[#00FF41] drop-shadow-[0_0_10px_rgba(0,255,65,0.5)] glow-text">Housing Dashboard</h2>
+                <p className="text-sm text-muted-foreground">Analytic Insights and Intelligence</p>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <span className="text-xs bg-highlight/10 text-highlight px-3 py-1 rounded-full font-medium animate-pulse">
@@ -27,10 +34,10 @@ export default function DashboardPage() {
 
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold text-foreground mb-3">Housing Market Analytics</h1>
-          <p className="text-lg text-muted-foreground max-w-3xl">
-            Comprehensive trend analysis and market insights for informed decision-making and public transparency
+        <div className="mb-10 text-center">
+          <h1 className="text-6xl text-[#00FF41] glow-text mb-3">Housing Dashboard</h1>
+          <p className="text-lg text-muted-foreground max-w-4xl mx-auto">
+            Housing trend analysis and insights to inform decision-making and public transparency
           </p>
         </div>
 

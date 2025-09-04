@@ -1,0 +1,25 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="brave-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF5722"/>
+      <stop offset="50%" style="stop-color:#FF4500"/>  
+      <stop offset="100%" style="stop-color:#E53E3E"/>
+    </linearGradient>
+  </defs>
+  <!-- Brave shield shape -->
+  <path fill="url(#brave-gradient)" d="M50 5 L85 25 L85 60 Q85 75 50 95 Q15 75 15 60 L15 25 Z"/>
+  <!-- Lion face -->
+  <g fill="white">
+    <!-- Mane -->
+    <path d="M50 20 Q35 25 30 35 Q25 45 30 55 Q35 65 50 70 Q65 65 70 55 Q75 45 70 35 Q65 25 50 20 Z"/>
+    <!-- Face -->
+    <ellipse cx="50" cy="45" rx="15" ry="18"/>
+    <!-- Eyes -->
+    <ellipse cx="45" cy="40" rx="2" ry="3" fill="url(#brave-gradient)"/>
+    <ellipse cx="55" cy="40" rx="2" ry="3" fill="url(#brave-gradient)"/>
+    <!-- Nose -->
+    <path d="M50 45 L47 50 L53 50 Z" fill="url(#brave-gradient)"/>
+    <!-- Mouth -->
+    <path d="M50 52 Q45 55 40 52 M50 52 Q55 55 60 52" stroke="url(#brave-gradient)" stroke-width="1.5" fill="none"/>
+  </g>
+</svg>

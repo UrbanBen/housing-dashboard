@@ -5,8 +5,11 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Housing Insights Dashboard",
+  title: "Housing Dashboard",
   description: "Professional housing data analytics and insights platform",
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
