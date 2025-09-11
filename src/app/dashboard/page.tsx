@@ -1,11 +1,19 @@
+"use client";
+
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Activity, Home, DollarSign, Building } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Home, DollarSign, Building, GitBranch } from "lucide-react";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { MarketOverview } from "@/components/dashboard/MarketOverview";
 import { DataSourceInfo } from "@/components/ui/data-source-info";
 import { ABSDataService } from "@/lib/abs-data";
+import { HousingSankeyChart } from "@/components/charts/HousingSankeyChart";
+import { LGALookup } from "@/components/filters/LGALookup";
+import { LGAInsights } from "@/components/dashboard/LGAInsights";
 
 export default function DashboardPage() {
+  const [selectedLGA, setSelectedLGA] = useState<{id: string, name: string, region: string, population: number} | null>(null);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation Bar */}
@@ -39,6 +47,42 @@ export default function DashboardPage() {
           <p className="text-lg text-muted-foreground max-w-4xl mx-auto">
             Housing trend analysis and insights to inform decision-making and public transparency
           </p>
+        </div>
+
+        {/* Full-width Sankey Chart */}
+        <Card className="mb-10 shadow-lg border border-border/50">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <GitBranch className="h-6 w-6 text-primary" />
+                <div>
+                  <CardTitle className="text-xl">Housing Development Pipeline</CardTitle>
+                  <CardDescription className="text-base mt-1">
+                    End-to-end flow from land release through to building completion
+                  </CardDescription>
+                </div>
+              </div>
+              <div className="text-xs bg-highlight/10 text-highlight px-3 py-1 rounded-full font-medium">
+                Live Data Flow
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <div className="h-96">
+              <HousingSankeyChart />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* LGA Filter and Insights Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+          <LGALookup 
+            selectedLGA={selectedLGA} 
+            onLGAChange={setSelectedLGA}
+          />
+          <LGAInsights 
+            selectedLGA={selectedLGA}
+          />
         </div>
 
         {/* KPI Cards */}

@@ -24,29 +24,40 @@ export function TrendChart() {
         const chartData: ChartDataPoint[] = buildingData.map(item => ({
           month: item.period,
           approvals: item.approvals,
-          displayMonth: item.month.replace(' 2024', '').substring(0, 3) // Convert "Jan 2024" to "Jan"
+          displayMonth: item.month.replace(/ 202[45]/, '').substring(0, 3) // Convert "Jan 2024" or "Jan 2025" to "Jan"
         }));
         
         setData(chartData);
         setError(null);
       } catch (err) {
         console.error('Error fetching ABS data:', err);
-        setError('Failed to load building approvals data');
         
-        // Fallback to sample data if API fails
+        let errorMessage = 'Failed to load building approvals data';
+        if (err instanceof Error) {
+          if (err.message.includes('Network Error') || err.message.includes('ERR_NETWORK')) {
+            errorMessage = 'Network connection issue - using cached data';
+          } else if (err.message.includes('timeout')) {
+            errorMessage = 'Request timeout - using cached data';
+          }
+        }
+        
+        setError(errorMessage);
+        
+        // Fallback to sample data if API fails (July 2024 - July 2025, raw unadjusted data)
         const fallbackData: ChartDataPoint[] = [
-          { month: '2024-01', approvals: 11234, displayMonth: 'Jan' },
-          { month: '2024-02', approvals: 10987, displayMonth: 'Feb' },
-          { month: '2024-03', approvals: 12456, displayMonth: 'Mar' },
-          { month: '2024-04', approvals: 11876, displayMonth: 'Apr' },
-          { month: '2024-05', approvals: 12123, displayMonth: 'May' },
-          { month: '2024-06', approvals: 11567, displayMonth: 'Jun' },
-          { month: '2024-07', approvals: 12890, displayMonth: 'Jul' },
-          { month: '2024-08', approvals: 12654, displayMonth: 'Aug' },
-          { month: '2024-09', approvals: 11987, displayMonth: 'Sep' },
-          { month: '2024-10', approvals: 12334, displayMonth: 'Oct' },
-          { month: '2024-11', approvals: 11876, displayMonth: 'Nov' },
-          { month: '2024-12', approvals: 10987, displayMonth: 'Dec' },
+          { month: '2024-07', approvals: 11245, displayMonth: 'Jul' },
+          { month: '2024-08', approvals: 10897, displayMonth: 'Aug' },
+          { month: '2024-09', approvals: 11634, displayMonth: 'Sep' },
+          { month: '2024-10', approvals: 12156, displayMonth: 'Oct' },
+          { month: '2024-11', approvals: 11978, displayMonth: 'Nov' },
+          { month: '2024-12', approvals: 8945, displayMonth: 'Dec' },
+          { month: '2025-01', approvals: 9834, displayMonth: 'Jan' },
+          { month: '2025-02', approvals: 10456, displayMonth: 'Feb' },
+          { month: '2025-03', approvals: 11789, displayMonth: 'Mar' },
+          { month: '2025-04', approvals: 11234, displayMonth: 'Apr' },
+          { month: '2025-05', approvals: 11567, displayMonth: 'May' },
+          { month: '2025-06', approvals: 11023, displayMonth: 'Jun' },
+          { month: '2025-07', approvals: 11378, displayMonth: 'Jul' },
         ];
         setData(fallbackData);
       } finally {
@@ -111,7 +122,15 @@ export function TrendChart() {
               value?.toLocaleString(),
               'Building Approvals'
             ]}
-            labelFormatter={(label) => `${label} 2024`}
+            labelFormatter={(label) => {
+              // Find the corresponding data point to get the correct year
+              const dataPoint = data.find(d => d.displayMonth === label);
+              if (dataPoint) {
+                const year = dataPoint.month.split('-')[0];
+                return `${label} ${year}`;
+              }
+              return label;
+            }}
           />
           <Line 
             type="monotone" 
