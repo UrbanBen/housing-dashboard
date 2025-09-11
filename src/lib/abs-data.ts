@@ -86,7 +86,7 @@ export class ABSDataService {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 503) {
           console.error('ABS server is temporarily unavailable');
-        } else if (error.response?.status >= 500) {
+        } else if (error.response?.status && error.response.status >= 500) {
           console.error('ABS server error:', error.response.status);
         } else if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
           console.error('Network connectivity issue');

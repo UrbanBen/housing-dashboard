@@ -3,6 +3,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 import { useEffect, useState } from 'react';
 import { ABSDataService, BuildingApprovalsData } from '@/lib/abs-data';
+import type { LGA } from '@/components/filters/LGALookup';
 
 interface ChartDataPoint {
   month: string;
@@ -10,7 +11,11 @@ interface ChartDataPoint {
   displayMonth: string;
 }
 
-export function TrendChart() {
+interface TrendChartProps {
+  selectedLGA?: LGA | null;
+}
+
+export function TrendChart({ selectedLGA }: TrendChartProps) {
   const [data, setData] = useState<ChartDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,16 +24,38 @@ export function TrendChart() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const buildingData = await ABSDataService.fetchBuildingApprovalsData();
         
-        const chartData: ChartDataPoint[] = buildingData.map(item => ({
-          month: item.period,
-          approvals: item.approvals,
-          displayMonth: item.month.replace(/ 202[45]/, '').substring(0, 3) // Convert "Jan 2024" or "Jan 2025" to "Jan"
-        }));
+        // Try to use the new database API first
+        const apiUrl = selectedLGA 
+          ? `/api/housing-data?type=building-approvals&lga=${encodeURIComponent(selectedLGA.name)}`
+          : '/api/housing-data?type=building-approvals';
         
-        setData(chartData);
-        setError(null);
+        const response = await fetch(apiUrl);
+        const dbData = await response.json();
+        
+        if (dbData.success && dbData.data.length > 0) {
+          // Use database data
+          const chartData: ChartDataPoint[] = dbData.data.map((item: any) => ({
+            month: item.period,
+            approvals: item.approvals,
+            displayMonth: item.month.substring(0, 3) // Convert "Jan" to "Jan"
+          }));
+          
+          setData(chartData);
+          setError(null);
+        } else {
+          // Fallback to ABS service
+          const buildingData = await ABSDataService.fetchBuildingApprovalsData();
+        
+          const chartData: ChartDataPoint[] = buildingData.map(item => ({
+            month: item.period,
+            approvals: item.approvals,
+            displayMonth: item.month.replace(/ 202[45]/, '').substring(0, 3) // Convert "Jan 2024" or "Jan 2025" to "Jan"
+          }));
+          
+          setData(chartData);
+          setError(null);
+        }
       } catch (err) {
         console.error('Error fetching ABS data:', err);
         
@@ -66,7 +93,7 @@ export function TrendChart() {
     };
 
     fetchData();
-  }, []);
+  }, [selectedLGA]);
 
   const formatYAxisTick = (value: number) => {
     if (value >= 1000) {

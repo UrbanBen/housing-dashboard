@@ -8,11 +8,13 @@ import { MarketOverview } from "@/components/dashboard/MarketOverview";
 import { DataSourceInfo } from "@/components/ui/data-source-info";
 import { ABSDataService } from "@/lib/abs-data";
 import { HousingSankeyChart } from "@/components/charts/HousingSankeyChart";
-import { LGALookup } from "@/components/filters/LGALookup";
+import { LGALookup, type LGA } from "@/components/filters/LGALookup";
 import { LGAInsights } from "@/components/dashboard/LGAInsights";
+import { LGAMetrics } from "@/components/dashboard/LGAMetrics";
+import { KeyMetrics } from "@/components/dashboard/KeyMetrics";
 
 export default function DashboardPage() {
-  const [selectedLGA, setSelectedLGA] = useState<{id: string, name: string, region: string, population: number} | null>(null);
+  const [selectedLGA, setSelectedLGA] = useState<LGA | null>(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,6 +85,16 @@ export default function DashboardPage() {
           <LGAInsights 
             selectedLGA={selectedLGA}
           />
+        </div>
+
+        {/* Key Metrics Card */}
+        <div className="mb-10">
+          <KeyMetrics selectedLGA={selectedLGA} />
+        </div>
+
+        {/* LGA Metrics Card */}
+        <div className="mb-10">
+          <LGAMetrics selectedLGA={selectedLGA} />
         </div>
 
         {/* KPI Cards */}
@@ -156,9 +168,19 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-3">
                   <Building className="h-6 w-6 text-primary" />
                   <div>
-                    <CardTitle className="text-xl">Building Approvals Trends</CardTitle>
+                    <CardTitle className="text-xl">
+                      Building Approvals Trends
+                      {selectedLGA && (
+                        <span className="text-base font-normal text-muted-foreground ml-2">
+                          - {selectedLGA.name}
+                        </span>
+                      )}
+                    </CardTitle>
                     <CardDescription className="text-base mt-1">
-                      Monthly dwelling unit approvals across Australia (ABS Data)
+                      {selectedLGA 
+                        ? `Monthly dwelling unit approvals in ${selectedLGA.name} (Database)`
+                        : 'Monthly dwelling unit approvals across NSW (Database)'
+                      }
                     </CardDescription>
                   </div>
                 </div>
@@ -166,7 +188,7 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-2">
-              <TrendChart />
+              <TrendChart selectedLGA={selectedLGA} />
             </CardContent>
           </Card>
 

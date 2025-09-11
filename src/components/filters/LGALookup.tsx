@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, MapPin, ChevronDown } from "lucide-react";
+import { Search, MapPin, ChevronDown, Loader2 } from "lucide-react";
 
-interface LGA {
+export interface LGA {
   id: string;
   name: string;
   region: string;
-  population: number;
+  population: number | null;
+  populationYear?: number | null;
+  housingTarget?: number;
 }
 
 interface LGALookupProps {
@@ -16,8 +18,8 @@ interface LGALookupProps {
   selectedLGA: LGA | null;
 }
 
-// Comprehensive NSW Local Government Areas data
-const NSW_LGAS: LGA[] = [
+// This will be replaced by database data
+const FALLBACK_NSW_LGAS: LGA[] = [
   // Sydney Metropolitan
   { id: 'sydney', name: 'Sydney', region: 'Sydney Metro', population: 240000 },
   { id: 'parramatta', name: 'Parramatta', region: 'Sydney Metro', population: 249000 },
@@ -93,17 +95,48 @@ const NSW_LGAS: LGA[] = [
 export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [lgaData, setLgaData] = useState<LGA[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch LGA data from database
+  useEffect(() => {
+    const fetchLGAs = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/lgas');
+        const data = await response.json();
+        
+        if (data.success) {
+          setLgaData(data.lgas);
+          setError(null);
+        } else {
+          console.warn('Failed to fetch LGAs from database, using fallback data');
+          setLgaData(FALLBACK_NSW_LGAS);
+          setError('Using offline data');
+        }
+      } catch (err) {
+        console.error('Error fetching LGAs:', err);
+        setLgaData(FALLBACK_NSW_LGAS);
+        setError('Using offline data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLGAs();
+  }, []);
 
   // Filter LGAs based on search term
   const filteredLGAs = useMemo(() => {
-    if (!searchTerm.trim()) return NSW_LGAS;
+    if (!searchTerm.trim()) return lgaData;
     
     const term = searchTerm.toLowerCase();
-    return NSW_LGAS.filter(lga => 
+    return lgaData.filter(lga => 
       lga.name.toLowerCase().includes(term) ||
       lga.region.toLowerCase().includes(term)
     );
-  }, [searchTerm]);
+  }, [searchTerm, lgaData]);
 
   // Group LGAs by region
   const groupedLGAs = useMemo(() => {
@@ -149,6 +182,21 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading LGAs...</span>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !isLoading && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+            <div className="text-xs text-yellow-800">{error}</div>
+          </div>
+        )}
+
         {/* Current Selection */}
         {selectedLGA && (
           <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
@@ -156,7 +204,9 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
               <div>
                 <div className="font-semibold text-foreground">{selectedLGA.name}</div>
                 <div className="text-xs text-muted-foreground">
-                  {selectedLGA.region} • Pop: {selectedLGA.population.toLocaleString()}
+                  {selectedLGA.region}
+                  {selectedLGA.population && ` • Pop: ${selectedLGA.population.toLocaleString()}`}
+                  {selectedLGA.housingTarget && ` • Target: ${selectedLGA.housingTarget.toLocaleString()}`}
                 </div>
               </div>
               <button
@@ -216,7 +266,10 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
                         <div>
                           <div className="font-medium text-foreground">{lga.name}</div>
                           <div className="text-xs text-muted-foreground">
-                            Population: {lga.population.toLocaleString()}
+                            {lga.population 
+                              ? `Population: ${lga.population.toLocaleString()}` 
+                              : `Housing Target: ${lga.housingTarget?.toLocaleString() || 'N/A'}`
+                            }
                           </div>
                         </div>
                         {selectedLGA?.id === lga.id && (
@@ -240,9 +293,11 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
         )}
 
         {/* Stats */}
-        <div className="text-xs text-muted-foreground border-t pt-3">
-          {filteredLGAs.length} of {NSW_LGAS.length} NSW LGAs available
-        </div>
+        {!isLoading && (
+          <div className="text-xs text-muted-foreground border-t pt-3">
+            {filteredLGAs.length} of {lgaData.length} NSW LGAs available
+          </div>
+        )}
       </CardContent>
     </Card>
   );

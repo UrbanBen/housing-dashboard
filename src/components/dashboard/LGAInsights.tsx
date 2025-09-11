@@ -3,14 +3,15 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, TrendingUp, Home, Users, MapPin } from "lucide-react";
-import { LGAMap } from "@/components/maps/LGAMap";
+import dynamic from 'next/dynamic';
 
-interface LGA {
-  id: string;
-  name: string;
-  region: string;
-  population: number;
-}
+// Dynamically import the LGAMap to avoid SSR issues with Leaflet
+const LGAMap = dynamic(() => import("@/components/maps/LGAMap").then(mod => ({ default: mod.LGAMap })), {
+  ssr: false,
+  loading: () => <div className="h-48 bg-muted rounded-lg flex items-center justify-center">Loading map...</div>
+});
+
+import type { LGA } from '@/components/filters/LGALookup';
 
 interface LGAInsightsProps {
   selectedLGA: LGA | null;
@@ -32,7 +33,7 @@ const getLGAData = (lga: LGA | null) => {
   }
 
   // Mock data variations based on LGA characteristics
-  const baseMultiplier = lga.population / 100000;
+  const baseMultiplier = (lga.population || 100000) / 100000;
   const regionMultipliers: { [key: string]: number } = {
     'Sydney Metro': 1.5,
     'Central Coast': 0.8,
@@ -85,45 +86,7 @@ export function LGAInsights({ selectedLGA }: LGAInsightsProps) {
       <CardContent className="space-y-6">
         {/* LGA Boundary Map */}
         <div className="mb-4">
-          <LGAMap selectedLGA={selectedLGA} height="200px" />
-        </div>
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-primary/5 border border-primary/10 rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Home className="h-4 w-4 text-primary" />
-              <span className="text-xs font-medium text-muted-foreground">Building Approvals</span>
-            </div>
-            <div className="text-2xl font-bold text-foreground">{data.buildingApprovals.toLocaleString()}</div>
-            <div className="text-xs text-muted-foreground">Last 12 months</div>
-          </div>
-
-          <div className="bg-chart-2/10 border border-chart-2/20 rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-4 w-4" style={{ color: 'hsl(var(--chart-2))' }} />
-              <span className="text-xs font-medium text-muted-foreground">Approval Rate</span>
-            </div>
-            <div className="text-2xl font-bold text-foreground">{data.approvalRate}%</div>
-            <div className="text-xs text-muted-foreground">DA Success Rate</div>
-          </div>
-
-          <div className="bg-chart-3/10 border border-chart-3/20 rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="h-4 w-4" style={{ color: 'hsl(var(--chart-3))' }} />
-              <span className="text-xs font-medium text-muted-foreground">Construction Starts</span>
-            </div>
-            <div className="text-2xl font-bold text-foreground">{data.constructionStarts.toLocaleString()}</div>
-            <div className="text-xs text-muted-foreground">YTD Units</div>
-          </div>
-
-          <div className="bg-highlight/10 border border-highlight/20 rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <MapPin className="h-4 w-4 text-highlight" />
-              <span className="text-xs font-medium text-muted-foreground">Median Price</span>
-            </div>
-            <div className="text-2xl font-bold text-foreground">${(data.medianPrice / 1000).toFixed(0)}k</div>
-            <div className="text-xs text-muted-foreground">Latest Quarter</div>
-          </div>
+          <LGAMap selectedLGA={selectedLGA} height="300px" />
         </div>
 
         {/* Processing Times */}
@@ -167,7 +130,9 @@ export function LGAInsights({ selectedLGA }: LGAInsightsProps) {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Population</span>
-                <div className="font-medium text-foreground">{selectedLGA.population.toLocaleString()}</div>
+                <div className="font-medium text-foreground">
+                  {selectedLGA.population ? selectedLGA.population.toLocaleString() : 'N/A'}
+                </div>
               </div>
               <div>
                 <span className="text-muted-foreground">Region</span>
@@ -176,7 +141,7 @@ export function LGAInsights({ selectedLGA }: LGAInsightsProps) {
               <div>
                 <span className="text-muted-foreground">Units per 1,000</span>
                 <div className="font-medium text-foreground">
-                  {((data.buildingApprovals / selectedLGA.population) * 1000).toFixed(1)}
+                  {selectedLGA.population ? ((data.buildingApprovals / selectedLGA.population) * 1000).toFixed(1) : 'N/A'}
                 </div>
               </div>
               <div>
