@@ -55,7 +55,7 @@ const defaultCards: DashboardCard[] = [
   {
     id: 'lga-lookup',
     type: 'lga-lookup',
-    title: 'LGA Lookup',
+    title: 'Search Geography',
     size: 'medium',
     category: 'lga',
     gridArea: 'lga-lookup'
@@ -82,7 +82,7 @@ const defaultCards: DashboardCard[] = [
     id: 'key-metrics',
     type: 'key-metrics',
     title: 'Key Metrics',
-    size: 'xl',
+    size: 'medium',
     category: 'metrics',
     gridArea: 'key-metrics'
   },
@@ -90,7 +90,7 @@ const defaultCards: DashboardCard[] = [
     id: 'lga-metrics',
     type: 'lga-metrics',
     title: 'LGA Housing Metrics',
-    size: 'xl',
+    size: 'large',
     category: 'metrics',
     gridArea: 'lga-metrics'
   },
@@ -311,9 +311,16 @@ export function DraggableDashboard({ selectedLGA, onLGAChange }: DraggableDashbo
         .dashboard-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+          grid-auto-rows: min-content;
+          grid-auto-flow: dense;
           gap: 2rem;
           width: 100%;
           max-width: none;
+          align-items: start;
+        }
+
+        .dashboard-grid .draggable-card {
+          align-self: start;
         }
 
         .dashboard-grid.edit-mode .draggable-card {
