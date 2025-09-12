@@ -33,7 +33,7 @@ export default function DashboardPage() {
         </div>
       </nav>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="w-full px-6 py-8">
         {/* Header */}
         <div className="mb-10 text-center">
           <h1 className="text-6xl text-[#00FF41] glow-text mb-3">Housing Dashboard</h1>

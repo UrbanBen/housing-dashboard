@@ -310,13 +310,48 @@ export function DraggableDashboard({ selectedLGA, onLGAChange }: DraggableDashbo
       <style jsx global>{`
         .dashboard-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+          grid-template-columns: 1fr;
           grid-auto-rows: min-content;
           grid-auto-flow: dense;
           gap: 2rem;
           width: 100%;
           max-width: none;
           align-items: start;
+        }
+
+        /* 2 columns from 768px */
+        @media (min-width: 768px) {
+          .dashboard-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        /* 3 columns from 1024px */
+        @media (min-width: 1024px) {
+          .dashboard-grid {
+            grid-template-columns: repeat(3, 1fr);
+          }
+        }
+
+        /* 4 columns from 1920px */
+        @media (min-width: 1920px) {
+          .dashboard-grid {
+            grid-template-columns: repeat(4, 1fr);
+          }
+        }
+
+        /* 5 columns from 2560px */
+        @media (min-width: 2560px) {
+          .dashboard-grid {
+            grid-template-columns: repeat(5, 1fr);
+          }
+        }
+
+        /* 6 columns from 3440px */
+        @media (min-width: 3440px) {
+          .dashboard-grid {
+            grid-template-columns: repeat(6, 1fr);
+          }
         }
 
         .dashboard-grid .draggable-card {
@@ -340,20 +375,6 @@ export function DraggableDashboard({ selectedLGA, onLGAChange }: DraggableDashbo
           border: 2px solid hsl(var(--primary));
         }
 
-        /* Responsive grid adjustments for very small screens */
-        @media (max-width: 767px) {
-          .dashboard-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        @media (min-width: 768px) and (max-width: 1023px) {
-          .dashboard-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        /* Let auto-fit handle larger screens naturally */
 
         /* Size-specific styling - default for larger screens */
         .card-size-small {
