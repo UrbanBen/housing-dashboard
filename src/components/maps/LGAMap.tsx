@@ -94,20 +94,28 @@ export function LGAMap({ selectedLGA, height = "h-64" }: LGAMapProps) {
         setBoundaryError(null);
         console.log('Fetching boundary data for:', selectedLGA.name);
         
-        const response = await fetch(`/api/lga-boundaries?lga=${encodeURIComponent(selectedLGA.name)}`);
+        // Try NSW Spatial Services first (official government data)
+        let response = await fetch(`/api/nsw-boundaries?lga=${encodeURIComponent(selectedLGA.name)}&geometry=true`);
+        let data = await response.json();
         
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        if (response.ok && data.boundaries && data.boundaries.boundary) {
+          setBoundaryData(data.boundaries);
+          console.log('NSW Spatial boundary data loaded successfully:', data.boundaries.name);
+          return;
         }
         
-        const data = await response.json();
+        // Fallback to our simplified boundary data
+        console.log('NSW Spatial data not available, trying fallback...');
+        response = await fetch(`/api/lga-boundaries?lga=${encodeURIComponent(selectedLGA.name)}`);
+        data = await response.json();
         
-        if (data.error) {
-          throw new Error(data.error);
+        if (response.ok && data.boundaries) {
+          setBoundaryData(data.boundaries);
+          console.log('Fallback boundary data loaded successfully:', data.boundaries.name);
+          return;
         }
         
-        setBoundaryData(data.boundaries);
-        console.log('Boundary data loaded successfully:', data.boundaries.name);
+        throw new Error(data.error || 'No boundary data available');
         
       } catch (error) {
         console.error('Error fetching boundary data:', error);
@@ -156,7 +164,7 @@ export function LGAMap({ selectedLGA, height = "h-64" }: LGAMapProps) {
           .bindPopup(`
             <strong>${boundaryData.name}</strong><br/>
             <em>Code: ${boundaryData.code}</em><br/>
-            <small>Real boundary data from PostGIS</small>
+            <small>${boundaryData.urbanity ? `Type: ${boundaryData.urbanity === 'U' ? 'Urban' : 'Rural'}<br/>` : ''}Real boundary data from NSW Spatial Services</small>
           `)
           .addTo(mapRef.current);
 
@@ -229,7 +237,7 @@ export function LGAMap({ selectedLGA, height = "h-64" }: LGAMapProps) {
       )}
       {selectedLGA && boundaryData && (
         <div className="text-xs text-green-600 mt-2 text-center">
-          Showing real boundary data for {boundaryData.name}
+          {boundaryData.urbanity ? `${boundaryData.urbanity === 'U' ? 'Urban' : 'Rural'} LGA: ` : ''}{boundaryData.name} - Official NSW Spatial Data
         </div>
       )}
     </>

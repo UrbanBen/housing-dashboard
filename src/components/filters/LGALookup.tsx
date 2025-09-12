@@ -11,6 +11,8 @@ export interface LGA {
   population: number | null;
   populationYear?: number | null;
   housingTarget?: number;
+  urbanity?: string; // 'U' for Urban, 'R' for Rural
+  councilName?: string; // Full council name
 }
 
 interface LGALookupProps {
@@ -99,21 +101,43 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch LGA data from database
+  // Fetch LGA data from NSW Spatial Services
   useEffect(() => {
     const fetchLGAs = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/lgas');
-        const data = await response.json();
         
-        if (data.success) {
-          setLgaData(data.lgas);
+        // Try NSW Spatial Services first (official 128 LGAs)
+        let response = await fetch('/api/nsw-boundaries');
+        let data = await response.json();
+        
+        if (response.ok && data.lgas && data.lgas.length > 0) {
+          // Transform NSW spatial data to our format
+          const transformedLGAs: LGA[] = data.lgas.map((lga: any, index: number) => ({
+            id: lga.code?.toString() || lga.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+            name: lga.name,
+            region: lga.urbanity === 'U' ? 'Urban LGA' : 'Rural LGA',
+            population: null, // Will be populated from database if available
+            urbanity: lga.urbanity,
+            councilName: lga.council
+          }));
+          
+          setLgaData(transformedLGAs);
           setError(null);
+          console.log(`Loaded ${transformedLGAs.length} LGAs from NSW Spatial Services`);
         } else {
-          console.warn('Failed to fetch LGAs from database, using fallback data');
-          setLgaData(FALLBACK_NSW_LGAS);
-          setError('Using offline data');
+          // Fallback to database
+          console.warn('NSW Spatial not available, trying database...');
+          response = await fetch('/api/lgas');
+          data = await response.json();
+          
+          if (data.success) {
+            setLgaData(data.lgas);
+            setError('Using database data');
+          } else {
+            setLgaData(FALLBACK_NSW_LGAS);
+            setError('Using offline data');
+          }
         }
       } catch (err) {
         console.error('Error fetching LGAs:', err);
@@ -134,7 +158,8 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
     const term = searchTerm.toLowerCase();
     return lgaData.filter(lga => 
       lga.name.toLowerCase().includes(term) ||
-      lga.region.toLowerCase().includes(term)
+      lga.region.toLowerCase().includes(term) ||
+      (lga.councilName && lga.councilName.toLowerCase().includes(term))
     );
   }, [searchTerm, lgaData]);
 
@@ -204,7 +229,7 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
               <div>
                 <div className="font-semibold text-foreground">{selectedLGA.name}</div>
                 <div className="text-xs text-muted-foreground">
-                  {selectedLGA.region}
+                  {selectedLGA.councilName || selectedLGA.region}
                   {selectedLGA.population && ` • Pop: ${selectedLGA.population.toLocaleString()}`}
                   {selectedLGA.housingTarget && ` • Target: ${selectedLGA.housingTarget.toLocaleString()}`}
                 </div>
@@ -266,10 +291,8 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
                         <div>
                           <div className="font-medium text-foreground">{lga.name}</div>
                           <div className="text-xs text-muted-foreground">
-                            {lga.population 
-                              ? `Population: ${lga.population.toLocaleString()}` 
-                              : `Housing Target: ${lga.housingTarget?.toLocaleString() || 'N/A'}`
-                            }
+                            {lga.councilName || lga.region}
+                            {lga.population && ` • ${lga.population.toLocaleString()}`}
                           </div>
                         </div>
                         {selectedLGA?.id === lga.id && (
