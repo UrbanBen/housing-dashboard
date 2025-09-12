@@ -14,6 +14,7 @@ interface BoundaryData {
   boundary: any; // GeoJSON geometry
   center: [number, number];
   bounds: [[number, number], [number, number]];
+  urbanity?: string; // Optional urbanity field from NSW Spatial Services
 }
 
 export function LGAMap({ selectedLGA, height = "h-64" }: LGAMapProps) {
