@@ -15,12 +15,12 @@ import type { LGA } from '@/components/filters/LGALookup';
 
 interface LGAInsightsProps {
   selectedLGA: LGA | null;
+  effectiveColumns?: number;
 }
 
-export function LGAInsights({ selectedLGA }: LGAInsightsProps) {
-
+export function LGAInsights({ selectedLGA, effectiveColumns }: LGAInsightsProps) {
   return (
-    <Card className="shadow-lg border border-border/50 h-fit">
+    <Card className="shadow-lg border border-border/50 h-full flex flex-col">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
           <MapPin className="h-6 w-6 text-primary" />
@@ -37,12 +37,11 @@ export function LGAInsights({ selectedLGA }: LGAInsightsProps) {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="flex-1 flex flex-col">
         {/* LGA Boundary Map */}
-        <div className="mb-4">
-          <LGAMap selectedLGA={selectedLGA} height="300px" />
+        <div className="flex-1 min-h-0">
+          <LGAMap selectedLGA={selectedLGA} effectiveColumns={effectiveColumns} height="400px" />
         </div>
-
       </CardContent>
     </Card>
   );

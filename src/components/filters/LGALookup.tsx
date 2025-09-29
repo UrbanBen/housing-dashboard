@@ -94,6 +94,18 @@ const FALLBACK_NSW_LGAS: LGA[] = [
   { id: 'unincorporated-far-west', name: 'Unincorporated Far West', region: 'Far West', population: 5000 }
 ];
 
+// Helper function to convert text to proper title case
+const toTitleCase = (str: string): string => {
+  if (!str) return '';
+  return str.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+};
+
+// Helper function to remove suffix words from LGA names
+const cleanLGAName = (str: string): string => {
+  if (!str) return '';
+  return str.replace(/\b(City|Shire|Regional)\b/gi, '').trim();
+};
+
 export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -101,55 +113,177 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch LGA data from NSW Spatial Services
+  // Prevent multiple API calls with a ref
+  const hasFetchedRef = React.useRef(false);
+
+  // Fetch LGA data from NSW Spatial Services - only run once on mount
   useEffect(() => {
+    let cancelled = false;
+
+    // Prevent multiple API calls
+    if (hasFetchedRef.current) {
+      return;
+    }
+
+    hasFetchedRef.current = true;
+
     const fetchLGAs = async () => {
       try {
         setIsLoading(true);
-        
-        // Try NSW Spatial Services first (official 128 LGAs)
-        let response = await fetch('/api/nsw-boundaries');
+
+        // Try ArcGIS service first (preferred source - official ABS ASGS2021)
+        let response = await fetch('/api/arcgis-lga');
+
+        // Check if component unmounted
+        if (cancelled) return;
+
         let data = await response.json();
-        
+
         if (response.ok && data.lgas && data.lgas.length > 0) {
-          // Transform NSW spatial data to our format
-          const transformedLGAs: LGA[] = data.lgas.map((lga: any, index: number) => ({
+          // Transform ArcGIS data to our format
+          const transformedLGAs: LGA[] = data.lgas.map((lga: any) => ({
             id: lga.code?.toString() || lga.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-            name: lga.name,
-            region: lga.urbanity === 'U' ? 'Urban LGA' : 'Rural LGA',
+            name: cleanLGAName(toTitleCase(lga.name)),
+            region: lga.area_sqkm > 5000 ? 'Rural LGA' : 'Urban LGA',
             population: null, // Will be populated from database if available
-            urbanity: lga.urbanity,
-            councilName: lga.council
+            urbanity: lga.area_sqkm > 5000 ? 'R' : 'U', // Based on area size
+            councilName: lga.name
           }));
-          
-          setLgaData(transformedLGAs);
-          setError(null);
-          console.log(`Loaded ${transformedLGAs.length} LGAs from NSW Spatial Services`);
+
+          // Add NSW state-wide option at the top
+          const nswStateWide: LGA = {
+            id: 'nsw-state',
+            name: 'New South Wales (State-wide)',
+            region: 'State',
+            population: null,
+            urbanity: 'S', // 'S' for State
+            councilName: 'NSW Government'
+          };
+
+          if (!cancelled) {
+            setLgaData([nswStateWide, ...transformedLGAs]);
+            setError(null);
+            console.log(`Loaded ${transformedLGAs.length} LGAs from ArcGIS ASGS2021 service`);
+          }
         } else {
-          // Fallback to database
-          console.warn('NSW Spatial not available, trying database...');
-          response = await fetch('/api/lgas');
+          // Fallback to ABS Census database
+          console.warn('ArcGIS service not available, trying ABS Census database...');
+          response = await fetch('/api/abs-census-lga');
+
+          if (cancelled) return;
+
           data = await response.json();
-          
-          if (data.success) {
-            setLgaData(data.lgas);
-            setError('Using database data');
+
+          if (response.ok && data.lgas && data.lgas.length > 0) {
+            // Transform ABS census data to our format
+            const transformedLGAs: LGA[] = data.lgas.map((lga: any) => ({
+              id: lga.code?.toString() || lga.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+              name: cleanLGAName(toTitleCase(lga.name)),
+              region: lga.state === 'New South Wales' ? (lga.area_sqkm > 5000 ? 'Rural LGA' : 'Urban LGA') : `${lga.state} LGA`,
+              population: null, // Will be populated from database if available
+              urbanity: lga.area_sqkm > 5000 ? 'R' : 'U', // Rough estimate based on area
+              councilName: lga.name
+            }));
+
+            // Add NSW state-wide option at the top for NSW LGAs
+            const nswLGAs = transformedLGAs.filter(lga => lga.region.includes('New South Wales') || lga.region.includes('LGA'));
+            if (nswLGAs.length > 0) {
+              const nswStateWide: LGA = {
+                id: 'nsw-state',
+                name: 'New South Wales (State-wide)',
+                region: 'State',
+                population: null,
+                urbanity: 'S', // 'S' for State
+                councilName: 'NSW Government'
+              };
+
+              if (!cancelled) {
+                setLgaData([nswStateWide, ...transformedLGAs]);
+                setError('Using ABS Census database (ArcGIS unavailable)');
+                console.log(`Loaded ${transformedLGAs.length} LGAs from ABS Census 2024`);
+              }
+            } else {
+              if (!cancelled) {
+                setLgaData(transformedLGAs);
+                setError('ABS data available (non-NSW LGAs, ArcGIS unavailable)');
+                console.log(`Loaded ${transformedLGAs.length} LGAs from ABS Census 2024`);
+              }
+            }
           } else {
-            setLgaData(FALLBACK_NSW_LGAS);
-            setError('Using offline data');
+            // Fallback to NSW Spatial Services
+            console.warn('ABS Census data not available, trying NSW Spatial Services...');
+            response = await fetch('/api/nsw-boundaries');
+
+            if (cancelled) return;
+
+            data = await response.json();
+
+            if (response.ok && data.lgas && data.lgas.length > 0) {
+              // Transform NSW spatial data to our format
+              const transformedLGAs: LGA[] = data.lgas.map((lga: any, index: number) => ({
+                id: lga.code?.toString() || lga.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                name: cleanLGAName(toTitleCase(lga.name)),
+                region: lga.urbanity === 'U' ? 'Urban LGA' : 'Rural LGA',
+                population: null, // Will be populated from database if available
+                urbanity: lga.urbanity,
+                councilName: toTitleCase(lga.council)
+              }));
+
+              // Add NSW state-wide option at the top
+              const nswStateWide: LGA = {
+                id: 'nsw-state',
+                name: 'New South Wales (State-wide)',
+                region: 'State',
+                population: null,
+                urbanity: 'S', // 'S' for State
+                councilName: 'NSW Government'
+              };
+
+              if (!cancelled) {
+                setLgaData([nswStateWide, ...transformedLGAs]);
+                setError('Using NSW Spatial Services (ArcGIS and ABS unavailable)');
+                console.log(`Loaded ${transformedLGAs.length} LGAs from NSW Spatial Services`);
+              }
+            } else {
+              // Final fallback to hardcoded data
+              console.warn('NSW Spatial not available, using fallback data...');
+              setLgaData(FALLBACK_NSW_LGAS);
+              setError('Using offline data (all services unavailable)');
+            }
           }
         }
       } catch (err) {
+        if (cancelled) return;
         console.error('Error fetching LGAs:', err);
         setLgaData(FALLBACK_NSW_LGAS);
         setError('Using offline data');
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchLGAs();
-  }, []);
+
+    // Cleanup function
+    return () => {
+      cancelled = true;
+    };
+  }, []); // Empty dependency array - only run once on mount
+
+  // Auto-select NSW state-wide if nothing is selected and data is loaded (only once)
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
+
+  useEffect(() => {
+    if (!selectedLGA && lgaData.length > 0 && !isLoading && !hasAutoSelected) {
+      const nswStateWide = lgaData.find(lga => lga.id === 'nsw-state');
+      if (nswStateWide) {
+        onLGAChange(nswStateWide);
+        setHasAutoSelected(true);
+      }
+    }
+  }, [selectedLGA, lgaData, isLoading, hasAutoSelected]);
 
   // Filter LGAs based on search term
   const filteredLGAs = useMemo(() => {
@@ -199,7 +333,7 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
         <div className="flex items-center gap-3">
           <MapPin className="h-6 w-6 text-primary" />
           <div>
-            <CardTitle className="text-xl">Local Government Area</CardTitle>
+            <CardTitle className="text-xl">Geography Search</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               Filter all housing data by NSW LGA
             </p>
@@ -222,27 +356,38 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
           </div>
         )}
 
-        {/* Current Selection */}
-        {selectedLGA && (
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-semibold text-foreground">{selectedLGA.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {selectedLGA.councilName || selectedLGA.region}
-                  {selectedLGA.population && ` • Pop: ${selectedLGA.population.toLocaleString()}`}
-                  {selectedLGA.housingTarget && ` • Target: ${selectedLGA.housingTarget.toLocaleString()}`}
-                </div>
-              </div>
+        {/* Current Selection - Always visible to prevent resizing */}
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              {selectedLGA ? (
+                <>
+                  <div className="font-semibold text-foreground">{selectedLGA.name}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {selectedLGA.councilName || selectedLGA.region}
+                    {selectedLGA.population && ` • Pop: ${selectedLGA.population.toLocaleString()}`}
+                    {selectedLGA.housingTarget && ` • Target: ${selectedLGA.housingTarget.toLocaleString()}`}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="font-semibold text-muted-foreground">No Selection</div>
+                  <div className="text-xs text-muted-foreground">
+                    Choose an LGA to view specific data
+                  </div>
+                </>
+              )}
+            </div>
+            {selectedLGA && (
               <button
                 onClick={handleClearSelection}
                 className="text-xs bg-destructive/20 text-destructive hover:bg-destructive/30 px-2 py-1 rounded transition-colors"
               >
                 Clear
               </button>
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Search Input */}
         <div className="relative">
@@ -257,6 +402,18 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
               setIsDropdownOpen(true);
             }}
             onFocus={() => setIsDropdownOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && isDropdownOpen) {
+                // Select the top search result
+                const firstGroup = Object.values(groupedLGAs)[0];
+                if (firstGroup && firstGroup.length > 0) {
+                  handleLGASelect(firstGroup[0]);
+                }
+              } else if (e.key === 'Escape') {
+                setIsDropdownOpen(false);
+                setSearchTerm('');
+              }
+            }}
             placeholder="Search NSW Local Government Areas..."
             className="w-full pl-10 pr-10 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           />

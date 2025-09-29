@@ -19,11 +19,12 @@ import {
 } from '@dnd-kit/sortable';
 import { DraggableCard } from './DraggableCard';
 import type { LGA } from '@/components/filters/LGALookup';
+import type { ABSLGA } from '@/components/filters/ABSLGALookup';
 
 // Define card types
-export type CardType = 
+export type CardType =
   | 'lga-lookup'
-  | 'lga-details' 
+  | 'lga-details'
   | 'lga-insights'
   | 'key-metrics'
   | 'lga-metrics'
@@ -33,7 +34,9 @@ export type CardType =
   | 'market-forecast'
   | 'regional-comparison'
   | 'data-freshness'
-  | 'kpi-cards';
+  | 'kpi-cards'
+  | 'abs-geography-search'
+  | 'abs-lga-map';
 
 export interface DashboardCard {
   id: string;
@@ -47,6 +50,9 @@ export interface DashboardCard {
 interface DraggableDashboardProps {
   selectedLGA: LGA | null;
   onLGAChange: (lga: LGA | null) => void;
+  maxColumns: number;
+  isEditMode: boolean;
+  isAdminMode: boolean;
 }
 
 // Default card configuration
@@ -56,7 +62,7 @@ const defaultCards: DashboardCard[] = [
     id: 'lga-lookup',
     type: 'lga-lookup',
     title: 'Search Geography',
-    size: 'medium',
+    size: 'small',
     category: 'lga',
     gridArea: 'lga-lookup'
   },
@@ -64,7 +70,7 @@ const defaultCards: DashboardCard[] = [
     id: 'lga-details',
     type: 'lga-details',
     title: 'LGA Details',
-    size: 'medium',
+    size: 'small',
     category: 'lga',
     gridArea: 'lga-details'
   },
@@ -72,7 +78,7 @@ const defaultCards: DashboardCard[] = [
     id: 'lga-insights',
     type: 'lga-insights',
     title: 'LGA Map',
-    size: 'medium',
+    size: 'small',
     category: 'lga',
     gridArea: 'lga-insights'
   },
@@ -82,7 +88,7 @@ const defaultCards: DashboardCard[] = [
     id: 'key-metrics',
     type: 'key-metrics',
     title: 'Key Metrics',
-    size: 'medium',
+    size: 'small',
     category: 'metrics',
     gridArea: 'key-metrics'
   },
@@ -90,7 +96,7 @@ const defaultCards: DashboardCard[] = [
     id: 'lga-metrics',
     type: 'lga-metrics',
     title: 'LGA Housing Metrics',
-    size: 'large',
+    size: 'medium',
     category: 'metrics',
     gridArea: 'lga-metrics'
   },
@@ -110,7 +116,7 @@ const defaultCards: DashboardCard[] = [
     id: 'building-approvals-chart',
     type: 'building-approvals-chart',
     title: 'Building Approvals Trends',
-    size: 'large',
+    size: 'small',
     category: 'charts',
     gridArea: 'building-chart'
   },
@@ -118,7 +124,7 @@ const defaultCards: DashboardCard[] = [
     id: 'market-overview',
     type: 'market-overview',
     title: 'Market Overview',
-    size: 'large',
+    size: 'medium',
     category: 'charts',
     gridArea: 'market-overview'
   },
@@ -150,20 +156,30 @@ const defaultCards: DashboardCard[] = [
     category: 'metrics',
     gridArea: 'regional-comparison'
   },
+
+  // Duplicated cards using ABS Census 2024 data from Mosaic_pro
   {
-    id: 'data-freshness',
-    type: 'data-freshness',
-    title: 'Data Freshness',
+    id: 'abs-geography-search',
+    type: 'abs-geography-search',
+    title: 'ABS Geography Search',
     size: 'small',
-    category: 'metrics',
-    gridArea: 'data-freshness'
+    category: 'lga',
+    gridArea: 'abs-geography-search'
+  },
+  {
+    id: 'abs-lga-map',
+    type: 'abs-lga-map',
+    title: 'ABS LGA Map',
+    size: 'small',
+    category: 'lga',
+    gridArea: 'abs-lga-map'
   },
 ];
 
-export function DraggableDashboard({ selectedLGA, onLGAChange }: DraggableDashboardProps) {
+export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode }: DraggableDashboardProps) {
   const [cards, setCards] = useState<DashboardCard[]>(defaultCards);
   const [activeCard, setActiveCard] = useState<DashboardCard | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedABSLGA, setSelectedABSLGA] = useState<ABSLGA | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -200,6 +216,39 @@ export function DraggableDashboard({ selectedLGA, onLGAChange }: DraggableDashbo
     });
   };
 
+  // Calculate effective columns based on screen size and max setting
+  const getEffectiveColumns = React.useCallback(() => {
+    if (typeof window === 'undefined') return 1;
+    
+    const width = window.innerWidth;
+    let naturalColumns = 1;
+    
+    if (width >= 3440) naturalColumns = 6;
+    else if (width >= 2560) naturalColumns = 5;
+    else if (width >= 1920) naturalColumns = 4;
+    else if (width >= 1024) naturalColumns = 3;
+    else if (width >= 768) naturalColumns = 2;
+    else naturalColumns = 1;
+    
+    return Math.min(naturalColumns, maxColumns);
+  }, [maxColumns]);
+
+  // Force re-render when window resizes or maxColumns changes
+  const [effectiveColumns, setEffectiveColumns] = React.useState(1);
+
+  React.useEffect(() => {
+    const updateColumns = () => {
+      const newColumns = getEffectiveColumns();
+      console.log('Updating columns:', { width: window.innerWidth, maxColumns, naturalColumns: Math.min(6, Math.max(1, Math.floor(window.innerWidth / 350))), effectiveColumns: newColumns });
+      setEffectiveColumns(newColumns);
+    };
+
+    updateColumns(); // Initial calculation
+    
+    window.addEventListener('resize', updateColumns);
+    return () => window.removeEventListener('resize', updateColumns);
+  }, [getEffectiveColumns]);
+
   // Load saved layout on component mount
   React.useEffect(() => {
     const savedLayout = localStorage.getItem('dashboard-layout');
@@ -213,14 +262,17 @@ export function DraggableDashboard({ selectedLGA, onLGAChange }: DraggableDashbo
     }
   }, []);
 
-  const resetLayout = () => {
-    setCards(defaultCards);
-    localStorage.removeItem('dashboard-layout');
-  };
+  // Listen for reset layout event from parent
+  React.useEffect(() => {
+    const handleResetLayout = () => {
+      setCards(defaultCards);
+      localStorage.removeItem('dashboard-layout');
+    };
 
-  const toggleEditMode = () => {
-    setIsEditMode(!isEditMode);
-  };
+    window.addEventListener('resetDashboardLayout', handleResetLayout);
+    return () => window.removeEventListener('resetDashboardLayout', handleResetLayout);
+  }, []);
+
 
   // Group cards by category for better organization
   const groupedCards = React.useMemo(() => {
@@ -236,56 +288,40 @@ export function DraggableDashboard({ selectedLGA, onLGAChange }: DraggableDashbo
 
   return (
     <div className="w-full">
-      {/* Edit Mode Toggle */}
-      <div className="flex items-center justify-between mb-6 px-6 py-3 bg-card/50 backdrop-blur rounded-lg border border-border/50">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isEditMode ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`}></div>
-            <span className="text-sm font-medium">
-              {isEditMode ? 'Edit Mode Active' : 'View Mode'}
-            </span>
+      {isEditMode && (
+        <div className="mb-6 px-6 py-3 bg-orange-500/10 backdrop-blur rounded-lg border border-orange-500/20">
+          <div className="text-sm text-orange-600 font-medium">
+            ✏️ Edit Mode Active - Drag cards to rearrange • Changes save automatically
           </div>
-          {isEditMode && (
-            <div className="text-xs text-muted-foreground">
-              Drag cards to rearrange • Changes save automatically
-            </div>
-          )}
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={resetLayout}
-            className="text-xs px-3 py-1 bg-destructive/20 text-destructive hover:bg-destructive/30 rounded transition-colors"
-          >
-            Reset Layout
-          </button>
-          <button
-            onClick={toggleEditMode}
-            className={`text-xs px-3 py-1 rounded transition-colors ${
-              isEditMode 
-                ? 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30' 
-                : 'bg-primary/20 text-primary hover:bg-primary/30'
-            }`}
-          >
-            {isEditMode ? 'Exit Edit' : 'Edit Layout'}
-          </button>
-        </div>
-      </div>
+      )}
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
+      <div suppressHydrationWarning={true}>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
         <SortableContext items={cards.map(card => card.id)} strategy={rectSortingStrategy}>
-          <div className={`dashboard-grid ${isEditMode ? 'edit-mode' : ''}`}>
+          <div 
+            className={`dashboard-grid ${isEditMode ? 'edit-mode' : ''}`} 
+            style={{
+              gridTemplateColumns: `repeat(${effectiveColumns}, 1fr)`,
+              '--effective-columns': effectiveColumns
+            } as React.CSSProperties}
+          >
             {cards.map((card) => (
               <DraggableCard
                 key={card.id}
                 card={card}
                 isEditMode={isEditMode}
+                isAdminMode={isAdminMode}
                 selectedLGA={selectedLGA}
                 onLGAChange={onLGAChange}
+                selectedABSLGA={selectedABSLGA}
+                onABSLGAChange={setSelectedABSLGA}
+                effectiveColumns={effectiveColumns}
               />
             ))}
           </div>
@@ -297,61 +333,29 @@ export function DraggableDashboard({ selectedLGA, onLGAChange }: DraggableDashbo
               <DraggableCard
                 card={activeCard}
                 isEditMode={true}
+                isAdminMode={isAdminMode}
                 selectedLGA={selectedLGA}
                 onLGAChange={onLGAChange}
                 isDragging={true}
+                effectiveColumns={effectiveColumns}
               />
             </div>
           ) : null}
         </DragOverlay>
-      </DndContext>
+        </DndContext>
+      </div>
 
       {/* Custom Styles */}
       <style jsx global>{`
         .dashboard-grid {
           display: grid;
-          grid-template-columns: 1fr;
-          grid-auto-rows: min-content;
+          grid-auto-rows: 20px; /* Small row units for fine-grained control */
           grid-auto-flow: dense;
-          gap: 2rem;
+          column-gap: 2rem;
+          row-gap: 1rem;
           width: 100%;
           max-width: none;
           align-items: start;
-        }
-
-        /* 2 columns from 768px */
-        @media (min-width: 768px) {
-          .dashboard-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
-        /* 3 columns from 1024px */
-        @media (min-width: 1024px) {
-          .dashboard-grid {
-            grid-template-columns: repeat(3, 1fr);
-          }
-        }
-
-        /* 4 columns from 1920px */
-        @media (min-width: 1920px) {
-          .dashboard-grid {
-            grid-template-columns: repeat(4, 1fr);
-          }
-        }
-
-        /* 5 columns from 2560px */
-        @media (min-width: 2560px) {
-          .dashboard-grid {
-            grid-template-columns: repeat(5, 1fr);
-          }
-        }
-
-        /* 6 columns from 3440px */
-        @media (min-width: 3440px) {
-          .dashboard-grid {
-            grid-template-columns: repeat(6, 1fr);
-          }
         }
 
         .dashboard-grid .draggable-card {
@@ -376,55 +380,7 @@ export function DraggableDashboard({ selectedLGA, onLGAChange }: DraggableDashbo
         }
 
 
-        /* Size-specific styling - default for larger screens */
-        .card-size-small {
-          grid-column: span 1;
-        }
-
-        .card-size-medium {
-          grid-column: span 1;
-        }
-
-        .card-size-large {
-          grid-column: span 2;
-        }
-
-        .card-size-xl {
-          grid-column: span 3;
-        }
-
-        /* Responsive card sizing adjustments */
-        @media (max-width: 767px) {
-          .card-size-small,
-          .card-size-medium,
-          .card-size-large,
-          .card-size-xl {
-            grid-column: span 1;
-          }
-        }
-
-        @media (min-width: 768px) and (max-width: 1023px) {
-          .card-size-large,
-          .card-size-xl {
-            grid-column: span 2;
-          }
-        }
-
-        /* For very large screens, allow even more expansion */
-        @media (min-width: 1920px) {
-          .card-size-xl {
-            grid-column: span 4;
-          }
-        }
-
-        @media (min-width: 2560px) {
-          .card-size-large {
-            grid-column: span 3;
-          }
-          .card-size-xl {
-            grid-column: span 5;
-          }
-        }
+        /* Card sizing now handled in JavaScript */
       `}</style>
     </div>
   );

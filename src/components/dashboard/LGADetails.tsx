@@ -11,15 +11,16 @@ interface LGADetailsProps {
 
 // Mock data for different LGAs - in real implementation, this would come from an API
 const getLGAData = (lga: LGA | null) => {
-  if (!lga) {
+  if (!lga || lga.id === 'nsw-state') {
+    // NSW State-wide aggregated data (all 128 LGAs combined)
     return {
-      buildingApprovals: 2840,
-      averageApprovalTime: 45,
-      developmentApplications: 3200,
-      approvalRate: 89,
-      landReleases: 450,
-      constructionStarts: 2100,
-      completions: 1850,
+      buildingApprovals: 147200, // Aggregated across all NSW LGAs
+      averageApprovalTime: 42,
+      developmentApplications: 165300,
+      approvalRate: 87,
+      landReleases: 18400,
+      constructionStarts: 132600,
+      completions: 124800,
       medianPrice: 485000
     };
   }
@@ -110,45 +111,90 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
           <div className="border-t pt-4">
             <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
               <Users className="h-4 w-4" />
-              LGA Context
+              {selectedLGA.id === 'nsw-state' ? 'NSW State Context' : 'LGA Context'}
             </h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Population</span>
-                <div className="font-medium text-foreground">
-                  {selectedLGA.population ? selectedLGA.population.toLocaleString() : 'N/A'}
-                </div>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Type</span>
-                <div className="font-medium text-foreground">
-                  {selectedLGA.urbanity === 'U' ? 'Urban' : 'Rural'}
-                </div>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Units per 1,000</span>
-                <div className="font-medium text-foreground">
-                  {selectedLGA.population ? ((data.buildingApprovals / selectedLGA.population) * 1000).toFixed(1) : 'N/A'}
-                </div>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Completion Rate</span>
-                <div className="font-medium text-foreground">
-                  {Math.round((data.completions / data.constructionStarts) * 100)}%
-                </div>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Council</span>
-                <div className="font-medium text-foreground text-xs">
-                  {selectedLGA.councilName?.replace(' COUNCIL', '') || selectedLGA.region}
-                </div>
-              </div>
-              <div>
-                <span className="text-muted-foreground">ABS Code</span>
-                <div className="font-medium text-foreground">
-                  {selectedLGA.id}
-                </div>
-              </div>
+              {selectedLGA.id === 'nsw-state' ? (
+                // NSW State-wide context
+                <>
+                  <div>
+                    <span className="text-muted-foreground">Population</span>
+                    <div className="font-medium text-foreground">
+                      8.2M (approx)
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">LGAs</span>
+                    <div className="font-medium text-foreground">
+                      128 Total
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Units per 1,000</span>
+                    <div className="font-medium text-foreground">
+                      18.0
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Completion Rate</span>
+                    <div className="font-medium text-foreground">
+                      {Math.round((data.completions / data.constructionStarts) * 100)}%
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Urban LGAs</span>
+                    <div className="font-medium text-foreground text-xs">
+                      43 Urban
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Rural LGAs</span>
+                    <div className="font-medium text-foreground">
+                      85 Rural
+                    </div>
+                  </div>
+                </>
+              ) : (
+                // Individual LGA context
+                <>
+                  <div>
+                    <span className="text-muted-foreground">Population</span>
+                    <div className="font-medium text-foreground">
+                      {selectedLGA.population ? selectedLGA.population.toLocaleString() : 'N/A'}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Type</span>
+                    <div className="font-medium text-foreground">
+                      {selectedLGA.urbanity === 'U' ? 'Urban' : 'Rural'}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Units per 1,000</span>
+                    <div className="font-medium text-foreground">
+                      {selectedLGA.population ? ((data.buildingApprovals / selectedLGA.population) * 1000).toFixed(1) : 'N/A'}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Completion Rate</span>
+                    <div className="font-medium text-foreground">
+                      {Math.round((data.completions / data.constructionStarts) * 100)}%
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Council</span>
+                    <div className="font-medium text-foreground text-xs">
+                      {selectedLGA.councilName?.replace(' COUNCIL', '') || selectedLGA.region}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">ABS Code</span>
+                    <div className="font-medium text-foreground">
+                      {selectedLGA.id}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}

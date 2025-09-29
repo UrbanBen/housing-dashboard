@@ -40,14 +40,14 @@ interface LGAMetricsData {
 
 // Generate realistic metrics based on LGA data
 const generateLGAMetrics = (lga: LGA | null): LGAMetricsData => {
-  if (!lga) {
-    // Default NSW-wide metrics
+  if (!lga || lga.id === 'nsw-state') {
+    // NSW State-wide aggregated metrics (all 128 LGAs combined)
     return {
-      buildingApprovals: { current: 8542, change: 12.5, trend: 'up' },
-      housingTarget: { target: 75000, progress: 8542, progressPercent: 11.4 },
-      developmentApplications: { submitted: 12650, approved: 11283, approvalRate: 89.2, avgProcessingDays: 47 },
-      constructionActivity: { starts: 7234, completions: 6891, pipeline: 15432 },
-      demographics: { population: 8200000, populationGrowth: 1.8, householdsSize: 2.6 }
+      buildingApprovals: { current: 147200, change: 8.3, trend: 'up' },
+      housingTarget: { target: 250000, progress: 147200, progressPercent: 58.9 },
+      developmentApplications: { submitted: 165300, approved: 143811, approvalRate: 87.0, avgProcessingDays: 42 },
+      constructionActivity: { starts: 132600, completions: 124800, pipeline: 287400 },
+      demographics: { population: 8200000, populationGrowth: 1.2, householdsSize: 2.6 }
     };
   }
 

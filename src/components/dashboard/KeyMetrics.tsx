@@ -11,12 +11,13 @@ interface KeyMetricsProps {
 
 // Mock data for different LGAs - in real implementation, this would come from an API
 const getLGAData = (lga: LGA | null) => {
-  if (!lga) {
+  if (!lga || lga.id === 'nsw-state') {
+    // NSW State-wide aggregated data (all 128 LGAs combined)
     return {
-      buildingApprovals: 2840,
-      approvalRate: 89,
-      constructionStarts: 2100,
-      medianPrice: 485000
+      buildingApprovals: 147200,
+      approvalRate: 87,
+      constructionStarts: 132600,
+      medianPrice: 675000
     };
   }
 

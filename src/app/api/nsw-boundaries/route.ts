@@ -11,8 +11,8 @@ export async function GET(request: Request) {
     let queryUrl: string;
     
     if (lgaName) {
-      // Query for specific LGA with geometry
-      const whereClause = `lganame='${lgaName}' OR councilname LIKE '%${lgaName}%'`;
+      // Query for specific LGA with geometry - use case-insensitive search
+      const whereClause = `UPPER(lganame)='${lgaName.toUpperCase()}' OR UPPER(councilname) LIKE '%${lgaName.toUpperCase()}%'`;
       queryUrl = `${NSW_SPATIAL_BASE_URL}/query?` + new URLSearchParams({
         where: whereClause,
         outFields: 'cadid,lganame,councilname,abscode,urbanity,Shape__Area,Shape__Length',
