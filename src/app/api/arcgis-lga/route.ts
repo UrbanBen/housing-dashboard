@@ -54,8 +54,7 @@ export async function GET(request: Request) {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; Housing-Dashboard/1.0)',
         'Accept': 'application/json',
-      },
-      timeout: 30000
+      }
     });
 
     if (!response.ok) {
