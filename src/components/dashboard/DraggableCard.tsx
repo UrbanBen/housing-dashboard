@@ -6,12 +6,10 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Move } from 'lucide-react';
 import type { DashboardCard } from './DraggableDashboard';
 import type { LGA } from '@/components/filters/LGALookup';
-import type { ABSLGA } from '@/components/filters/ABSLGALookup';
 
 // Import all the dashboard components
 import { LGALookup } from '@/components/filters/LGALookup';
-import { ABSLGALookup } from '@/components/filters/ABSLGALookup';
-import { ABSLGAMap } from '@/components/maps/ABSLGAMap';
+import { LGAMap } from '@/components/maps/LGAMap';
 import { LGADetails } from './LGADetails';
 import { LGAInsights } from './LGAInsights';
 import { KeyMetrics } from './KeyMetrics';
@@ -31,8 +29,6 @@ interface DraggableCardProps {
   isAdminMode?: boolean;
   selectedLGA: LGA | null;
   onLGAChange: (lga: LGA | null) => void;
-  selectedABSLGA?: ABSLGA | null;
-  onABSLGAChange?: (lga: ABSLGA | null) => void;
   isDragging?: boolean;
   effectiveColumns?: number;
 }
@@ -43,8 +39,6 @@ export function DraggableCard({
   isAdminMode = false,
   selectedLGA,
   onLGAChange,
-  selectedABSLGA,
-  onABSLGAChange,
   isDragging = false,
   effectiveColumns = 4
 }: DraggableCardProps) {
@@ -402,9 +396,9 @@ export function DraggableCard({
       case 'abs-geography-search':
         return (
           <AdminClickableWrapper dataItemName="ABS Geography Search Component" className="p-1 -m-1">
-            <ABSLGALookup
-              selectedLGA={selectedABSLGA || null}
-              onLGAChange={onABSLGAChange || (() => {})}
+            <LGALookup
+              selectedLGA={selectedLGA || null}
+              onLGAChange={onLGAChange || (() => {})}
             />
           </AdminClickableWrapper>
         );
@@ -429,8 +423,8 @@ export function DraggableCard({
             </CardHeader>
             <CardContent className="pt-2">
               <AdminClickableWrapper dataItemName="ABS LGA Map Component" className="p-1 -m-1">
-                <ABSLGAMap
-                  selectedLGA={selectedABSLGA || null}
+                <LGAMap
+                  selectedLGA={selectedLGA || null}
                   effectiveColumns={effectiveColumns}
                   height="400px"
                 />

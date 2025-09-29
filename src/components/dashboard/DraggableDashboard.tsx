@@ -19,7 +19,6 @@ import {
 } from '@dnd-kit/sortable';
 import { DraggableCard } from './DraggableCard';
 import type { LGA } from '@/components/filters/LGALookup';
-import type { ABSLGA } from '@/components/filters/ABSLGALookup';
 
 // Define card types
 export type CardType =
@@ -179,7 +178,6 @@ const defaultCards: DashboardCard[] = [
 export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode }: DraggableDashboardProps) {
   const [cards, setCards] = useState<DashboardCard[]>(defaultCards);
   const [activeCard, setActiveCard] = useState<DashboardCard | null>(null);
-  const [selectedABSLGA, setSelectedABSLGA] = useState<ABSLGA | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -319,8 +317,6 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
                 isAdminMode={isAdminMode}
                 selectedLGA={selectedLGA}
                 onLGAChange={onLGAChange}
-                selectedABSLGA={selectedABSLGA}
-                onABSLGAChange={setSelectedABSLGA}
                 effectiveColumns={effectiveColumns}
               />
             ))}
