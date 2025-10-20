@@ -1,22 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-} from '@dnd-kit/core';
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  horizontalListSortingStrategy,
-  rectSortingStrategy,
-} from '@dnd-kit/sortable';
+import React from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import { DraggableCard } from './DraggableCard';
 import type { LGA } from '@/components/filters/LGALookup';
 
@@ -35,7 +21,29 @@ export type CardType =
   | 'data-freshness'
   | 'kpi-cards'
   | 'abs-geography-search'
-  | 'abs-lga-map';
+  | 'abs-lga-map'
+  | 'test-card'
+  | 'search-geography-card'
+  // New template types from AdminToolbar
+  | 'blank-card'
+  | 'geography-search'
+  | 'interactive-map'
+  | 'location-details'
+  | 'bar-chart'
+  | 'line-chart'
+  | 'pie-chart'
+  | 'trend-chart'
+  | 'housing-affordability'
+  | 'property-values'
+  | 'population-metrics'
+  | 'development-stats'
+  | 'data-table'
+  | 'comparison-table'
+  | 'time-series'
+  | 'progress-tracker'
+  | 'insights-panel'
+  | 'percentage-display'
+  | 'counter-display';
 
 export interface DashboardCard {
   id: string;
@@ -52,6 +60,56 @@ interface DraggableDashboardProps {
   maxColumns: number;
   isEditMode: boolean;
   isAdminMode: boolean;
+  cards: DashboardCard[];
+  setCards: React.Dispatch<React.SetStateAction<DashboardCard[]>>;
+}
+
+interface DroppableDashboardGridProps {
+  effectiveColumns: number;
+  isEditMode: boolean;
+  cards: DashboardCard[];
+  isAdminMode: boolean;
+  selectedLGA: LGA | null;
+  onLGAChange: (lga: LGA | null) => void;
+}
+
+function DroppableDashboardGrid({
+  effectiveColumns,
+  isEditMode,
+  cards,
+  isAdminMode,
+  selectedLGA,
+  onLGAChange
+}: DroppableDashboardGridProps) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: 'dashboard-grid',
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`dashboard-grid ${isEditMode ? 'edit-mode' : ''} ${isOver ? 'bg-primary/5 border-2 border-dashed border-primary' : ''}`}
+      style={{
+        gridTemplateColumns: `repeat(${effectiveColumns}, 1fr)`,
+        '--effective-columns': effectiveColumns,
+        minHeight: isOver ? '200px' : 'auto',
+        transition: 'all 0.2s ease'
+      } as React.CSSProperties}
+      suppressHydrationWarning={true}
+    >
+      {cards.map((card) => (
+        <DraggableCard
+          key={card.id}
+          card={card}
+          isEditMode={isEditMode}
+          isAdminMode={isAdminMode}
+          selectedLGA={selectedLGA}
+          onLGAChange={onLGAChange}
+          effectiveColumns={effectiveColumns}
+        />
+      ))}
+    </div>
+  );
 }
 
 // Default card configuration
@@ -115,7 +173,7 @@ const defaultCards: DashboardCard[] = [
     id: 'building-approvals-chart',
     type: 'building-approvals-chart',
     title: 'Building Approvals Trends',
-    size: 'small',
+    size: 'medium',
     category: 'charts',
     gridArea: 'building-chart'
   },
@@ -123,7 +181,7 @@ const defaultCards: DashboardCard[] = [
     id: 'market-overview',
     type: 'market-overview',
     title: 'Market Overview',
-    size: 'medium',
+    size: 'large',
     category: 'charts',
     gridArea: 'market-overview'
   },
@@ -155,12 +213,20 @@ const defaultCards: DashboardCard[] = [
     category: 'metrics',
     gridArea: 'regional-comparison'
   },
+  {
+    id: 'data-freshness',
+    type: 'data-freshness',
+    title: 'Data Freshness',
+    size: 'small',
+    category: 'metrics',
+    gridArea: 'data-freshness'
+  },
 
   // Duplicated cards using ABS Census 2024 data from Mosaic_pro
   {
     id: 'abs-geography-search',
     type: 'abs-geography-search',
-    title: 'ABS Geography Search',
+    title: 'Secondary Search',
     size: 'small',
     category: 'lga',
     gridArea: 'abs-geography-search'
@@ -175,101 +241,52 @@ const defaultCards: DashboardCard[] = [
   },
 ];
 
-export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode }: DraggableDashboardProps) {
-  const [cards, setCards] = useState<DashboardCard[]>(defaultCards);
-  const [activeCard, setActiveCard] = useState<DashboardCard | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // 8px movement before drag starts
-      },
-    })
-  );
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    const activeCard = cards.find(card => card.id === active.id);
-    setActiveCard(activeCard || null);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveCard(null);
-
-    if (!over || active.id === over.id) return;
-
-    setCards(currentCards => {
-      const activeIndex = currentCards.findIndex(card => card.id === active.id);
-      const overIndex = currentCards.findIndex(card => card.id === over.id);
-
-      const newCards = [...currentCards];
-      const [movedCard] = newCards.splice(activeIndex, 1);
-      newCards.splice(overIndex, 0, movedCard);
-
-      // Save layout to localStorage
-      localStorage.setItem('dashboard-layout', JSON.stringify(newCards));
-      
-      return newCards;
-    });
-  };
+export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode, cards, setCards }: DraggableDashboardProps) {
 
   // Calculate effective columns based on screen size and max setting
   const getEffectiveColumns = React.useCallback(() => {
-    if (typeof window === 'undefined') return 1;
-    
+    if (typeof window === 'undefined') return Math.min(4, maxColumns);
+
     const width = window.innerWidth;
     let naturalColumns = 1;
-    
+
     if (width >= 3440) naturalColumns = 6;
     else if (width >= 2560) naturalColumns = 5;
     else if (width >= 1920) naturalColumns = 4;
     else if (width >= 1024) naturalColumns = 3;
     else if (width >= 768) naturalColumns = 2;
     else naturalColumns = 1;
-    
+
     return Math.min(naturalColumns, maxColumns);
   }, [maxColumns]);
 
-  // Force re-render when window resizes or maxColumns changes
-  const [effectiveColumns, setEffectiveColumns] = React.useState(1);
+  // Use a consistent initial value for both server and client to prevent hydration mismatch
+  const [effectiveColumns, setEffectiveColumns] = React.useState(4);
+  const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    // Only update columns after mount to prevent hydration mismatch
+    if (!mounted) return;
+
     const updateColumns = () => {
       const newColumns = getEffectiveColumns();
       console.log('Updating columns:', { width: window.innerWidth, maxColumns, naturalColumns: Math.min(6, Math.max(1, Math.floor(window.innerWidth / 350))), effectiveColumns: newColumns });
       setEffectiveColumns(newColumns);
     };
 
-    updateColumns(); // Initial calculation
-    
+    // Update columns immediately after mount
+    updateColumns();
+
     window.addEventListener('resize', updateColumns);
-    return () => window.removeEventListener('resize', updateColumns);
-  }, [getEffectiveColumns]);
-
-  // Load saved layout on component mount
-  React.useEffect(() => {
-    const savedLayout = localStorage.getItem('dashboard-layout');
-    if (savedLayout) {
-      try {
-        const parsedLayout = JSON.parse(savedLayout);
-        setCards(parsedLayout);
-      } catch (error) {
-        console.error('Failed to load saved dashboard layout:', error);
-      }
-    }
-  }, []);
-
-  // Listen for reset layout event from parent
-  React.useEffect(() => {
-    const handleResetLayout = () => {
-      setCards(defaultCards);
-      localStorage.removeItem('dashboard-layout');
+    return () => {
+      window.removeEventListener('resize', updateColumns);
     };
+  }, [getEffectiveColumns, maxColumns, mounted]);
 
-    window.addEventListener('resetDashboardLayout', handleResetLayout);
-    return () => window.removeEventListener('resetDashboardLayout', handleResetLayout);
-  }, []);
 
 
   // Group cards by category for better organization
@@ -295,50 +312,16 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
       )}
 
       <div suppressHydrationWarning={true}>
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
         <SortableContext items={cards.map(card => card.id)} strategy={rectSortingStrategy}>
-          <div 
-            className={`dashboard-grid ${isEditMode ? 'edit-mode' : ''}`} 
-            style={{
-              gridTemplateColumns: `repeat(${effectiveColumns}, 1fr)`,
-              '--effective-columns': effectiveColumns
-            } as React.CSSProperties}
-          >
-            {cards.map((card) => (
-              <DraggableCard
-                key={card.id}
-                card={card}
-                isEditMode={isEditMode}
-                isAdminMode={isAdminMode}
-                selectedLGA={selectedLGA}
-                onLGAChange={onLGAChange}
-                effectiveColumns={effectiveColumns}
-              />
-            ))}
-          </div>
+          <DroppableDashboardGrid
+            effectiveColumns={effectiveColumns}
+            isEditMode={isEditMode}
+            cards={cards}
+            isAdminMode={isAdminMode}
+            selectedLGA={selectedLGA}
+            onLGAChange={onLGAChange}
+          />
         </SortableContext>
-
-        <DragOverlay>
-          {activeCard ? (
-            <div className="dashboard-card-overlay">
-              <DraggableCard
-                card={activeCard}
-                isEditMode={true}
-                isAdminMode={isAdminMode}
-                selectedLGA={selectedLGA}
-                onLGAChange={onLGAChange}
-                isDragging={true}
-                effectiveColumns={effectiveColumns}
-              />
-            </div>
-          ) : null}
-        </DragOverlay>
-        </DndContext>
       </div>
 
       {/* Custom Styles */}

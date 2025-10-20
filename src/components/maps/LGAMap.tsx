@@ -154,7 +154,54 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
       try {
         setBoundaryError(null);
         console.log('Fetching boundary data for:', selectedLGA.name);
-        
+
+        // First check if LGA has geometry from database
+        if (selectedLGA.geometry) {
+          console.log('Using database geometry for:', selectedLGA.name);
+
+          // Parse geometry if it's a string
+          let geometry = selectedLGA.geometry;
+          if (typeof geometry === 'string') {
+            geometry = JSON.parse(geometry);
+          }
+
+          // Calculate bounds from geometry
+          let bounds: [[number, number], [number, number]] = [[-37.0, 141.0], [-28.5, 153.0]];
+          let center: [number, number] = [-32.5, 147.0];
+
+          if (geometry && geometry.coordinates) {
+            const coords = geometry.type === 'MultiPolygon'
+              ? geometry.coordinates.flat(2)
+              : geometry.coordinates.flat(1);
+
+            if (coords.length > 0) {
+              const lngs = coords.map((coord: number[]) => coord[0]).filter((lng: number) => !isNaN(lng));
+              const lats = coords.map((coord: number[]) => coord[1]).filter((lat: number) => !isNaN(lat));
+
+              if (lngs.length > 0 && lats.length > 0) {
+                const minLng = Math.min(...lngs);
+                const maxLng = Math.max(...lngs);
+                const minLat = Math.min(...lats);
+                const maxLat = Math.max(...lats);
+
+                bounds = [[minLat, minLng], [maxLat, maxLng]];
+                center = [(minLat + maxLat) / 2, (minLng + maxLng) / 2];
+              }
+            }
+          }
+
+          setBoundaryData({
+            name: selectedLGA.name,
+            code: selectedLGA.id,
+            boundary: geometry,
+            center: center,
+            bounds: bounds,
+            urbanity: 'Database'
+          });
+          console.log('Database boundary data loaded successfully:', selectedLGA.name);
+          return;
+        }
+
         // Handle NSW state-wide view
         if (selectedLGA.id === 'nsw-state') {
           try {
@@ -381,7 +428,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
             .bindPopup(`
               <strong>${boundaryData.name}</strong><br/>
               <em>Code: ${boundaryData.code}</em><br/>
-              <small>${boundaryData.urbanity === 'S' ? 'State-wide View<br/>Official ABS ASGS2021 Boundary Data (Mainland Only)' : boundaryData.urbanity === 'U' ? 'Urban LGA<br/>NSW Spatial Services Data' : 'Rural LGA<br/>NSW Spatial Services Data'}</small>
+              <small>${boundaryData.urbanity === 'Database' ? 'LGA Boundary<br/>Azure PostgreSQL Database' : boundaryData.urbanity === 'S' ? 'State-wide View<br/>Official ABS ASGS2021 Boundary Data (Mainland Only)' : boundaryData.urbanity === 'U' ? 'Urban LGA<br/>NSW Spatial Services Data' : 'Rural LGA<br/>NSW Spatial Services Data'}</small>
             `)
             .addTo(mapRef.current);
         }
@@ -462,7 +509,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
       )}
       {selectedLGA && boundaryData && (
         <div className="text-xs text-green-600 mt-2 text-center">
-          {boundaryData.urbanity ? `${boundaryData.urbanity === 'U' ? 'Urban' : 'Rural'} LGA: ` : ''}{boundaryData.name} - Official NSW Spatial Data
+          {boundaryData.urbanity === 'Database' ? `${boundaryData.name} - Azure PostgreSQL Database` : boundaryData.urbanity ? `${boundaryData.urbanity === 'U' ? 'Urban' : 'Rural'} LGA: ${boundaryData.name} - Official NSW Spatial Data` : `${boundaryData.name} - Official NSW Spatial Data`}
         </div>
       )}
     </>

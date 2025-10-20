@@ -13,6 +13,8 @@ export interface LGA {
   housingTarget?: number;
   urbanity?: string; // 'U' for Urban, 'R' for Rural
   councilName?: string; // Full council name
+  geometry?: any; // GeoJSON geometry object
+  area?: number; // Area in square kilometers
 }
 
 interface LGALookupProps {
@@ -20,79 +22,6 @@ interface LGALookupProps {
   selectedLGA: LGA | null;
 }
 
-// This will be replaced by database data
-const FALLBACK_NSW_LGAS: LGA[] = [
-  // Sydney Metropolitan
-  { id: 'sydney', name: 'Sydney', region: 'Sydney Metro', population: 240000 },
-  { id: 'parramatta', name: 'Parramatta', region: 'Sydney Metro', population: 249000 },
-  { id: 'blacktown', name: 'Blacktown', region: 'Sydney Metro', population: 387000 },
-  { id: 'penrith', name: 'Penrith', region: 'Sydney Metro', population: 215000 },
-  { id: 'liverpool', name: 'Liverpool', region: 'Sydney Metro', population: 230000 },
-  { id: 'campbelltown', name: 'Campbelltown', region: 'Sydney Metro', population: 180000 },
-  { id: 'fairfield', name: 'Fairfield', region: 'Sydney Metro', population: 208000 },
-  { id: 'bankstown', name: 'Canterbury-Bankstown', region: 'Sydney Metro', population: 380000 },
-  { id: 'georges-river', name: 'Georges River', region: 'Sydney Metro', population: 165000 },
-  { id: 'sutherland', name: 'Sutherland Shire', region: 'Sydney Metro', population: 230000 },
-  { id: 'bayside', name: 'Bayside', region: 'Sydney Metro', population: 170000 },
-  { id: 'randwick', name: 'Randwick', region: 'Sydney Metro', population: 150000 },
-  { id: 'waverley', name: 'Waverley', region: 'Sydney Metro', population: 75000 },
-  { id: 'woollahra', name: 'Woollahra', region: 'Sydney Metro', population: 60000 },
-  { id: 'inner-west', name: 'Inner West', region: 'Sydney Metro', population: 195000 },
-  { id: 'canada-bay', name: 'Canada Bay', region: 'Sydney Metro', population: 95000 },
-  { id: 'strathfield', name: 'Strathfield', region: 'Sydney Metro', population: 42000 },
-  { id: 'burwood', name: 'Burwood', region: 'Sydney Metro', population: 42000 },
-  { id: 'ryde', name: 'Ryde', region: 'Sydney Metro', population: 120000 },
-  { id: 'hunters-hill', name: 'Hunters Hill', region: 'Sydney Metro', population: 14000 },
-  { id: 'lane-cove', name: 'Lane Cove', region: 'Sydney Metro', population: 38000 },
-  { id: 'willoughby', name: 'Willoughby', region: 'Sydney Metro', population: 75000 },
-  { id: 'north-sydney', name: 'North Sydney', region: 'Sydney Metro', population: 70000 },
-  { id: 'mosman', name: 'Mosman', region: 'Sydney Metro', population: 30000 },
-  { id: 'manly', name: 'Northern Beaches', region: 'Sydney Metro', population: 265000 },
-  { id: 'ku-ring-gai', name: 'Ku-ring-gai', region: 'Sydney Metro', population: 125000 },
-  { id: 'hornsby', name: 'Hornsby', region: 'Sydney Metro', population: 165000 },
-  { id: 'the-hills', name: 'The Hills Shire', region: 'Sydney Metro', population: 175000 },
-  { id: 'blacktown-west', name: 'Blacktown', region: 'Sydney Metro', population: 387000 },
-  { id: 'blue-mountains', name: 'Blue Mountains', region: 'Sydney Metro', population: 82000 },
-
-  // Central Coast
-  { id: 'central-coast', name: 'Central Coast', region: 'Central Coast', population: 350000 },
-
-  // Hunter
-  { id: 'newcastle', name: 'Newcastle', region: 'Hunter', population: 167000 },
-  { id: 'lake-macquarie', name: 'Lake Macquarie', region: 'Hunter', population: 215000 },
-  { id: 'maitland', name: 'Maitland', region: 'Hunter', population: 90000 },
-  { id: 'cessnock', name: 'Cessnock', region: 'Hunter', population: 60000 },
-  { id: 'port-stephens', name: 'Port Stephens', region: 'Hunter', population: 74000 },
-  { id: 'singleton', name: 'Singleton', region: 'Hunter', population: 24000 },
-  { id: 'muswellbrook', name: 'Muswellbrook', region: 'Hunter', population: 17000 },
-
-  // Illawarra
-  { id: 'wollongong', name: 'Wollongong', region: 'Illawarra', population: 220000 },
-  { id: 'shellharbour', name: 'Shellharbour', region: 'Illawarra', population: 75000 },
-  { id: 'kiama', name: 'Kiama', region: 'Illawarra', population: 23000 },
-  { id: 'shoalhaven', name: 'Shoalhaven', region: 'Illawarra', population: 110000 },
-  { id: 'wingecarribee', name: 'Wingecarribee', region: 'Illawarra', population: 50000 },
-
-  // Central West
-  { id: 'bathurst', name: 'Bathurst Regional', region: 'Central West', population: 45000 },
-  { id: 'orange', name: 'Orange', region: 'Central West', population: 42000 },
-  { id: 'dubbo', name: 'Dubbo Regional', region: 'Central West', population: 55000 },
-  { id: 'wagga-wagga', name: 'Wagga Wagga', region: 'Central West', population: 70000 },
-  { id: 'albury', name: 'Albury', region: 'Central West', population: 55000 },
-
-  // North Coast
-  { id: 'tweed', name: 'Tweed', region: 'North Coast', population: 100000 },
-  { id: 'byron', name: 'Byron', region: 'North Coast', population: 35000 },
-  { id: 'ballina', name: 'Ballina', region: 'North Coast', population: 47000 },
-  { id: 'lismore', name: 'Lismore', region: 'North Coast', population: 45000 },
-  { id: 'richmond-valley', name: 'Richmond Valley', region: 'North Coast', population: 23000 },
-  { id: 'coffs-harbour', name: 'Coffs Harbour', region: 'North Coast', population: 78000 },
-  { id: 'port-macquarie-hastings', name: 'Port Macquarie-Hastings', region: 'North Coast', population: 85000 },
-
-  // Far West
-  { id: 'broken-hill', name: 'Broken Hill', region: 'Far West', population: 18000 },
-  { id: 'unincorporated-far-west', name: 'Unincorporated Far West', region: 'Far West', population: 5000 }
-];
 
 // Helper function to convert text to proper title case
 const toTitleCase = (str: string): string => {
@@ -131,22 +60,22 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
       try {
         setIsLoading(true);
 
-        // Try ArcGIS service first (preferred source - official ABS ASGS2021)
-        let response = await fetch('/api/arcgis-lga');
+        // Only use database connection - no fallbacks
+        const response = await fetch('/api/lga-database?action=list');
 
         // Check if component unmounted
         if (cancelled) return;
 
-        let data = await response.json();
+        const data = await response.json();
 
         if (response.ok && data.lgas && data.lgas.length > 0) {
-          // Transform ArcGIS data to our format
+          // Transform database data to our format
           const transformedLGAs: LGA[] = data.lgas.map((lga: any) => ({
             id: lga.code?.toString() || lga.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
             name: cleanLGAName(toTitleCase(lga.name)),
-            region: lga.area_sqkm > 5000 ? 'Rural LGA' : 'Urban LGA',
-            population: null, // Will be populated from database if available
-            urbanity: lga.area_sqkm > 5000 ? 'R' : 'U', // Based on area size
+            region: lga.region || 'NSW',
+            population: null, // Can be populated later if needed
+            urbanity: 'U', // Default to Urban
             councilName: lga.name
           }));
 
@@ -163,100 +92,21 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
           if (!cancelled) {
             setLgaData([nswStateWide, ...transformedLGAs]);
             setError(null);
-            console.log(`Loaded ${transformedLGAs.length} LGAs from ArcGIS ASGS2021 service`);
+            console.log(`Loaded ${transformedLGAs.length} LGAs from Azure PostgreSQL database`);
           }
         } else {
-          // Fallback to ABS Census database
-          console.warn('ArcGIS service not available, trying ABS Census database...');
-          response = await fetch('/api/abs-census-lga');
-
-          if (cancelled) return;
-
-          data = await response.json();
-
-          if (response.ok && data.lgas && data.lgas.length > 0) {
-            // Transform ABS census data to our format
-            const transformedLGAs: LGA[] = data.lgas.map((lga: any) => ({
-              id: lga.code?.toString() || lga.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-              name: cleanLGAName(toTitleCase(lga.name)),
-              region: lga.state === 'New South Wales' ? (lga.area_sqkm > 5000 ? 'Rural LGA' : 'Urban LGA') : `${lga.state} LGA`,
-              population: null, // Will be populated from database if available
-              urbanity: lga.area_sqkm > 5000 ? 'R' : 'U', // Rough estimate based on area
-              councilName: lga.name
-            }));
-
-            // Add NSW state-wide option at the top for NSW LGAs
-            const nswLGAs = transformedLGAs.filter(lga => lga.region.includes('New South Wales') || lga.region.includes('LGA'));
-            if (nswLGAs.length > 0) {
-              const nswStateWide: LGA = {
-                id: 'nsw-state',
-                name: 'New South Wales (State-wide)',
-                region: 'State',
-                population: null,
-                urbanity: 'S', // 'S' for State
-                councilName: 'NSW Government'
-              };
-
-              if (!cancelled) {
-                setLgaData([nswStateWide, ...transformedLGAs]);
-                setError('Using ABS Census database (ArcGIS unavailable)');
-                console.log(`Loaded ${transformedLGAs.length} LGAs from ABS Census 2024`);
-              }
-            } else {
-              if (!cancelled) {
-                setLgaData(transformedLGAs);
-                setError('ABS data available (non-NSW LGAs, ArcGIS unavailable)');
-                console.log(`Loaded ${transformedLGAs.length} LGAs from ABS Census 2024`);
-              }
-            }
-          } else {
-            // Fallback to NSW Spatial Services
-            console.warn('ABS Census data not available, trying NSW Spatial Services...');
-            response = await fetch('/api/nsw-boundaries');
-
-            if (cancelled) return;
-
-            data = await response.json();
-
-            if (response.ok && data.lgas && data.lgas.length > 0) {
-              // Transform NSW spatial data to our format
-              const transformedLGAs: LGA[] = data.lgas.map((lga: any, index: number) => ({
-                id: lga.code?.toString() || lga.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-                name: cleanLGAName(toTitleCase(lga.name)),
-                region: lga.urbanity === 'U' ? 'Urban LGA' : 'Rural LGA',
-                population: null, // Will be populated from database if available
-                urbanity: lga.urbanity,
-                councilName: toTitleCase(lga.council)
-              }));
-
-              // Add NSW state-wide option at the top
-              const nswStateWide: LGA = {
-                id: 'nsw-state',
-                name: 'New South Wales (State-wide)',
-                region: 'State',
-                population: null,
-                urbanity: 'S', // 'S' for State
-                councilName: 'NSW Government'
-              };
-
-              if (!cancelled) {
-                setLgaData([nswStateWide, ...transformedLGAs]);
-                setError('Using NSW Spatial Services (ArcGIS and ABS unavailable)');
-                console.log(`Loaded ${transformedLGAs.length} LGAs from NSW Spatial Services`);
-              }
-            } else {
-              // Final fallback to hardcoded data
-              console.warn('NSW Spatial not available, using fallback data...');
-              setLgaData(FALLBACK_NSW_LGAS);
-              setError('Using offline data (all services unavailable)');
-            }
+          // Database connection failed
+          if (!cancelled) {
+            setLgaData([]);
+            setError(data.error || 'Database connection failed');
+            console.error('Failed to load LGAs from database:', data.error);
           }
         }
       } catch (err) {
         if (cancelled) return;
-        console.error('Error fetching LGAs:', err);
-        setLgaData(FALLBACK_NSW_LGAS);
-        setError('Using offline data');
+        console.error('Error fetching LGAs from database:', err);
+        setLgaData([]);
+        setError('Database connection error');
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -276,14 +126,14 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
   const [hasAutoSelected, setHasAutoSelected] = useState(false);
 
   useEffect(() => {
-    if (!selectedLGA && lgaData.length > 0 && !isLoading && !hasAutoSelected) {
+    if (!selectedLGA && lgaData.length > 0 && !isLoading && !hasAutoSelected && !error) {
       const nswStateWide = lgaData.find(lga => lga.id === 'nsw-state');
       if (nswStateWide) {
         onLGAChange(nswStateWide);
         setHasAutoSelected(true);
       }
     }
-  }, [selectedLGA, lgaData, isLoading, hasAutoSelected]);
+  }, [selectedLGA, lgaData, isLoading, hasAutoSelected, error]);
 
   // Filter LGAs based on search term
   const filteredLGAs = useMemo(() => {
@@ -316,7 +166,32 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
     return sortedGroups;
   }, [filteredLGAs]);
 
-  const handleLGASelect = (lga: LGA) => {
+  const handleLGASelect = async (lga: LGA) => {
+    if (lga && lga.id !== 'nsw-state') {
+      // Fetch additional details including geometry and area from database
+      try {
+        const response = await fetch(`/api/lga-database?action=details&lgaCode=${lga.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.lga) {
+            // Enhance the LGA object with geometry and area
+            const enhancedLGA = {
+              ...lga,
+              geometry: data.lga.geometry,
+              area: data.lga.area
+            };
+            onLGAChange(enhancedLGA);
+            setIsDropdownOpen(false);
+            setSearchTerm('');
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch LGA details:', error);
+      }
+    }
+
+    // Fallback to basic LGA data
     onLGAChange(lga);
     setIsDropdownOpen(false);
     setSearchTerm('');
@@ -333,7 +208,7 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
         <div className="flex items-center gap-3">
           <MapPin className="h-6 w-6 text-primary" />
           <div>
-            <CardTitle className="text-xl">Geography Search</CardTitle>
+            <CardTitle className="text-xl">Secondary Search</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               Filter all housing data by NSW LGA
             </p>

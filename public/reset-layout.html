@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reset Dashboard Layout</title>
+</head>
+<body>
+    <h1>Reset Dashboard Layout</h1>
+    <button onclick="resetLayout()">Clear Saved Layout</button>
+    <div id="status"></div>
+
+    <script>
+        function resetLayout() {
+            localStorage.removeItem('dashboard-layout');
+            document.getElementById('status').innerHTML = 'Layout cleared! <a href="/dashboard">Go to dashboard</a>';
+        }
+
+        // Auto-reset and redirect
+        resetLayout();
+        setTimeout(() => {
+            window.location.href = '/dashboard';
+        }, 1000);
+    </script>
+</body>
+</html>
