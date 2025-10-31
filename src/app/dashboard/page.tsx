@@ -36,12 +36,12 @@ const defaultCards: DashboardCard[] = [
     gridArea: 'lga-details'
   },
   {
-    id: 'lga-insights',
-    type: 'lga-insights',
-    title: 'LGA Map',
+    id: 'abs-lga-map',
+    type: 'abs-lga-map',
+    title: 'ABS LGA Map',
     size: 'small',
     category: 'lga',
-    gridArea: 'lga-insights'
+    gridArea: 'abs-lga-map'
   },
 
   // Metrics Section
@@ -126,16 +126,6 @@ const defaultCards: DashboardCard[] = [
     gridArea: 'data-freshness'
   },
 
-  // Duplicated cards using ABS Census 2024 data from Mosaic_pro
-  {
-    id: 'abs-lga-map',
-    type: 'abs-lga-map',
-    title: 'ABS LGA Map',
-    size: 'small',
-    category: 'lga',
-    gridArea: 'abs-lga-map'
-  },
-
   // Test Card
   {
     id: 'test-card',
@@ -144,16 +134,6 @@ const defaultCards: DashboardCard[] = [
     size: 'small',
     category: 'lga',
     gridArea: 'test-card'
-  },
-
-  // Secondary Search Card
-  {
-    id: 'lga-lookup',
-    type: 'lga-lookup',
-    title: 'Secondary Search',
-    size: 'small',
-    category: 'lga',
-    gridArea: 'lga-lookup'
   },
 ];
 
@@ -367,12 +347,6 @@ export default function DashboardPage() {
         <AdminToolbar isVisible={isAdminMode} />
 
         <div className="w-full px-6 py-8">
-          {/* Main Dashboard Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Housing Market Analytics</h1>
-            <p className="text-lg text-muted-foreground">Comprehensive housing data analysis and market intelligence</p>
-          </div>
-
           {/* Draggable Dashboard */}
           <DraggableDashboard
             selectedLGA={selectedLGA}

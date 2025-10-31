@@ -329,7 +329,7 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
         .dashboard-grid {
           display: grid;
           grid-auto-rows: 20px; /* Small row units for fine-grained control */
-          grid-auto-flow: dense;
+          grid-auto-flow: row;
           column-gap: 2rem;
           row-gap: 1rem;
           width: 100%;
