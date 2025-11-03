@@ -55,12 +55,12 @@ async function getBuildingApprovalsData(lgaName?: string | null) {
         year,
         month,
         building_type,
-        CAST(value AS NUMERIC) as value
+        value::NUMERIC as value
       FROM public.abs_building_approvals_lga
       WHERE (year > 2021 OR (year = 2021 AND month >= 7))
         AND (year < 2024 OR (year = 2024 AND month <= 10))
         AND value IS NOT NULL
-        AND value <> ''
+        AND value > 0
     ),
     lga_mapping AS (
       SELECT DISTINCT

@@ -866,8 +866,8 @@ export function DraggableCard({
 
       // Special override for kpi-cards card
       if (card.id === 'kpi-cards') {
-        setRowSpan(3);
-        console.log(`🔍 Card: ${card.id} (size: ${card.size}) - FORCED to 3 rows`);
+        setRowSpan(4);
+        console.log(`🔍 Card: ${card.id} (size: ${card.size}) - FORCED to 4 rows`);
         return;
       }
 
