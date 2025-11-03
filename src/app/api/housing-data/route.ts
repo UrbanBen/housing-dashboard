@@ -27,21 +27,40 @@ export async function GET(request: Request) {
 }
 
 async function getBuildingApprovalsData(lgaName?: string | null) {
-  // Get data from July 2021 to October 2024
+  // Get data from July 2021 to October 2024 (all 40 months)
   // Database: mosaic_pro, Schema: public, Table: abs_building_approvals_lga
-  let queryText = `
-    WITH recent_data AS (
+
+  // Build the query with conditional LGA filtering
+  const queryText = `
+    WITH date_range AS (
+      -- Generate all months from July 2021 to October 2024 (40 months total)
+      SELECT
+        year,
+        month,
+        year || '-' || LPAD(month::text, 2, '0') as period
+      FROM (
+        SELECT
+          EXTRACT(YEAR FROM d)::INTEGER as year,
+          EXTRACT(MONTH FROM d)::INTEGER as month
+        FROM generate_series(
+          '2021-07-01'::date,
+          '2024-10-01'::date,
+          '1 month'::interval
+        ) AS d
+      ) dates
+    ),
+    recent_data AS (
       SELECT
         lga_code,
         year,
         month,
         building_type,
-        value,
-        year * 100 + month as period_num
+        CAST(value AS NUMERIC) as value
       FROM public.abs_building_approvals_lga
       WHERE (year > 2021 OR (year = 2021 AND month >= 7))
         AND (year < 2024 OR (year = 2024 AND month <= 10))
-        AND value > 0
+        AND value IS NOT NULL
+        AND value <> ''
     ),
     lga_mapping AS (
       SELECT DISTINCT
@@ -49,38 +68,34 @@ async function getBuildingApprovalsData(lgaName?: string | null) {
         ROW_NUMBER() OVER (ORDER BY lga_name) as synthetic_lga_code
       FROM public.nsw_lga_housing_targets
       WHERE lga_name IS NOT NULL
+      ${lgaName ? `AND lga_name ILIKE $1` : ''}
     ),
     monthly_totals AS (
-      SELECT 
+      SELECT
         rd.year,
         rd.month,
-        rd.lga_code,
-        SUM(CAST(rd.value AS INTEGER)) as total_approvals,
-        MAX(lm.lga_name) as lga_name
+        SUM(rd.value) as total_approvals,
+        STRING_AGG(DISTINCT lm.lga_name, ', ') as lga_names
       FROM recent_data rd
       LEFT JOIN lga_mapping lm ON CAST(lm.synthetic_lga_code AS TEXT) = CAST(rd.lga_code AS TEXT)
-      GROUP BY rd.year, rd.month, rd.lga_code
-      HAVING SUM(rd.value) > 0
+      ${lgaName ? 'WHERE lm.lga_name IS NOT NULL' : ''}
+      GROUP BY rd.year, rd.month
     )
-    SELECT 
-      year,
-      month,
-      lga_code,
-      total_approvals,
-      lga_name,
-      (year || '-' || LPAD(month::text, 2, '0')) as period
-    FROM monthly_totals
+    SELECT
+      dr.year,
+      dr.month,
+      COALESCE(mt.total_approvals, 0) as total_approvals,
+      mt.lga_names as lga_name,
+      dr.period
+    FROM date_range dr
+    LEFT JOIN monthly_totals mt ON dr.year = mt.year AND dr.month = mt.month
+    ORDER BY dr.year ASC, dr.month ASC
   `;
-  
+
   const params: any[] = [];
-  
   if (lgaName) {
-    // Since we don't have a direct mapping, we'll return a message about this limitation
-    queryText += ` WHERE lga_name ILIKE $1`;
     params.push(`%${lgaName}%`);
   }
-  
-  queryText += ` ORDER BY year ASC, month ASC LIMIT 500`;
 
   const result = await query(queryText, params);
 
