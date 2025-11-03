@@ -67,7 +67,7 @@ const defaultCards: DashboardCard[] = [
     id: 'housing-pipeline',
     type: 'housing-pipeline',
     title: 'Housing Development Pipeline',
-    size: 'xl',
+    size: 'large',
     category: 'charts',
     gridArea: 'housing-pipeline'
   },
@@ -85,7 +85,7 @@ const defaultCards: DashboardCard[] = [
     id: 'market-overview',
     type: 'market-overview',
     title: 'Market Overview',
-    size: 'large',
+    size: 'medium',
     category: 'charts',
     gridArea: 'market-overview'
   },
@@ -197,15 +197,26 @@ export default function DashboardPage() {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    console.log('Drag end:', event);
+    console.log('🎯 Drag end event:', {
+      activeId: event.active.id,
+      overId: event.over?.id,
+      activeData: event.active.data.current,
+      overData: event.over?.data.current
+    });
+
     const { active, over } = event;
     setActiveTemplate(null);
     setActiveCard(null);
 
-    if (!over) return;
+    if (!over) {
+      console.log('⚠️ No drop target detected');
+      return;
+    }
 
     // Handle dropping templates from admin toolbar
     if (active.data.current?.type === 'template') {
+      console.log('📦 Template drop detected:', active.data.current.template);
+
       // Check if dropped on dashboard grid or on another card
       if (over.id === 'dashboard-grid' || cards.some(card => card.id === over.id)) {
         const template = active.data.current.template;
@@ -218,11 +229,16 @@ export default function DashboardPage() {
           ...template.defaultConfig
         };
 
+        console.log('✅ Adding new card:', newCard);
+
         setCards(currentCards => {
           const newCards = [...currentCards, newCard];
           localStorage.setItem('dashboard-layout', JSON.stringify(newCards));
+          console.log('💾 Updated cards:', newCards.length, 'cards');
           return newCards;
         });
+      } else {
+        console.log('❌ Drop target not valid:', over.id);
       }
       return;
     }
@@ -248,7 +264,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className={`min-h-screen ${isAdminMode ? 'bg-purple-900' : 'bg-black'}`}>
+    <div className="min-h-screen bg-black">
       {/* Navigation Bar */}
       <nav className="border-b border-border bg-card/50 backdrop-blur">
         <div className="container mx-auto px-6 py-4">
@@ -275,9 +291,9 @@ export default function DashboardPage() {
 
                 {isAdminMode && (
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
-                    <span className="text-sm font-medium text-purple-600">
-                      Admin Mode - Click any card to configure data source
+                    <div className="w-2 h-2 rounded-full bg-[#00FF41] animate-pulse"></div>
+                    <span className="text-sm font-medium text-[#00FF41]">
+                      Edit Mode - Drag cards from sidebar
                     </span>
                   </div>
                 )}
@@ -307,24 +323,14 @@ export default function DashboardPage() {
                   Reset Layout
                 </button>
                 <button
-                  onClick={toggleEditMode}
-                  className={`text-xs px-3 py-1 rounded transition-colors ${
-                    isEditMode
-                      ? 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30'
-                      : 'bg-primary/20 text-primary hover:bg-primary/30'
-                  }`}
-                >
-                  {isEditMode ? 'Exit Edit' : 'Edit Layout'}
-                </button>
-                <button
                   onClick={() => setIsAdminMode(!isAdminMode)}
                   className={`text-xs px-3 py-1 rounded transition-colors ${
                     isAdminMode
-                      ? 'bg-purple-500/20 text-purple-600 hover:bg-purple-500/30'
+                      ? 'bg-[#00FF41]/20 text-[#00FF41] hover:bg-[#00FF41]/30'
                       : 'bg-muted/20 text-muted-foreground hover:bg-muted/30'
                   }`}
                 >
-                  {isAdminMode ? 'Exit Admin' : 'Admin Mode'}
+                  {isAdminMode ? 'Exit Edit' : 'Edit'}
                 </button>
               </div>
               

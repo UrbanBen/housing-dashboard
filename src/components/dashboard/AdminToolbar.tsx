@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import {
   Plus,
@@ -23,7 +23,10 @@ import {
   Clock,
   FileText,
   Grid3X3,
-  Layout
+  Layout,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles
 } from "lucide-react";
 import type { DashboardCard } from './DraggableDashboard';
 
@@ -34,7 +37,7 @@ interface AdminToolbarProps {
 interface CardTemplate {
   id: string;
   title: string;
-  category: 'lga' | 'metrics' | 'charts' | 'kpi';
+  category: 'search' | 'map' | 'charts' | 'kpi' | 'data' | 'blank';
   icon: React.ComponentType<any>;
   description: string;
   defaultConfig?: Partial<DashboardCard>;
@@ -42,45 +45,61 @@ interface CardTemplate {
 
 // Available card templates and elements
 const cardTemplates: CardTemplate[] = [
-  // Blank Cards
+  // Blank Card
   {
     id: 'blank-card',
     title: 'Blank Card',
-    category: 'lga',
+    category: 'blank',
     icon: Plus,
     description: 'Empty card to configure from scratch'
   },
 
-  // Geography & Search
+  // Search Cards
   {
     id: 'geography-search',
-    title: 'Geography Search',
-    category: 'lga',
+    title: 'Search Card',
+    category: 'search',
     icon: Search,
     description: 'LGA/location search and selection'
   },
   {
+    id: 'advanced-search',
+    title: 'Advanced Search',
+    category: 'search',
+    icon: Sparkles,
+    description: 'Multi-criteria search with filters'
+  },
+
+  // Map Cards
+  {
     id: 'interactive-map',
-    title: 'Interactive Map',
-    category: 'lga',
+    title: 'Map Card',
+    category: 'map',
     icon: Map,
-    description: 'Zoomable map with LGA boundaries'
+    description: 'Interactive map with boundaries'
   },
   {
     id: 'location-details',
     title: 'Location Details',
-    category: 'lga',
+    category: 'map',
     icon: MapPin,
-    description: 'Detailed information panel for selected area'
+    description: 'Detailed area information'
+  },
+  {
+    id: 'heat-map',
+    title: 'Heat Map',
+    category: 'map',
+    icon: Activity,
+    description: 'Data density visualization'
   },
 
-  // Charts & Visualizations
+  // Chart Cards
   {
     id: 'bar-chart',
     title: 'Bar Chart',
     category: 'charts',
     icon: BarChart3,
-    description: 'Vertical or horizontal bar comparisons'
+    description: 'Vertical or horizontal bars'
   },
   {
     id: 'line-chart',
@@ -94,124 +113,159 @@ const cardTemplates: CardTemplate[] = [
     title: 'Pie Chart',
     category: 'charts',
     icon: PieChart,
-    description: 'Proportional breakdown visualization'
+    description: 'Proportional breakdown'
   },
   {
     id: 'trend-chart',
     title: 'Trend Analysis',
     category: 'charts',
     icon: TrendingUp,
-    description: 'Advanced trend visualization with forecasting'
+    description: 'Advanced trends with forecasting'
   },
-
-  // Metrics & KPIs
-  {
-    id: 'key-metrics',
-    title: 'Key Metrics',
-    category: 'kpi',
-    icon: Activity,
-    description: 'Important numerical indicators'
-  },
-  {
-    id: 'housing-affordability',
-    title: 'Housing Affordability',
-    category: 'metrics',
-    icon: Home,
-    description: 'Affordability ratios and indices'
-  },
-  {
-    id: 'property-values',
-    title: 'Property Values',
-    category: 'metrics',
-    icon: DollarSign,
-    description: 'Median prices and valuations'
-  },
-  {
-    id: 'population-metrics',
-    title: 'Population Data',
-    category: 'metrics',
-    icon: Users,
-    description: 'Demographics and population statistics'
-  },
-  {
-    id: 'development-stats',
-    title: 'Development Stats',
-    category: 'metrics',
-    icon: Building,
-    description: 'Housing targets and construction data'
-  },
-
-  // Data Tables & Lists
-  {
-    id: 'data-table',
-    title: 'Data Table',
-    category: 'lga',
-    icon: Grid3X3,
-    description: 'Tabular data display with sorting/filtering'
-  },
-  {
-    id: 'comparison-table',
-    title: 'Comparison Table',
-    category: 'metrics',
-    icon: Layout,
-    description: 'Side-by-side area comparisons'
-  },
-
-  // Time-based
   {
     id: 'time-series',
     title: 'Time Series',
     category: 'charts',
     icon: Calendar,
-    description: 'Historical data over time periods'
+    description: 'Historical data over periods'
   },
   {
-    id: 'progress-tracker',
-    title: 'Progress Tracker',
-    category: 'kpi',
-    icon: Clock,
-    description: 'Goal tracking with progress indicators'
+    id: 'scatter-plot',
+    title: 'Scatter Plot',
+    category: 'charts',
+    icon: Activity,
+    description: 'Correlation visualization'
   },
 
-  // Reports & Insights
+  // KPI & Metrics
   {
-    id: 'insights-panel',
-    title: 'Insights Panel',
-    category: 'lga',
-    icon: FileText,
-    description: 'AI-generated insights and summaries'
+    id: 'key-metrics',
+    title: 'Key Metrics',
+    category: 'kpi',
+    icon: Activity,
+    description: 'Important indicators'
+  },
+  {
+    id: 'housing-affordability',
+    title: 'Affordability',
+    category: 'kpi',
+    icon: Home,
+    description: 'Affordability ratios'
+  },
+  {
+    id: 'property-values',
+    title: 'Property Values',
+    category: 'kpi',
+    icon: DollarSign,
+    description: 'Median prices'
+  },
+  {
+    id: 'population-metrics',
+    title: 'Population',
+    category: 'kpi',
+    icon: Users,
+    description: 'Demographics'
+  },
+  {
+    id: 'development-stats',
+    title: 'Development',
+    category: 'kpi',
+    icon: Building,
+    description: 'Construction data'
   },
   {
     id: 'percentage-display',
-    title: 'Percentage Display',
+    title: 'Percentage',
     category: 'kpi',
     icon: Percent,
-    description: 'Large percentage/ratio displays'
+    description: 'Large % displays'
   },
   {
     id: 'counter-display',
-    title: 'Counter Display',
+    title: 'Counter',
     category: 'kpi',
     icon: Hash,
-    description: 'Large numerical counters'
+    description: 'Large numbers'
+  },
+  {
+    id: 'progress-tracker',
+    title: 'Progress',
+    category: 'kpi',
+    icon: Clock,
+    description: 'Goal tracking'
+  },
+
+  // Data Tables
+  {
+    id: 'data-table',
+    title: 'Data Table',
+    category: 'data',
+    icon: Grid3X3,
+    description: 'Sortable table'
+  },
+  {
+    id: 'comparison-table',
+    title: 'Comparison',
+    category: 'data',
+    icon: Layout,
+    description: 'Side-by-side compare'
+  },
+  {
+    id: 'insights-panel',
+    title: 'Insights',
+    category: 'data',
+    icon: FileText,
+    description: 'AI insights'
   },
 
   // Database Test
   {
     id: 'test-card',
-    title: 'Test',
-    category: 'lga',
+    title: 'DB Test',
+    category: 'data',
     icon: Database,
-    description: 'Database connection test card'
+    description: 'Connection test'
   }
 ];
 
-// Category colors for visual organization
-const categoryColors = {
-  'lga': 'bg-blue-500/10 border-blue-500/20 text-blue-700',
-  'metrics': 'bg-green-500/10 border-green-500/20 text-green-700',
-  'charts': 'bg-purple-500/10 border-purple-500/20 text-purple-700',
-  'kpi': 'bg-orange-500/10 border-orange-500/20 text-orange-700'
+// Category styling with green highlights
+const categoryStyles = {
+  'blank': {
+    bg: 'bg-zinc-900',
+    border: 'border-[#00FF41]/30',
+    text: 'text-[#00FF41]',
+    hover: 'hover:border-[#00FF41] hover:shadow-[0_0_10px_rgba(0,255,65,0.3)]'
+  },
+  'search': {
+    bg: 'bg-zinc-900',
+    border: 'border-emerald-500/30',
+    text: 'text-emerald-400',
+    hover: 'hover:border-emerald-500 hover:shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+  },
+  'map': {
+    bg: 'bg-zinc-900',
+    border: 'border-cyan-500/30',
+    text: 'text-cyan-400',
+    hover: 'hover:border-cyan-500 hover:shadow-[0_0_10px_rgba(6,182,212,0.3)]'
+  },
+  'charts': {
+    bg: 'bg-zinc-900',
+    border: 'border-violet-500/30',
+    text: 'text-violet-400',
+    hover: 'hover:border-violet-500 hover:shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+  },
+  'kpi': {
+    bg: 'bg-zinc-900',
+    border: 'border-amber-500/30',
+    text: 'text-amber-400',
+    hover: 'hover:border-amber-500 hover:shadow-[0_0_10px_rgba(245,158,11,0.3)]'
+  },
+  'data': {
+    bg: 'bg-zinc-900',
+    border: 'border-blue-500/30',
+    text: 'text-blue-400',
+    hover: 'hover:border-blue-500 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+  }
 };
 
 // Draggable card template component
@@ -229,6 +283,7 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
   } : undefined;
 
   const IconComponent = template.icon;
+  const styles = categoryStyles[template.category];
 
   return (
     <div
@@ -237,16 +292,15 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
       {...listeners}
       {...attributes}
       className={`
-        flex flex-col items-center gap-1 p-3 rounded-lg border-2 cursor-grab
-        hover:shadow-md transition-all duration-200 min-w-[100px] max-w-[120px]
-        flex-shrink-0
-        ${categoryColors[template.category]}
-        ${isDragging ? 'opacity-50 cursor-grabbing' : 'hover:scale-105'}
+        flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 cursor-grab
+        transition-all duration-300
+        ${styles.bg} ${styles.border} ${styles.text} ${styles.hover}
+        ${isDragging ? 'opacity-50 cursor-grabbing scale-95' : 'hover:scale-105'}
       `}
       title={template.description}
     >
-      <IconComponent className="h-6 w-6" />
-      <span className="text-xs font-medium text-center leading-tight">
+      <IconComponent className="h-8 w-8" />
+      <span className="text-xs font-semibold text-center leading-tight">
         {template.title}
       </span>
     </div>
@@ -254,48 +308,146 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
 }
 
 export function AdminToolbar({ isVisible }: AdminToolbarProps) {
-  if (!isVisible) return null;
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const categories = [
+    { id: 'blank', label: 'Blank', icon: Plus },
+    { id: 'search', label: 'Search', icon: Search },
+    { id: 'map', label: 'Maps', icon: Map },
+    { id: 'charts', label: 'Charts', icon: BarChart3 },
+    { id: 'kpi', label: 'KPIs', icon: Activity },
+    { id: 'data', label: 'Data', icon: Database }
+  ];
+
+  const filteredTemplates = selectedCategory
+    ? cardTemplates.filter(t => t.category === selectedCategory)
+    : cardTemplates;
 
   return (
-    <div className="bg-muted/50 border-b border-border shadow-sm">
-      <div className="max-w-full px-4 py-3">
-        <div className="flex items-center gap-4 mb-3">
-          <div className="flex items-center gap-2">
-            <Layout className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Admin Toolbar</h3>
-          </div>
-          <span className="text-xs text-muted-foreground">
-            Drag elements below to add to your dashboard
-          </span>
-          <span className="text-xs text-muted-foreground ml-auto">
-            Total: {cardTemplates.length} available elements
-          </span>
-        </div>
-
-        {/* Single horizontal scrollable row */}
-        <div className="relative">
-          <div
-            className="flex gap-3 overflow-x-auto pb-3 scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent"
-            style={{
-              scrollbarWidth: 'thin',
-              scrollbarColor: 'rgba(0,0,0,0.2) transparent'
-            }}
+    <div
+      className={`
+        fixed left-0 top-0 h-full z-50
+        transition-transform duration-500 ease-in-out
+        ${isVisible ? 'translate-x-0' : '-translate-x-full'}
+      `}
+    >
+      {/* Sidebar */}
+      <div
+        className={`
+          h-full bg-black/95 backdrop-blur-xl border-r border-[#00FF41]/20
+          shadow-[0_0_30px_rgba(0,255,65,0.1)]
+          transition-all duration-500 ease-in-out
+          ${isExpanded ? 'w-80' : 'w-16'}
+        `}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-[#00FF41]/20 flex items-center justify-between">
+          {isExpanded && (
+            <div className="flex items-center gap-2">
+              <Layout className="h-5 w-5 text-[#00FF41]" />
+              <h3 className="font-bold text-[#00FF41] text-lg drop-shadow-[0_0_10px_rgba(0,255,65,0.5)]">
+                Card Library
+              </h3>
+            </div>
+          )}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="p-2 rounded-lg bg-zinc-900 border border-[#00FF41]/30 hover:border-[#00FF41] hover:shadow-[0_0_10px_rgba(0,255,65,0.3)] transition-all"
           >
-            {cardTemplates.map(template => (
-              <DraggableTemplate key={template.id} template={template} />
-            ))}
-          </div>
-
-          {/* Scroll indicators */}
-          <div className="absolute left-0 top-0 bottom-3 w-8 bg-gradient-to-r from-muted/50 to-transparent pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-3 w-8 bg-gradient-to-l from-muted/50 to-transparent pointer-events-none" />
+            {isExpanded ? (
+              <ChevronLeft className="h-4 w-4 text-[#00FF41]" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-[#00FF41]" />
+            )}
+          </button>
         </div>
 
-        <div className="mt-2 pt-3 border-t border-border">
-          <div className="text-center">
-            <span className="text-xs text-muted-foreground">💡 Tip: Click any card element after dropping to configure database connections and queries</span>
+        {isExpanded && (
+          <>
+            {/* Category Filter */}
+            <div className="p-4 border-b border-[#00FF41]/20">
+              <div className="text-xs font-semibold text-[#00FF41] mb-2">CATEGORIES</div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className={`
+                    px-3 py-1.5 rounded-md text-xs font-medium transition-all
+                    ${!selectedCategory
+                      ? 'bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]'
+                      : 'bg-zinc-900 text-gray-400 border border-zinc-700 hover:border-[#00FF41]/50'
+                    }
+                  `}
+                >
+                  All ({cardTemplates.length})
+                </button>
+                {categories.map(cat => {
+                  const Icon = cat.icon;
+                  const count = cardTemplates.filter(t => t.category === cat.id).length;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`
+                        px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1
+                        ${selectedCategory === cat.id
+                          ? 'bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]'
+                          : 'bg-zinc-900 text-gray-400 border border-zinc-700 hover:border-[#00FF41]/50'
+                        }
+                      `}
+                    >
+                      <Icon className="h-3 w-3" />
+                      {cat.label} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Card Templates Grid */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="text-xs font-semibold text-[#00FF41] mb-3">
+                {selectedCategory
+                  ? `${categories.find(c => c.id === selectedCategory)?.label.toUpperCase()} CARDS`
+                  : 'ALL CARDS'}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {filteredTemplates.map(template => (
+                  <DraggableTemplate key={template.id} template={template} />
+                ))}
+              </div>
+            </div>
+
+            {/* Footer Tip */}
+            <div className="p-4 border-t border-[#00FF41]/20 bg-zinc-950">
+              <div className="text-xs text-gray-400 text-center">
+                💡 <span className="text-[#00FF41]">Drag</span> cards to dashboard • <span className="text-[#00FF41]">Double-click</span> to configure
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Collapsed State Icons */}
+        {!isExpanded && (
+          <div className="p-2 space-y-2">
+            {categories.slice(0, 6).map(cat => {
+              const Icon = cat.icon;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setIsExpanded(true);
+                    setSelectedCategory(cat.id);
+                  }}
+                  className="w-full p-2 rounded-lg bg-zinc-900 border border-[#00FF41]/30 hover:border-[#00FF41] hover:shadow-[0_0_10px_rgba(0,255,65,0.3)] transition-all"
+                  title={cat.label}
+                >
+                  <Icon className="h-5 w-5 text-[#00FF41] mx-auto" />
+                </button>
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

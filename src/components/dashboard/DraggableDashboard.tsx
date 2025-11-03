@@ -27,12 +27,15 @@ export type CardType =
   // New template types from AdminToolbar
   | 'blank-card'
   | 'geography-search'
+  | 'advanced-search'
   | 'interactive-map'
   | 'location-details'
+  | 'heat-map'
   | 'bar-chart'
   | 'line-chart'
   | 'pie-chart'
   | 'trend-chart'
+  | 'scatter-plot'
   | 'housing-affordability'
   | 'property-values'
   | 'population-metrics'
@@ -51,7 +54,7 @@ export interface DashboardCard {
   title: string;
   gridArea?: string; // CSS grid area for complex layouts
   size: 'small' | 'medium' | 'large' | 'xl';
-  category: 'lga' | 'metrics' | 'charts' | 'kpi';
+  category: 'lga' | 'metrics' | 'charts' | 'kpi' | 'search' | 'map' | 'data' | 'blank';
 }
 
 interface DraggableDashboardProps {
@@ -88,15 +91,29 @@ function DroppableDashboardGrid({
   return (
     <div
       ref={setNodeRef}
-      className={`dashboard-grid ${isEditMode ? 'edit-mode' : ''} ${isOver ? 'bg-primary/5 border-2 border-dashed border-primary' : ''}`}
+      className={`
+        dashboard-grid
+        ${isEditMode ? 'edit-mode' : ''}
+        ${isOver ? 'bg-[#00FF41]/10 border-2 border-dashed border-[#00FF41]' : isAdminMode ? 'border-2 border-dashed border-[#00FF41]/30' : ''}
+        ${isAdminMode ? 'min-h-[60vh] rounded-lg p-4' : ''}
+        transition-all duration-300 ease-in-out
+      `}
       style={{
         gridTemplateColumns: `repeat(${effectiveColumns}, 1fr)`,
         '--effective-columns': effectiveColumns,
-        minHeight: isOver ? '200px' : 'auto',
         transition: 'all 0.2s ease'
       } as React.CSSProperties}
       suppressHydrationWarning={true}
     >
+      {cards.length === 0 && isAdminMode && (
+        <div className="col-span-full flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="text-6xl mb-4">📊</div>
+            <h3 className="text-2xl font-bold text-[#00FF41] mb-2">Drop Cards Here</h3>
+            <p className="text-gray-400">Drag cards from the sidebar to build your dashboard</p>
+          </div>
+        </div>
+      )}
       {cards.map((card) => (
         <DraggableCard
           key={card.id}
@@ -153,7 +170,7 @@ const defaultCards: DashboardCard[] = [
     id: 'lga-metrics',
     type: 'lga-metrics',
     title: 'LGA Housing Metrics',
-    size: 'medium',
+    size: 'small',
     category: 'metrics',
     gridArea: 'lga-metrics'
   },
@@ -335,27 +352,62 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
           width: 100%;
           max-width: none;
           align-items: start;
+          transition: none !important;
         }
 
         .dashboard-grid .draggable-card {
           align-self: start;
+          border-radius: 0.75rem;
+          transition: opacity 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0s !important;
+          min-width: 0;
+          transition-property: opacity, border-color, box-shadow;
+          transition-duration: 0.2s;
+          transition-timing-function: ease;
+        }
+
+        /* Fixed heights for each card size to prevent warping */
+        .dashboard-grid .draggable-card[data-size="small"] {
+          min-height: 240px;
+        }
+
+        .dashboard-grid .draggable-card[data-size="medium"] {
+          min-height: 412px;
+        }
+
+        .dashboard-grid .draggable-card[data-size="large"] {
+          min-height: 784px;
+        }
+
+        .dashboard-grid .draggable-card[data-size="xl"] {
+          min-height: 1056px;
+        }
+
+        .dashboard-grid .draggable-card.dragging {
+          z-index: 1000;
+          pointer-events: none;
+        }
+
+        .dashboard-grid .draggable-card > * {
+          transition: none !important;
         }
 
         .dashboard-grid.edit-mode .draggable-card {
           border: 2px dashed hsl(var(--border));
           background: hsl(var(--card) / 0.8);
-          transition: all 0.2s ease;
+          border-radius: 0.75rem;
         }
 
         .dashboard-grid.edit-mode .draggable-card:hover {
           border-color: hsl(var(--primary));
           box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3);
+          border-radius: 0.75rem;
         }
 
         .dashboard-card-overlay {
           transform: rotate(3deg);
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
           border: 2px solid hsl(var(--primary));
+          border-radius: 0.75rem;
         }
 
 

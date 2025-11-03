@@ -61,12 +61,14 @@ export function DraggableCard({
   } = useSortable({
     id: card.id,
     disabled: isAdminMode, // Disable dragging in admin mode
+    animateLayoutChanges: () => false,
   });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition || undefined,
     opacity: isSortableDragging ? 0.5 : 1,
+    willChange: isDragging ? 'transform' : 'auto',
   };
 
   const renderCardContent = () => {
@@ -139,6 +141,7 @@ export function DraggableCard({
         );
 
       case 'building-approvals-chart':
+        // Data Source: Database mosaic_pro, Schema public, Table abs_building_approvals_lga
         return (
           <Card className="shadow-lg border border-border/50">
             <CardHeader className="pb-4">
@@ -147,30 +150,30 @@ export function DraggableCard({
                   <Building className="h-6 w-6 text-primary" />
                   <div>
                                           <CardTitle className="text-xl">
-                        Housing Price Trends
+                        Building Approvals
                         {selectedLGA && (
                           <span className="text-base font-normal text-muted-foreground ml-2">
                             - {selectedLGA.name}
                           </span>
                         )}
                       </CardTitle>
-                    
+
                                           <CardDescription className="text-base mt-1">
                         {selectedLGA
-                          ? `Monthly dwelling unit approvals in ${selectedLGA.name} (Database)`
-                          : 'Monthly dwelling unit approvals across NSW (Database)'
+                          ? `Monthly dwelling approvals in ${selectedLGA.name} (Jul 2021 - Oct 2024)`
+                          : 'Monthly dwelling approvals across NSW (Jul 2021 - Oct 2024)'
                         }
                       </CardDescription>
-                    
+
                   </div>
                 </div>
                                   <DataSourceInfo dataSource={ABSDataService.getDataSource()} />
-                
+
               </div>
             </CardHeader>
             <CardContent className="pt-2">
                               <TrendChart selectedLGA={selectedLGA} />
-              
+
             </CardContent>
           </Card>
         );
@@ -854,15 +857,58 @@ export function DraggableCard({
   // Calculate row span based on actual content height
   const updateRowSpan = React.useCallback(() => {
     if (cardRef.current) {
+      // Special override for housing-pipeline card
+      if (card.id === 'housing-pipeline') {
+        setRowSpan(15);
+        console.log(`🔍 Card: ${card.id} (size: ${card.size}) - FORCED to 15 rows`);
+        return;
+      }
+
+      // Special override for kpi-cards card
+      if (card.id === 'kpi-cards') {
+        setRowSpan(3);
+        console.log(`🔍 Card: ${card.id} (size: ${card.size}) - FORCED to 3 rows`);
+        return;
+      }
+
       const cardHeight = cardRef.current.offsetHeight;
       const gap = 16; // 1rem gap
       const rowHeight = 20; // grid-auto-rows value
-      
+
       // Calculate how many 20px rows this card needs
       const calculatedRowSpan = Math.ceil((cardHeight + gap) / (rowHeight + gap));
-      setRowSpan(calculatedRowSpan);
+
+      // Expected rowSpan based on min-height for each size
+      const expectedRowSpan = {
+        small: Math.ceil((240 + gap) / (rowHeight + gap)),   // ~7 rows
+        medium: Math.ceil((412 + gap) / (rowHeight + gap)),  // ~12 rows
+        large: Math.ceil((784 + gap) / (rowHeight + gap)),   // ~22 rows
+        xl: Math.ceil((1056 + gap) / (rowHeight + gap))      // ~30 rows
+      }[card.size] || calculatedRowSpan;
+
+      // Use the maximum of calculated or expected to ensure card doesn't shrink
+      const finalRowSpan = Math.max(calculatedRowSpan, expectedRowSpan);
+
+      // DIAGNOSTIC LOGGING
+      console.log(`🔍 Card: ${card.id} (size: ${card.size})`, {
+        offsetHeight: cardHeight,
+        calculatedRowSpan,
+        expectedRowSpan,
+        finalRowSpan,
+        expectedMinHeight: {
+          small: 240,
+          medium: 412,
+          large: 784,
+          xl: 1056
+        }[card.size],
+        scrollHeight: cardRef.current.scrollHeight,
+        clientHeight: cardRef.current.clientHeight,
+        boundingRect: cardRef.current.getBoundingClientRect().height
+      });
+
+      setRowSpan(finalRowSpan);
     }
-  }, []);
+  }, [card.id, card.size]);
 
   // Update row span when component mounts and when content changes
   React.useEffect(() => {
@@ -895,21 +941,16 @@ export function DraggableCard({
         }}
         className={`draggable-card ${isDragging ? 'dragging' : ''}`}
         data-card-id={card.id}
+        data-size={card.size}
         suppressHydrationWarning={true}
         {...(isAdminMode ? {} : attributes)}
       >
-      {isEditMode && !isAdminMode && (
+      {!isAdminMode && (
         <div
-          className="drag-handle absolute top-2 right-2 z-10 p-2 bg-background/80 backdrop-blur rounded cursor-move hover:bg-background"
+          className="drag-handle absolute top-2 right-2 z-10 p-2 bg-background/80 backdrop-blur rounded cursor-move hover:bg-background transition-all opacity-60 hover:opacity-100"
           {...listeners}
         >
           <GripVertical className="h-4 w-4 text-muted-foreground" />
-        </div>
-      )}
-      
-      {isEditMode && !isAdminMode && (
-        <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-primary/20 text-primary text-xs rounded">
-          {card.title}
         </div>
       )}
 

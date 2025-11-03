@@ -3,9 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, Database, Settings, Save, RefreshCw, FolderOpen, MapPin, Link } from "lucide-react";
+import { X, Database, Settings, Save, FolderOpen, BarChart3, Link, Clock, Home, Building2 } from "lucide-react";
 
-interface MapConfig {
+export interface DataItemConfig {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+}
+
+export interface LGADetailsConfig {
   host: string;
   port: number;
   database: string;
@@ -13,33 +19,58 @@ interface MapConfig {
   passwordPath: string;
   schema: string;
   table: string;
-  geometryColumn: string;
   lgaNameColumn: string;
-  lgaCodeColumn: string;
   filterIntegration: {
     enabled: boolean;
     sourceCardId: string;
     sourceCardType: 'search-geography-card' | 'lga-lookup' | 'custom';
-    lgaNameColumn: string;
-    lgaCodeColumn: string;
     autoRefresh: boolean;
+  };
+  dataItems: {
+    avgProcessingDays: DataItemConfig;
+    developmentApplications: DataItemConfig;
+    landReleases: DataItemConfig;
+    completions: DataItemConfig;
   };
 }
 
-interface ABSLGAMapConfigFormProps {
+interface LGADetailsConfigFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (config: MapConfig) => void;
-  currentConfig: MapConfig | null;
+  onSave: (config: LGADetailsConfig) => void;
+  currentConfig: LGADetailsConfig | null;
 }
 
-export function ABSLGAMapConfigForm({
+const defaultDataItems = {
+  avgProcessingDays: {
+    enabled: true,
+    title: 'Average DA Processing',
+    subtitle: 'Processing Time'
+  },
+  developmentApplications: {
+    enabled: true,
+    title: 'Development Applications',
+    subtitle: 'Total DAs'
+  },
+  landReleases: {
+    enabled: true,
+    title: 'Land Releases',
+    subtitle: 'Lots Released'
+  },
+  completions: {
+    enabled: true,
+    title: 'Completions',
+    subtitle: 'Units Completed'
+  }
+};
+
+export function LGADetailsConfigForm({
   isOpen,
   onClose,
   onSave,
   currentConfig
-}: ABSLGAMapConfigFormProps) {
-  const [config, setConfig] = useState<MapConfig>({
+}: LGADetailsConfigFormProps) {
+  const [config, setConfig] = useState<LGADetailsConfig>({
     host: 'mecone-data-lake.postgres.database.azure.com',
     port: 5432,
     database: 'research&insights',
@@ -47,17 +78,14 @@ export function ABSLGAMapConfigForm({
     passwordPath: '/users/ben/permissions/.env.admin',
     schema: 'housing_dashboard',
     table: 'search',
-    geometryColumn: 'wkb_geometry',
     lgaNameColumn: 'lga_name24',
-    lgaCodeColumn: 'lga_code24',
     filterIntegration: {
       enabled: true,
       sourceCardId: 'search-geography-card',
       sourceCardType: 'search-geography-card',
-      lgaNameColumn: 'lga_name24',
-      lgaCodeColumn: 'lga_code24',
       autoRefresh: true
-    }
+    },
+    dataItems: defaultDataItems
   });
 
   const [isPasswordValid, setIsPasswordValid] = useState(false);
@@ -116,6 +144,13 @@ export function ABSLGAMapConfigForm({
 
   if (!isOpen) return null;
 
+  const dataItemIcons = {
+    avgProcessingDays: Clock,
+    developmentApplications: BarChart3,
+    landReleases: Home,
+    completions: Building2
+  };
+
   return createPortal(
     <div
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
@@ -124,18 +159,18 @@ export function ABSLGAMapConfigForm({
       }}
     >
       <div
-        className="bg-background border border-border rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto"
+        className="bg-background border border-border rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <Card className="border-0 shadow-none">
-          <CardHeader className="pb-4 border-b border-border">
+          <CardHeader className="pb-4 border-b border-border sticky top-0 bg-background z-10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <MapPin className="h-6 w-6 text-primary" />
+                <BarChart3 className="h-6 w-6 text-primary" />
                 <div>
-                  <CardTitle className="text-xl">ABS LGA Map Configuration</CardTitle>
+                  <CardTitle className="text-xl">NSW Processing Details Configuration</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Configure database connection and filter integration
+                    Configure database connection, data items, and filter integration
                   </p>
                 </div>
               </div>
@@ -149,6 +184,89 @@ export function ABSLGAMapConfigForm({
           </CardHeader>
 
           <CardContent className="pt-6 space-y-6">
+            {/* Data Items Section */}
+            <div>
+              <h3 className="flex items-center gap-2 text-base font-semibold mb-4">
+                <Settings className="h-4 w-4" />
+                Data Items (4 Maximum)
+              </h3>
+              <div className="space-y-3">
+                {Object.entries(config.dataItems).map(([key, item]) => {
+                  const Icon = dataItemIcons[key as keyof typeof dataItemIcons];
+                  return (
+                    <div key={key} className="border border-border rounded-lg p-4 bg-muted/30">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          id={`item-${key}`}
+                          checked={item.enabled}
+                          onChange={(e) => setConfig({
+                            ...config,
+                            dataItems: {
+                              ...config.dataItems,
+                              [key]: {
+                                ...item,
+                                enabled: e.target.checked
+                              }
+                            }
+                          })}
+                          className="h-4 w-4 mt-1"
+                        />
+                        <div className="flex-1 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4 text-primary" />
+                            <label htmlFor={`item-${key}`} className="font-medium text-sm">
+                              {key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}
+                            </label>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground">Title</label>
+                              <input
+                                type="text"
+                                value={item.title}
+                                onChange={(e) => setConfig({
+                                  ...config,
+                                  dataItems: {
+                                    ...config.dataItems,
+                                    [key]: {
+                                      ...item,
+                                      title: e.target.value
+                                    }
+                                  }
+                                })}
+                                disabled={!item.enabled}
+                                className="w-full mt-1 px-2 py-1.5 bg-background border border-border rounded-md text-sm disabled:opacity-50"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground">Subtitle</label>
+                              <input
+                                type="text"
+                                value={item.subtitle}
+                                onChange={(e) => setConfig({
+                                  ...config,
+                                  dataItems: {
+                                    ...config.dataItems,
+                                    [key]: {
+                                      ...item,
+                                      subtitle: e.target.value
+                                    }
+                                  }
+                                })}
+                                disabled={!item.enabled}
+                                className="w-full mt-1 px-2 py-1.5 bg-background border border-border rounded-md text-sm disabled:opacity-50"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Database Connection Section */}
             <div>
               <h3 className="flex items-center gap-2 text-base font-semibold mb-4">
@@ -214,13 +332,13 @@ export function ABSLGAMapConfigForm({
               </div>
             </div>
 
-            {/* Geometry Configuration */}
+            {/* Data Configuration */}
             <div>
               <h3 className="flex items-center gap-2 text-base font-semibold mb-4">
-                <MapPin className="h-4 w-4" />
-                Geometry Configuration
+                <Settings className="h-4 w-4" />
+                Data Source Tables
               </h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Schema</label>
                   <input
@@ -240,30 +358,11 @@ export function ABSLGAMapConfigForm({
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Geometry Column</label>
-                  <input
-                    type="text"
-                    value={config.geometryColumn}
-                    onChange={(e) => setConfig({...config, geometryColumn: e.target.value})}
-                    className="w-full mt-1 px-3 py-2 bg-background border border-border rounded-md text-sm bg-primary/10 text-primary font-mono"
-                    placeholder="e.g., wkb_geometry"
-                  />
-                </div>
-                <div>
                   <label className="text-sm font-medium text-muted-foreground">LGA Name Column</label>
                   <input
                     type="text"
                     value={config.lgaNameColumn}
                     onChange={(e) => setConfig({...config, lgaNameColumn: e.target.value})}
-                    className="w-full mt-1 px-3 py-2 bg-background border border-border rounded-md text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">LGA Code Column</label>
-                  <input
-                    type="text"
-                    value={config.lgaCodeColumn}
-                    onChange={(e) => setConfig({...config, lgaCodeColumn: e.target.value})}
                     className="w-full mt-1 px-3 py-2 bg-background border border-border rounded-md text-sm"
                   />
                 </div>
@@ -292,7 +391,7 @@ export function ABSLGAMapConfigForm({
                     className="h-4 w-4"
                   />
                   <label htmlFor="filterEnabled" className="text-sm font-medium">
-                    Enable filter integration
+                    Enable filter integration with search card
                   </label>
                 </div>
 
@@ -333,36 +432,6 @@ export function ABSLGAMapConfigForm({
                         disabled={config.filterIntegration.sourceCardType === 'search-geography-card'}
                       />
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Filter LGA Name Column</label>
-                      <input
-                        type="text"
-                        value={config.filterIntegration.lgaNameColumn}
-                        onChange={(e) => setConfig({
-                          ...config,
-                          filterIntegration: {
-                            ...config.filterIntegration,
-                            lgaNameColumn: e.target.value
-                          }
-                        })}
-                        className="w-full mt-1 px-3 py-2 bg-background border border-border rounded-md text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Filter LGA Code Column</label>
-                      <input
-                        type="text"
-                        value={config.filterIntegration.lgaCodeColumn}
-                        onChange={(e) => setConfig({
-                          ...config,
-                          filterIntegration: {
-                            ...config.filterIntegration,
-                            lgaCodeColumn: e.target.value
-                          }
-                        })}
-                        className="w-full mt-1 px-3 py-2 bg-background border border-border rounded-md text-sm"
-                      />
-                    </div>
                     <div className="col-span-2 flex items-center gap-3">
                       <input
                         type="checkbox"
@@ -378,7 +447,7 @@ export function ABSLGAMapConfigForm({
                         className="h-4 w-4"
                       />
                       <label htmlFor="autoRefresh" className="text-sm font-medium">
-                        Auto-refresh map on filter change
+                        Auto-refresh data when filter changes
                       </label>
                     </div>
                   </div>
@@ -387,7 +456,7 @@ export function ABSLGAMapConfigForm({
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3 pt-4 border-t">
+            <div className="flex justify-end gap-3 pt-4 border-t sticky bottom-0 bg-background">
               <button
                 onClick={onClose}
                 className="px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted rounded-md transition-colors"

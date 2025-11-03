@@ -167,14 +167,12 @@ export function ABSLGAMap({
     }
   }, [externalSelectedLGA]);
 
-  // Handle double click for admin mode
+  // Handle double click to configure
   const handleDoubleClick = () => {
-    if (isAdminMode) {
-      const config = getStoredConfig();
-      setCurrentConfig(config);
-      setShowConfigForm(true);
-      onAdminClick?.();
-    }
+    const config = getStoredConfig();
+    setCurrentConfig(config);
+    setShowConfigForm(true);
+    onAdminClick?.();
   };
 
   const handleSaveConfig = (newConfig: MapConfig) => {
@@ -197,9 +195,7 @@ export function ABSLGAMap({
   return (
     <>
     <Card
-      className={`shadow-lg border border-border/50 ${
-        isAdminMode ? 'cursor-pointer hover:ring-2 hover:ring-purple-500 hover:shadow-purple-500/25 hover:shadow-lg transition-all' : ''
-      }`}
+      className="shadow-lg border border-border/50 cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all"
       onDoubleClick={handleDoubleClick}
     >
       <CardHeader className="pb-4">

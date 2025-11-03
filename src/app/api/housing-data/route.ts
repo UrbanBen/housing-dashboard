@@ -27,25 +27,27 @@ export async function GET(request: Request) {
 }
 
 async function getBuildingApprovalsData(lgaName?: string | null) {
-  // Get the most recent 24 months of data
+  // Get data from July 2021 to October 2024
+  // Database: mosaic_pro, Schema: public, Table: abs_building_approvals_lga
   let queryText = `
     WITH recent_data AS (
-      SELECT 
+      SELECT
         lga_code,
         year,
         month,
         building_type,
         value,
         year * 100 + month as period_num
-      FROM abs_building_approvals_lga 
-      WHERE year >= EXTRACT(YEAR FROM CURRENT_DATE) - 2
+      FROM public.abs_building_approvals_lga
+      WHERE (year > 2021 OR (year = 2021 AND month >= 7))
+        AND (year < 2024 OR (year = 2024 AND month <= 10))
         AND value > 0
     ),
     lga_mapping AS (
-      SELECT DISTINCT 
+      SELECT DISTINCT
         lga_name,
         ROW_NUMBER() OVER (ORDER BY lga_name) as synthetic_lga_code
-      FROM nsw_lga_housing_targets 
+      FROM public.nsw_lga_housing_targets
       WHERE lga_name IS NOT NULL
     ),
     monthly_totals AS (
@@ -78,10 +80,10 @@ async function getBuildingApprovalsData(lgaName?: string | null) {
     params.push(`%${lgaName}%`);
   }
   
-  queryText += ` ORDER BY year DESC, month DESC LIMIT 200`;
-  
+  queryText += ` ORDER BY year ASC, month ASC LIMIT 500`;
+
   const result = await query(queryText, params);
-  
+
   // Process the data to match expected format
   const processedData = result.rows.map((row: any) => ({
     period: row.period,
@@ -110,22 +112,32 @@ async function getBuildingApprovalsData(lgaName?: string | null) {
       acc[key].approvals += parseInt(curr.approvals) || 0;
       return acc;
     }, {} as Record<string, any>);
-    
+
+    // Sort by period and return all data from July 2021 to October 2024
+    const sortedData = Object.values(aggregated).sort((a: any, b: any) =>
+      a.period.localeCompare(b.period)
+    );
+
     return NextResponse.json({
       success: true,
-      data: Object.values(aggregated).slice(0, 24), // Last 2 years
+      data: sortedData,
       total: Object.keys(aggregated).length,
       lga_filter: lgaName,
-      message: lgaName ? `Data for ${lgaName}` : 'NSW state-wide data'
+      message: lgaName ? `Data for ${lgaName}` : 'NSW state-wide data (Jul 2021 - Oct 2024)'
     });
   }
 
+  // Sort by period for individual LGA data
+  const sortedData = processedData.sort((a: any, b: any) =>
+    a.period.localeCompare(b.period)
+  );
+
   return NextResponse.json({
     success: true,
-    data: processedData.slice(0, 24),
+    data: sortedData,
     total: processedData.length,
     lga_filter: lgaName,
-    message: lgaName ? `Data for ${lgaName}` : 'All LGA data'
+    message: lgaName ? `Data for ${lgaName} (Jul 2021 - Oct 2024)` : 'All LGA data'
   });
 }
 
