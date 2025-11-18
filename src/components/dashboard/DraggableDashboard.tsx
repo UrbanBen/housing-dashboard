@@ -15,6 +15,7 @@ export type CardType =
   | 'lga-metrics'
   | 'housing-pipeline'
   | 'building-approvals-chart'
+  | 'lga-dwelling-approvals'
   | 'market-overview'
   | 'market-forecast'
   | 'regional-comparison'
@@ -74,6 +75,7 @@ interface DroppableDashboardGridProps {
   isAdminMode: boolean;
   selectedLGA: LGA | null;
   onLGAChange: (lga: LGA | null) => void;
+  onDeleteCard: (cardId: string) => void;
 }
 
 function DroppableDashboardGrid({
@@ -82,7 +84,8 @@ function DroppableDashboardGrid({
   cards,
   isAdminMode,
   selectedLGA,
-  onLGAChange
+  onLGAChange,
+  onDeleteCard
 }: DroppableDashboardGridProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: 'dashboard-grid',
@@ -114,17 +117,27 @@ function DroppableDashboardGrid({
           </div>
         </div>
       )}
-      {cards.map((card) => (
-        <DraggableCard
-          key={card.id}
-          card={card}
-          isEditMode={isEditMode}
-          isAdminMode={isAdminMode}
-          selectedLGA={selectedLGA}
-          onLGAChange={onLGAChange}
-          effectiveColumns={effectiveColumns}
-        />
-      ))}
+      {cards.map((card) => {
+        if (card.type === 'lga-dwelling-approvals') {
+          console.log('[DroppableDashboardGrid] Rendering lga-dwelling-approvals card:', {
+            cardId: card.id,
+            cardType: card.type,
+            selectedLGA: selectedLGA
+          });
+        }
+        return (
+          <DraggableCard
+            key={card.id}
+            card={card}
+            isEditMode={isEditMode}
+            isAdminMode={isAdminMode}
+            selectedLGA={selectedLGA}
+            onLGAChange={onLGAChange}
+            effectiveColumns={effectiveColumns}
+            onDeleteCard={onDeleteCard}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -260,6 +273,15 @@ const defaultCards: DashboardCard[] = [
 
 export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode, cards, setCards }: DraggableDashboardProps) {
 
+  // Handle card deletion
+  const handleDeleteCard = React.useCallback((cardId: string) => {
+    setCards(currentCards => {
+      const newCards = currentCards.filter(card => card.id !== cardId);
+      localStorage.setItem('dashboard-layout', JSON.stringify(newCards));
+      return newCards;
+    });
+  }, [setCards]);
+
   // Calculate effective columns based on screen size and max setting
   const getEffectiveColumns = React.useCallback(() => {
     if (typeof window === 'undefined') return Math.min(4, maxColumns);
@@ -270,7 +292,7 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
     if (width >= 3440) naturalColumns = 6;
     else if (width >= 2560) naturalColumns = 5;
     else if (width >= 1920) naturalColumns = 4;
-    else if (width >= 1024) naturalColumns = 3;
+    else if (width >= 1400) naturalColumns = 3;
     else if (width >= 768) naturalColumns = 2;
     else naturalColumns = 1;
 
@@ -337,6 +359,7 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
             isAdminMode={isAdminMode}
             selectedLGA={selectedLGA}
             onLGAChange={onLGAChange}
+            onDeleteCard={handleDeleteCard}
           />
         </SortableContext>
       </div>

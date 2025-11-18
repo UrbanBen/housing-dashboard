@@ -26,12 +26,14 @@ import {
   Layout,
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  RotateCcw
 } from "lucide-react";
 import type { DashboardCard } from './DraggableDashboard';
 
 interface AdminToolbarProps {
   isVisible: boolean;
+  onResetLayout?: () => void;
 }
 
 interface CardTemplate {
@@ -135,6 +137,13 @@ const cardTemplates: CardTemplate[] = [
     category: 'charts',
     icon: Activity,
     description: 'Correlation visualization'
+  },
+  {
+    id: 'lga-dwelling-approvals',
+    title: 'Building Approvals by LGA',
+    category: 'charts',
+    icon: LineChart,
+    description: 'LGA-specific dwelling approvals trend'
   },
 
   // KPI & Metrics
@@ -283,7 +292,15 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
   } : undefined;
 
   const IconComponent = template.icon;
-  const styles = categoryStyles[template.category];
+
+  // Special bright green styling for LGA Dwelling Approvals
+  const isLGADwellingApprovals = template.id === 'lga-dwelling-approvals';
+  const styles = isLGADwellingApprovals ? {
+    bg: 'bg-zinc-900',
+    border: 'border-[#00FF41]/50',
+    text: 'text-[#00FF41]',
+    hover: 'hover:border-[#00FF41] hover:shadow-[0_0_15px_rgba(0,255,65,0.5)]'
+  } : categoryStyles[template.category];
 
   return (
     <div
@@ -307,7 +324,7 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
   );
 }
 
-export function AdminToolbar({ isVisible }: AdminToolbarProps) {
+export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -327,9 +344,9 @@ export function AdminToolbar({ isVisible }: AdminToolbarProps) {
   return (
     <div
       className={`
-        fixed left-0 top-0 h-full z-50
-        transition-transform duration-500 ease-in-out
-        ${isVisible ? 'translate-x-0' : '-translate-x-full'}
+        h-full z-50
+        transition-all duration-500 ease-in-out
+        ${isVisible ? (isExpanded ? 'w-80' : 'w-16') : 'w-0'}
       `}
     >
       {/* Sidebar */}
@@ -338,11 +355,13 @@ export function AdminToolbar({ isVisible }: AdminToolbarProps) {
           h-full bg-black/95 backdrop-blur-xl border-r border-[#00FF41]/20
           shadow-[0_0_30px_rgba(0,255,65,0.1)]
           transition-all duration-500 ease-in-out
-          ${isExpanded ? 'w-80' : 'w-16'}
+          flex flex-col
+          overflow-hidden
+          ${isVisible ? (isExpanded ? 'w-80' : 'w-16') : 'w-0'}
         `}
       >
         {/* Header */}
-        <div className="p-4 border-b border-[#00FF41]/20 flex items-center justify-between">
+        <div className="flex-shrink-0 p-4 border-b border-[#00FF41]/20 flex items-center justify-between">
           {isExpanded && (
             <div className="flex items-center gap-2">
               <Layout className="h-5 w-5 text-[#00FF41]" />
@@ -366,7 +385,7 @@ export function AdminToolbar({ isVisible }: AdminToolbarProps) {
         {isExpanded && (
           <>
             {/* Category Filter */}
-            <div className="p-4 border-b border-[#00FF41]/20">
+            <div className="flex-shrink-0 p-4 border-b border-[#00FF41]/20">
               <div className="text-xs font-semibold text-[#00FF41] mb-2">CATEGORIES</div>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -405,7 +424,7 @@ export function AdminToolbar({ isVisible }: AdminToolbarProps) {
             </div>
 
             {/* Card Templates Grid */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar">
               <div className="text-xs font-semibold text-[#00FF41] mb-3">
                 {selectedCategory
                   ? `${categories.find(c => c.id === selectedCategory)?.label.toUpperCase()} CARDS`
@@ -418,8 +437,19 @@ export function AdminToolbar({ isVisible }: AdminToolbarProps) {
               </div>
             </div>
 
+            {/* Reset Layout Button */}
+            <div className="flex-shrink-0 p-4 border-t border-[#00FF41]/20">
+              <button
+                onClick={onResetLayout}
+                className="w-full px-4 py-2.5 rounded-lg bg-zinc-900 border border-red-500/30 text-red-400 hover:border-red-500 hover:bg-red-500/10 hover:shadow-[0_0_10px_rgba(239,68,68,0.3)] transition-all flex items-center justify-center gap-2 text-sm font-medium"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset Layout
+              </button>
+            </div>
+
             {/* Footer Tip */}
-            <div className="p-4 border-t border-[#00FF41]/20 bg-zinc-950">
+            <div className="flex-shrink-0 p-4 bg-zinc-950">
               <div className="text-xs text-gray-400 text-center">
                 💡 <span className="text-[#00FF41]">Drag</span> cards to dashboard • <span className="text-[#00FF41]">Double-click</span> to configure
               </div>

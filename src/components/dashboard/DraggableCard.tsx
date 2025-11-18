@@ -1,9 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Move } from 'lucide-react';
+import { GripVertical, Move, Trash2 } from 'lucide-react';
 import type { DashboardCard } from './DraggableDashboard';
 import type { LGA } from '@/components/filters/LGALookup';
 
@@ -14,7 +14,8 @@ import { LGADetails } from './LGADetails';
 import { LGAInsights } from './LGAInsights';
 import { KeyMetrics } from './KeyMetrics';
 import { LGAMetrics } from './LGAMetrics';
-import { TrendChart } from '@/components/charts/TrendChart';
+import { TrendChart, type TrendChartRef } from '@/components/charts/TrendChart';
+import { LGADwellingApprovalsChart, type LGADwellingApprovalsChartRef } from '@/components/charts/LGADwellingApprovalsChart';
 import { MarketOverview } from './MarketOverview';
 import { HousingSankeyChart } from '@/components/charts/HousingSankeyChart';
 import { TestCard } from './TestCard';
@@ -37,6 +38,7 @@ interface DraggableCardProps {
   onLGAChange: (lga: LGA | null) => void;
   isDragging?: boolean;
   effectiveColumns?: number;
+  onDeleteCard?: (cardId: string) => void;
 }
 
 export function DraggableCard({
@@ -46,8 +48,10 @@ export function DraggableCard({
   selectedLGA,
   onLGAChange,
   isDragging = false,
-  effectiveColumns = 4
+  effectiveColumns = 4,
+  onDeleteCard
 }: DraggableCardProps) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const cardRef = React.useRef<HTMLDivElement>(null);
   const [rowSpan, setRowSpan] = React.useState(1);
 
@@ -60,9 +64,21 @@ export function DraggableCard({
     isDragging: isSortableDragging,
   } = useSortable({
     id: card.id,
-    disabled: isAdminMode, // Disable dragging in admin mode
+    disabled: false, // Allow dragging to rearrange cards
     animateLayoutChanges: () => false,
   });
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('[DraggableCard] Render state:', {
+      cardId: card.id,
+      cardTitle: card.title,
+      isEditMode,
+      isAdminMode,
+      isSortableDragging,
+      shouldShowDelete: isEditMode && !isSortableDragging
+    });
+  }, [isEditMode, isAdminMode, isSortableDragging, card.id, card.title]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -140,11 +156,18 @@ export function DraggableCard({
           </Card>
         );
 
-      case 'building-approvals-chart':
+      case 'building-approvals-chart': {
         // Data Source: Database mosaic_pro, Schema public, Table abs_building_approvals_lga
+        // Currently showing NSW state-wide totals (LGA filtering to be implemented)
+        const chartRef = useRef<TrendChartRef>(null);
+
         return (
           <Card className="shadow-lg border border-border/50">
-            <CardHeader className="pb-4">
+            <CardHeader
+              className="pb-4 cursor-pointer"
+              onDoubleClick={() => chartRef.current?.openConfig()}
+              title="Double-click to configure"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Building className="h-6 w-6 text-primary" />
@@ -160,8 +183,8 @@ export function DraggableCard({
 
                                           <CardDescription className="text-base mt-1">
                         {selectedLGA
-                          ? `Monthly dwelling approvals in ${selectedLGA.name} (Jul 2021 - Oct 2024)`
-                          : 'Monthly dwelling approvals across NSW (Jul 2021 - Oct 2024)'
+                          ? `Monthly dwelling approvals in ${selectedLGA.name}`
+                          : 'Monthly dwelling approvals across NSW (Jul 2021 - Dec 2024)'
                         }
                       </CardDescription>
 
@@ -172,11 +195,54 @@ export function DraggableCard({
               </div>
             </CardHeader>
             <CardContent className="pt-2">
-                              <TrendChart selectedLGA={selectedLGA} />
+                              <TrendChart ref={chartRef} selectedLGA={selectedLGA} />
 
             </CardContent>
           </Card>
         );
+      }
+
+      case 'lga-dwelling-approvals': {
+        // Data Source: Database research&insights, Schema housing_dashboard, Table building_approvals_nsw_lga
+        // Shows LGA-specific dwelling approvals (requires database permissions)
+        console.log('[DraggableCard lga-dwelling-approvals] Rendering with selectedLGA:', selectedLGA);
+        const chartRef = useRef<LGADwellingApprovalsChartRef>(null);
+
+        return (
+          <Card className="shadow-lg border-2 border-[#00FF41]/30 hover:border-[#00FF41] transition-colors">
+            <CardHeader
+              className="pb-4 cursor-pointer"
+              onDoubleClick={() => chartRef.current?.openConfig()}
+              title="Double-click to configure"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <LineChart className="h-6 w-6 text-[#00FF41]" />
+                  <div>
+                    <CardTitle className="text-xl text-white">
+                      Dwelling Approvals by LGA
+                      {selectedLGA && (
+                        <span className="text-base font-normal text-muted-foreground ml-2">
+                          - {selectedLGA.name}
+                        </span>
+                      )}
+                    </CardTitle>
+                    <CardDescription className="text-base mt-1">
+                      {selectedLGA
+                        ? `Number of approved dwellings in ${selectedLGA.name}`
+                        : 'Select an LGA to view dwelling approvals'
+                      }
+                    </CardDescription>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <LGADwellingApprovalsChart ref={chartRef} selectedLGA={selectedLGA} />
+            </CardContent>
+          </Card>
+        );
+      }
 
       case 'market-overview':
         return (
@@ -826,6 +892,8 @@ export function DraggableCard({
           <TestSearchCard
             isAdminMode={isAdminMode}
             onAdminClick={() => {}}
+            selectedLGA={selectedLGA}
+            onLGAChange={onLGAChange}
           />
         );
 
@@ -945,7 +1013,33 @@ export function DraggableCard({
         suppressHydrationWarning={true}
         {...(isAdminMode ? {} : attributes)}
       >
-      {!isAdminMode && (
+      {/* Edit Mode Controls - Delete and Drag Handle */}
+      {isEditMode && !isSortableDragging && (
+        <div className="absolute top-2 right-2 z-10 flex gap-1">
+          {/* Delete Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteConfirm(true);
+            }}
+            className="p-2 bg-red-500/80 backdrop-blur rounded cursor-pointer hover:bg-red-600 transition-all opacity-80 hover:opacity-100"
+            title="Delete card"
+          >
+            <Trash2 className="h-4 w-4 text-white" />
+          </button>
+
+          {/* Drag Handle - Small grab area */}
+          <div
+            className="p-2 bg-background/80 backdrop-blur rounded cursor-move hover:bg-background transition-all opacity-60 hover:opacity-100"
+            {...listeners}
+            title="Drag to rearrange"
+          >
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </div>
+      )}
+
+      {!isEditMode && !isSortableDragging && (
         <div
           className="drag-handle absolute top-2 right-2 z-10 p-2 bg-background/80 backdrop-blur rounded cursor-move hover:bg-background transition-all opacity-60 hover:opacity-100"
           {...listeners}
@@ -968,6 +1062,50 @@ export function DraggableCard({
       <div className={isEditMode ? 'pointer-events-none' : (isAdminMode ? 'pointer-events-auto' : '')}>
         {renderCardContent()}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center"
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            className="bg-background border-2 border-red-500/50 rounded-lg p-6 max-w-md mx-4 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-4">
+              <div className="p-2 bg-red-500/20 rounded-full">
+                <Trash2 className="h-6 w-6 text-red-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-2">Delete Card?</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Are you sure you want to delete "{card.title}"? This action cannot be undone.
+                </p>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="px-4 py-2 text-sm font-medium text-foreground bg-muted hover:bg-muted/80 rounded transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (onDeleteCard) {
+                        onDeleteCard(card.id);
+                      }
+                      setShowDeleteConfirm(false);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
 
 

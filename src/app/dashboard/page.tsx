@@ -57,7 +57,7 @@ const defaultCards: DashboardCard[] = [
     id: 'lga-metrics',
     type: 'lga-metrics',
     title: 'LGA Housing Metrics',
-    size: 'medium',
+    size: 'small',
     category: 'metrics',
     gridArea: 'lga-metrics'
   },
@@ -102,14 +102,6 @@ const defaultCards: DashboardCard[] = [
 
   // Analytics Cards
   {
-    id: 'market-forecast',
-    type: 'market-forecast',
-    title: 'Market Forecast',
-    size: 'small',
-    category: 'metrics',
-    gridArea: 'market-forecast'
-  },
-  {
     id: 'regional-comparison',
     type: 'regional-comparison',
     title: 'Regional Comparison',
@@ -146,12 +138,26 @@ export default function DashboardPage() {
   const [cards, setCards] = useState<DashboardCard[]>(defaultCards);
   const [activeCard, setActiveCard] = useState<DashboardCard | null>(null);
 
+  // Debug: Log selectedLGA changes
+  useEffect(() => {
+    console.log('[DashboardPage] selectedLGA changed:', selectedLGA);
+    const dwellingApprovalCards = cards.filter(c => c.type === 'lga-dwelling-approvals');
+    if (dwellingApprovalCards.length > 0) {
+      console.log('[DashboardPage] Found lga-dwelling-approvals cards:', dwellingApprovalCards);
+    }
+  }, [selectedLGA, cards]);
+
   // Load saved layout on component mount
   useEffect(() => {
     const savedLayout = localStorage.getItem('dashboard-layout');
     if (savedLayout) {
       try {
         const parsedLayout = JSON.parse(savedLayout);
+        console.log('[DashboardPage] Loading cards from localStorage:', parsedLayout);
+        const dwellingCards = parsedLayout.filter((c: DashboardCard) => c.type === 'lga-dwelling-approvals');
+        if (dwellingCards.length > 0) {
+          console.log('[DashboardPage] Found lga-dwelling-approvals cards in localStorage:', dwellingCards);
+        }
         setCards(parsedLayout);
       } catch (error) {
         console.error('Failed to load saved dashboard layout:', error);
@@ -230,6 +236,9 @@ export default function DashboardPage() {
         };
 
         console.log('✅ Adding new card:', newCard);
+        if (newCard.type === 'lga-dwelling-approvals') {
+          console.log('[DEBUG lga-dwelling-approvals] Card created from library template with type:', newCard.type);
+        }
 
         setCards(currentCards => {
           const newCards = [...currentCards, newCard];
@@ -281,24 +290,15 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-4">
+              {isAdminMode && (
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${isEditMode ? 'bg-orange-500 animate-pulse' : 'bg-green-500'}`}></div>
-                  <span className="text-sm font-medium">
-                    {isEditMode ? 'Edit Mode' : 'View Mode'}
+                  <div className="w-2 h-2 rounded-full bg-[#00FF41] animate-pulse"></div>
+                  <span className="text-sm font-medium text-[#00FF41]">
+                    Edit Mode - Drag cards from sidebar
                   </span>
                 </div>
+              )}
 
-                {isAdminMode && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#00FF41] animate-pulse"></div>
-                    <span className="text-sm font-medium text-[#00FF41]">
-                      Edit Mode - Drag cards from sidebar
-                    </span>
-                  </div>
-                )}
-              </div>
-              
               <div className="flex items-center gap-2">
                 <label className="text-xs text-muted-foreground">Max Columns:</label>
                 <select
@@ -314,29 +314,20 @@ export default function DashboardPage() {
                   <option value={6}>6</option>
                 </select>
               </div>
-              
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={resetLayout}
-                  className="text-xs px-3 py-1 bg-destructive/20 text-destructive hover:bg-destructive/30 rounded transition-colors"
-                >
-                  Reset Layout
-                </button>
-                <button
-                  onClick={() => setIsAdminMode(!isAdminMode)}
-                  className={`text-xs px-3 py-1 rounded transition-colors ${
-                    isAdminMode
-                      ? 'bg-[#00FF41]/20 text-[#00FF41] hover:bg-[#00FF41]/30'
-                      : 'bg-muted/20 text-muted-foreground hover:bg-muted/30'
-                  }`}
-                >
-                  {isAdminMode ? 'Exit Edit' : 'Edit'}
-                </button>
-              </div>
-              
-              <span className="text-xs bg-highlight/10 text-highlight px-3 py-1 rounded-full font-medium animate-pulse">
-                ● LIVE DATA
-              </span>
+
+              <button
+                onClick={() => {
+                  setIsAdminMode(!isAdminMode);
+                  setIsEditMode(!isEditMode);
+                }}
+                className={`text-xs px-3 py-1 rounded transition-colors ${
+                  isAdminMode
+                    ? 'bg-[#00FF41]/20 text-[#00FF41] hover:bg-[#00FF41]/30'
+                    : 'bg-muted/20 text-muted-foreground hover:bg-muted/30'
+                }`}
+              >
+                {isAdminMode ? 'Exit Edit' : 'Edit'}
+              </button>
             </div>
           </div>
         </div>
@@ -349,20 +340,22 @@ export default function DashboardPage() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        {/* Admin Toolbar - appears when admin mode is enabled */}
-        <AdminToolbar isVisible={isAdminMode} />
+        <div className="flex h-full">
+          {/* Admin Toolbar - appears when admin mode is enabled */}
+          <AdminToolbar isVisible={isAdminMode} onResetLayout={resetLayout} />
 
-        <div className="w-full px-6 py-8">
-          {/* Draggable Dashboard */}
-          <DraggableDashboard
-            selectedLGA={selectedLGA}
-            onLGAChange={handleLGAChange}
-            maxColumns={maxColumns}
-            isEditMode={isEditMode}
-            isAdminMode={isAdminMode}
-            cards={cards}
-            setCards={setCards}
-          />
+          <div className="flex-1 w-full px-6 py-8 overflow-auto">
+            {/* Draggable Dashboard */}
+            <DraggableDashboard
+              selectedLGA={selectedLGA}
+              onLGAChange={handleLGAChange}
+              maxColumns={maxColumns}
+              isEditMode={isEditMode}
+              isAdminMode={isAdminMode}
+              cards={cards}
+              setCards={setCards}
+            />
+          </div>
         </div>
 
         {/* Drag Overlay for templates and cards being dragged */}
@@ -378,7 +371,7 @@ export default function DashboardPage() {
             <div className="dashboard-card-overlay">
               <DraggableCard
                 card={activeCard}
-                isEditMode={true}
+                isEditMode={false}
                 isAdminMode={isAdminMode}
                 selectedLGA={selectedLGA}
                 onLGAChange={handleLGAChange}
