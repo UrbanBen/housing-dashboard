@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, TrendingUp, Users, MapPin, BarChart3, Square, Database, AlertCircle, Target } from "lucide-react";
 import type { LGA } from '@/components/filters/LGALookup';
-import { KeyMetricsConfigForm } from './KeyMetricsConfigForm';
+import { KeyMetricsConfigForm, type KeyMetricsConfig } from './KeyMetricsConfigForm';
+import { DataItemConfigForm, type DataItemDetailedConfig } from './DataItemConfigForm';
 
 interface KeyMetricsProps {
   selectedLGA: LGA | null;
@@ -37,35 +38,6 @@ interface ConnectionInfo {
   user: string;
   schema: string;
   table: string;
-}
-
-interface KeyMetricsConfig {
-  host: string;
-  port: number;
-  database: string;
-  user: string;
-  passwordPath: string;
-  schema: string;
-  table: string;
-  areaColumn: string;
-  accordTargetColumn: string;
-  lgaNameColumn: string;
-  buildingApprovals: {
-    enabled: boolean;
-    schema: string;
-    table: string;
-    lgaNameColumn: string;
-    totalDwellingsColumn: string;
-    newHousesColumn: string;
-    newOtherColumn: string;
-    valueTotalResColumn: string;
-  };
-  filterIntegration: {
-    enabled: boolean;
-    sourceCardId: string;
-    sourceCardType: 'search-geography-card' | 'lga-lookup' | 'custom';
-    autoRefresh: boolean;
-  };
 }
 
 // Get LGA data - combines real database data with defaults
@@ -111,6 +83,8 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
   const [connection, setConnection] = useState<ConnectionInfo | null>(null);
   const [showConfigForm, setShowConfigForm] = useState(false);
   const [currentConfig, setCurrentConfig] = useState<KeyMetricsConfig | null>(null);
+  const [showDataItemForm, setShowDataItemForm] = useState(false);
+  const [currentDataItem, setCurrentDataItem] = useState<{ key: string; title: string; config: DataItemDetailedConfig | null } | null>(null);
 
   // Get stored configuration
   const getStoredConfig = (): KeyMetricsConfig => {
@@ -140,8 +114,40 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
         sourceCardId: 'search-geography-card',
         sourceCardType: 'search-geography-card',
         autoRefresh: true
+      },
+      dataItems: {
+        totalDwellings: {
+          enabled: true,
+          title: 'Building Approvals (Total Dwellings)',
+          subtitle: 'FYTD Total Approvals'
+        },
+        newHouses: {
+          enabled: true,
+          title: 'New Houses',
+          subtitle: 'FYTD New Houses'
+        },
+        newOther: {
+          enabled: true,
+          title: 'New Other Dwellings',
+          subtitle: 'FYTD New Other'
+        },
+        valueTotalRes: {
+          enabled: true,
+          title: 'Total Residential Value',
+          subtitle: 'FYTD Total Value'
+        },
+        accordTarget: {
+          enabled: true,
+          title: 'National Housing Accord Target',
+          subtitle: 'Housing Target'
+        }
       }
     };
+
+    // Check if we're in the browser before accessing localStorage
+    if (typeof window === 'undefined') {
+      return defaultConfig;
+    }
 
     const stored = localStorage.getItem('key-metrics-config');
     if (stored) {
@@ -158,6 +164,10 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
           filterIntegration: {
             ...defaultConfig.filterIntegration,
             ...(parsedConfig.filterIntegration || {})
+          },
+          dataItems: {
+            ...defaultConfig.dataItems,
+            ...(parsedConfig.dataItems || {})
           }
         };
       } catch (e) {
@@ -341,14 +351,12 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
     }
   }, [externalSelectedLGA]);
 
-  // Handle double click for admin mode
+  // Handle double click to configure
   const handleDoubleClick = () => {
-    if (isAdminMode) {
-      const config = getStoredConfig();
-      setCurrentConfig(config);
-      setShowConfigForm(true);
-      onAdminClick?.();
-    }
+    const config = getStoredConfig();
+    setCurrentConfig(config);
+    setShowConfigForm(true);
+    onAdminClick?.();
   };
 
   const handleSaveConfig = (newConfig: KeyMetricsConfig) => {
@@ -364,167 +372,134 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
     }
   };
 
+  // Handle double click on individual data item
+  const handleDataItemDoubleClick = (key: string, title: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering card's double-click
+
+    // Load stored config for this data item
+    const stored = localStorage.getItem(`key-metrics-data-item-${key}`);
+    let itemConfig: DataItemDetailedConfig | null = null;
+
+    if (stored) {
+      try {
+        itemConfig = JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to parse data item config:', e);
+      }
+    }
+
+    setCurrentDataItem({ key, title, config: itemConfig });
+    setShowDataItemForm(true);
+  };
+
+  // Save individual data item configuration
+  const handleSaveDataItemConfig = (config: DataItemDetailedConfig) => {
+    if (!currentDataItem) return;
+
+    // Save to localStorage with key-specific identifier
+    localStorage.setItem(`key-metrics-data-item-${currentDataItem.key}`, JSON.stringify(config));
+
+    // Close the form
+    setShowDataItemForm(false);
+    setCurrentDataItem(null);
+  };
+
   const data = getLGAData(selectedLGA, areaData, accordTargetData, buildingApprovalsData);
+  const config = getStoredConfig();
+
+  // Map data item keys to their display properties
+  const dataItemMap = {
+    totalDwellings: {
+      icon: Home,
+      value: data.buildingApprovals !== null ? data.buildingApprovals.toLocaleString() : 'N/A',
+      loading: isLoadingBuildingApprovals,
+      error: buildingApprovalsError
+    },
+    newHouses: {
+      icon: Home,
+      value: data.newHouses !== null ? data.newHouses.toLocaleString() : 'N/A',
+      loading: isLoadingBuildingApprovals,
+      error: buildingApprovalsError
+    },
+    newOther: {
+      icon: Users,
+      value: data.newOther !== null ? data.newOther.toLocaleString() : 'N/A',
+      loading: isLoadingBuildingApprovals,
+      error: buildingApprovalsError
+    },
+    valueTotalRes: {
+      icon: TrendingUp,
+      value: data.valueTotalRes !== null ? `$${(data.valueTotalRes / 1000).toFixed(1)}M` : 'N/A',
+      loading: isLoadingBuildingApprovals,
+      error: buildingApprovalsError
+    },
+    accordTarget: {
+      icon: Target,
+      value: data.accordTarget ? data.accordTarget.toLocaleString() : 'N/A',
+      loading: isLoadingAccordTarget,
+      error: accordTargetError
+    }
+  };
+
+  // Filter enabled data items
+  const enabledItems = Object.entries(config.dataItems).filter(([_, item]) => item.enabled);
 
   return (
     <>
     <Card
-      className={`shadow-lg border border-border/50 ${
-        isAdminMode ? 'cursor-pointer hover:ring-2 hover:ring-purple-500 hover:shadow-purple-500/25 hover:shadow-lg transition-all' : ''
-      }`}
+      className="shadow-lg border border-border/50 cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all"
       onDoubleClick={handleDoubleClick}
     >
       <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <BarChart3 className="h-6 w-6 text-primary" />
-            <div>
-              <CardTitle className="text-xl">
-                {selectedLGA ? `${selectedLGA.name} Key Metrics` : 'NSW Key Metrics'}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {selectedLGA ?
-                  `Core housing indicators for ${selectedLGA.name}` :
-                  'Statewide core housing indicators'
-                }
-              </p>
-            </div>
-          </div>
-
-          {/* Connection Status Indicator */}
-          <div className="flex items-center gap-2">
-            {connection ? (
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <span className="text-xs text-muted-foreground">Connected</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                <span className="text-xs text-muted-foreground">No connection</span>
-              </div>
-            )}
+        <div className="flex items-center gap-3">
+          <BarChart3 className="h-6 w-6 text-primary" />
+          <div>
+            <CardTitle className="text-xl">
+              {selectedLGA ? `${selectedLGA.name} Key Metrics` : 'NSW Key Metrics'}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {selectedLGA ?
+                `Core housing indicators for ${selectedLGA.name}` :
+                'Statewide core housing indicators'
+              }
+            </p>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         {/* Key Metrics Grid */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-primary/5 border border-primary/10 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Home className="h-5 w-5 text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">Building Approvals (Total Dwellings)</span>
-              {isLoadingBuildingApprovals && (
-                <Database className="h-4 w-4 animate-spin text-muted-foreground" />
-              )}
-              {buildingApprovalsError && (
-                <AlertCircle className="h-4 w-4 text-destructive" />
-              )}
-            </div>
-            <div className="text-3xl font-bold text-foreground mb-1">
-              {isLoadingBuildingApprovals ? '...' : (data.buildingApprovals !== null ? data.buildingApprovals.toLocaleString() : 'N/A')}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {buildingApprovalsError ? 'Database error' : 'FYTD Total Dwellings'}
-            </div>
-          </div>
+          {enabledItems.map(([key, item]) => {
+            const itemData = dataItemMap[key as keyof typeof dataItemMap];
+            if (!itemData) return null;
 
-          <div className="bg-chart-2/10 border border-chart-2/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Home className="h-5 w-5" style={{ color: 'hsl(var(--chart-2))' }} />
-              <span className="text-sm font-medium text-muted-foreground">New Houses</span>
-              {isLoadingBuildingApprovals && (
-                <Database className="h-4 w-4 animate-spin text-muted-foreground" />
-              )}
-              {buildingApprovalsError && (
-                <AlertCircle className="h-4 w-4 text-destructive" />
-              )}
-            </div>
-            <div className="text-3xl font-bold text-foreground mb-1">
-              {isLoadingBuildingApprovals ? '...' : (data.newHouses !== null ? data.newHouses.toLocaleString() : 'N/A')}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {buildingApprovalsError ? 'Database error' : 'FYTD New Houses'}
-            </div>
-          </div>
+            const Icon = itemData.icon;
 
-          <div className="bg-chart-3/10 border border-chart-3/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Home className="h-5 w-5" style={{ color: 'hsl(var(--chart-3))' }} />
-              <span className="text-sm font-medium text-muted-foreground">New Other Dwellings</span>
-              {isLoadingBuildingApprovals && (
-                <Database className="h-4 w-4 animate-spin text-muted-foreground" />
-              )}
-              {buildingApprovalsError && (
-                <AlertCircle className="h-4 w-4 text-destructive" />
-              )}
-            </div>
-            <div className="text-3xl font-bold text-foreground mb-1">
-              {isLoadingBuildingApprovals ? '...' : (data.newOther !== null ? data.newOther.toLocaleString() : 'N/A')}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {buildingApprovalsError ? 'Database error' : 'FYTD New Other'}
-            </div>
-          </div>
-
-          <div className="bg-highlight/10 border border-highlight/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-5 w-5 text-highlight" />
-              <span className="text-sm font-medium text-muted-foreground">Total Residential Value</span>
-              {isLoadingBuildingApprovals && (
-                <Database className="h-4 w-4 animate-spin text-muted-foreground" />
-              )}
-              {buildingApprovalsError && (
-                <AlertCircle className="h-4 w-4 text-destructive" />
-              )}
-            </div>
-            <div className="text-3xl font-bold text-foreground mb-1">
-              {isLoadingBuildingApprovals ? '...' : (data.valueTotalRes !== null ? `$${(data.valueTotalRes / 1000).toFixed(1)}M` : 'N/A')}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {buildingApprovalsError ? 'Database error' : 'FYTD Total Value'}
-            </div>
-          </div>
-
-          <div className="bg-chart-4/10 border border-chart-4/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Square className="h-5 w-5" style={{ color: 'hsl(var(--chart-4))' }} />
-              <span className="text-sm font-medium text-muted-foreground">Area</span>
-              {isLoading && (
-                <Database className="h-4 w-4 animate-spin text-muted-foreground" />
-              )}
-              {error && (
-                <AlertCircle className="h-4 w-4 text-destructive" />
-              )}
-            </div>
-            <div className="text-3xl font-bold text-foreground mb-1">
-              {isLoading ? '...' : data.area.toLocaleString()} km²
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {error ? 'Database error' : 'Administrative Area'}
-            </div>
-          </div>
-
-          <div className="bg-chart-4/10 border border-chart-4/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Target className="h-5 w-5" style={{ color: 'hsl(var(--chart-4))' }} />
-              <span className="text-sm font-medium text-muted-foreground">National Housing Accord Target</span>
-              {isLoadingAccordTarget && (
-                <Database className="h-4 w-4 animate-spin text-muted-foreground" />
-              )}
-              {accordTargetError && (
-                <AlertCircle className="h-4 w-4 text-destructive" />
-              )}
-            </div>
-            <div className="text-3xl font-bold text-foreground mb-1">
-              {isLoadingAccordTarget ? '...' : (data.accordTarget ? data.accordTarget.toLocaleString() : 'N/A')}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {accordTargetError ? 'Database error' :
-               accordTargetData ? (accordTargetData.accord_target !== null ? 'Housing Target' : 'No target data available') :
-               'No database connection'}
-            </div>
-          </div>
+            return (
+              <div
+                key={key}
+                className="bg-primary/5 border border-primary/10 rounded-lg p-4 hover:bg-primary/10 hover:shadow-md hover:scale-[1.02] transition-all cursor-pointer"
+                onDoubleClick={(e) => handleDataItemDoubleClick(key, item.title, e)}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium text-muted-foreground">{item.title}</span>
+                  {itemData.loading && (
+                    <Database className="h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                  {itemData.error && (
+                    <AlertCircle className="h-4 w-4 text-destructive" />
+                  )}
+                </div>
+                <div className="text-3xl font-bold text-foreground mb-1">
+                  {itemData.loading ? '...' : itemData.value}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {itemData.error ? 'Database error' : item.subtitle}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Filter Status */}
@@ -548,6 +523,17 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
       onClose={() => setShowConfigForm(false)}
       onSave={handleSaveConfig}
       currentConfig={currentConfig}
+    />
+
+    <DataItemConfigForm
+      isOpen={showDataItemForm}
+      onClose={() => {
+        setShowDataItemForm(false);
+        setCurrentDataItem(null);
+      }}
+      onSave={handleSaveDataItemConfig}
+      currentConfig={currentDataItem?.config || null}
+      itemTitle={currentDataItem?.title || ''}
     />
     </>
   );

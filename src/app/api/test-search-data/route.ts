@@ -343,19 +343,22 @@ export async function GET(request: NextRequest) {
       } else {
         // Get data for specific LGA
         // Cast to numeric and remove commas for consistency
+        // Use ILIKE for case-insensitive pattern matching
+        // Quote column names to handle case-sensitive names like "Column2"
+        const quotedLgaColumn = lgaNameColumn.includes('"') ? lgaNameColumn : `"${lgaNameColumn}"`;
         query = `
           SELECT
-            ${lgaNameColumn} as lga_name,
+            ${quotedLgaColumn} as lga_name,
             CAST(REPLACE(NULLIF(total_dwellings, ''), ',', '') AS NUMERIC) as total_dwellings,
             CAST(REPLACE(NULLIF(new_houses, ''), ',', '') AS NUMERIC) as new_houses,
             CAST(REPLACE(NULLIF(new_other, ''), ',', '') AS NUMERIC) as new_other,
             CAST(REPLACE(NULLIF(value_total_res, ''), ',', '') AS NUMERIC) as value_total_res
           FROM ${schema}.${table}
-          WHERE ${lgaNameColumn} = $1
+          WHERE ${quotedLgaColumn} ILIKE $1
             AND total_dwellings ~ '^[0-9,]+\.?[0-9]*$'
           LIMIT 1
         `;
-        queryParams = [lgaName];
+        queryParams = [`%${lgaName}%`];
       }
 
       console.log(`[${requestId}] Executing building approvals query:`, {

@@ -66,6 +66,8 @@ interface DraggableDashboardProps {
   isAdminMode: boolean;
   cards: DashboardCard[];
   setCards: React.Dispatch<React.SetStateAction<DashboardCard[]>>;
+  activeCard: DashboardCard | null;
+  clearDragState: () => void;
 }
 
 interface DroppableDashboardGridProps {
@@ -76,6 +78,7 @@ interface DroppableDashboardGridProps {
   selectedLGA: LGA | null;
   onLGAChange: (lga: LGA | null) => void;
   onDeleteCard: (cardId: string) => void;
+  activeCard: DashboardCard | null;
 }
 
 function DroppableDashboardGrid({
@@ -85,7 +88,8 @@ function DroppableDashboardGrid({
   isAdminMode,
   selectedLGA,
   onLGAChange,
-  onDeleteCard
+  onDeleteCard,
+  activeCard
 }: DroppableDashboardGridProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: 'dashboard-grid',
@@ -135,6 +139,7 @@ function DroppableDashboardGrid({
             onLGAChange={onLGAChange}
             effectiveColumns={effectiveColumns}
             onDeleteCard={onDeleteCard}
+            isBeingDragged={activeCard?.id === card.id}
           />
         );
       })}
@@ -221,7 +226,7 @@ const defaultCards: DashboardCard[] = [
     id: 'kpi-cards',
     type: 'kpi-cards',
     title: 'KPI Cards',
-    size: 'xl',
+    size: 'small',
     category: 'kpi',
     gridArea: 'kpi-cards'
   },
@@ -271,16 +276,25 @@ const defaultCards: DashboardCard[] = [
   },
 ];
 
-export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode, cards, setCards }: DraggableDashboardProps) {
+export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode, cards, setCards, activeCard, clearDragState }: DraggableDashboardProps) {
 
   // Handle card deletion
   const handleDeleteCard = React.useCallback((cardId: string) => {
+    // Clear any active drag state before deleting
+    clearDragState();
+
+    // Check if the card being deleted is currently being dragged
+    if (activeCard?.id === cardId) {
+      console.warn('[DraggableDashboard] Attempted to delete card that is currently being dragged');
+      return;
+    }
+
     setCards(currentCards => {
       const newCards = currentCards.filter(card => card.id !== cardId);
       localStorage.setItem('dashboard-layout', JSON.stringify(newCards));
       return newCards;
     });
-  }, [setCards]);
+  }, [setCards, clearDragState, activeCard]);
 
   // Calculate effective columns based on screen size and max setting
   const getEffectiveColumns = React.useCallback(() => {
@@ -360,6 +374,7 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
             selectedLGA={selectedLGA}
             onLGAChange={onLGAChange}
             onDeleteCard={handleDeleteCard}
+            activeCard={activeCard}
           />
         </SortableContext>
       </div>
@@ -386,23 +401,6 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
           transition-property: opacity, border-color, box-shadow;
           transition-duration: 0.2s;
           transition-timing-function: ease;
-        }
-
-        /* Fixed heights for each card size to prevent warping */
-        .dashboard-grid .draggable-card[data-size="small"] {
-          min-height: 240px;
-        }
-
-        .dashboard-grid .draggable-card[data-size="medium"] {
-          min-height: 412px;
-        }
-
-        .dashboard-grid .draggable-card[data-size="large"] {
-          min-height: 784px;
-        }
-
-        .dashboard-grid .draggable-card[data-size="xl"] {
-          min-height: 1056px;
         }
 
         .dashboard-grid .draggable-card.dragging {

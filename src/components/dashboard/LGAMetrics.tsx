@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, Home, Building2, Users, Target, Clock, CheckCircle } from "lucide-react";
 import type { LGA } from '@/components/filters/LGALookup';
+import { LGAMetricsConfigForm, type LGAMetricsConfig } from './LGAMetricsConfigForm';
+import { DataItemConfigForm, type DataItemDetailedConfig } from './DataItemConfigForm';
 
 interface LGAMetricsProps {
   selectedLGA: LGA | null;
@@ -105,13 +107,146 @@ const generateLGAMetrics = (lga: LGA | null): LGAMetricsData => {
 
 export function LGAMetrics({ selectedLGA }: LGAMetricsProps) {
   const [metrics, setMetrics] = useState<LGAMetricsData>(() => generateLGAMetrics(selectedLGA));
+  const [showConfigForm, setShowConfigForm] = useState(false);
+  const [currentConfig, setCurrentConfig] = useState<LGAMetricsConfig | null>(null);
+  const [showDataItemForm, setShowDataItemForm] = useState(false);
+  const [currentDataItem, setCurrentDataItem] = useState<{ key: string; title: string; config: DataItemDetailedConfig | null } | null>(null);
 
   useEffect(() => {
     setMetrics(generateLGAMetrics(selectedLGA));
   }, [selectedLGA]);
 
+  // Get stored configuration
+  const getStoredConfig = (): LGAMetricsConfig => {
+    const defaultConfig: LGAMetricsConfig = {
+      host: 'mecone-data-lake.postgres.database.azure.com',
+      port: 5432,
+      database: 'research&insights',
+      user: 'db_admin',
+      passwordPath: '/users/ben/permissions/.env.admin',
+      schema: 'housing_dashboard',
+      table: 'search',
+      lgaNameColumn: 'lga_name24',
+      filterIntegration: {
+        enabled: true,
+        sourceCardId: 'search-geography-card',
+        sourceCardType: 'search-geography-card',
+        autoRefresh: true
+      },
+      dataItems: {
+        buildingApprovals: {
+          enabled: true,
+          title: 'Building Approvals',
+          subtitle: 'from last year'
+        },
+        housingTarget: {
+          enabled: true,
+          title: 'Housing Target (5yr)',
+          subtitle: 'Progress'
+        },
+        daApprovals: {
+          enabled: true,
+          title: 'DA Approvals',
+          subtitle: 'submitted'
+        }
+      }
+    };
+
+    // Check if we're in the browser before accessing localStorage
+    if (typeof window === 'undefined') {
+      return defaultConfig;
+    }
+
+    const stored = localStorage.getItem('lga-metrics-config');
+    if (stored) {
+      try {
+        const parsedConfig = JSON.parse(stored);
+        return {
+          ...defaultConfig,
+          ...parsedConfig,
+          filterIntegration: {
+            ...defaultConfig.filterIntegration,
+            ...(parsedConfig.filterIntegration || {})
+          },
+          dataItems: {
+            ...defaultConfig.dataItems,
+            ...(parsedConfig.dataItems || {})
+          }
+        };
+      } catch (e) {
+        console.error('Failed to parse stored LGA metrics config:', e);
+      }
+    }
+    return defaultConfig;
+  };
+
+  // Handle double click to configure card
+  const handleDoubleClick = () => {
+    const config = getStoredConfig();
+    setCurrentConfig(config);
+    setShowConfigForm(true);
+  };
+
+  const handleSaveConfig = (newConfig: LGAMetricsConfig) => {
+    localStorage.setItem('lga-metrics-config', JSON.stringify(newConfig));
+    setCurrentConfig(newConfig);
+  };
+
+  // Handle double click on individual data item
+  const handleDataItemDoubleClick = (key: string, title: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    const stored = localStorage.getItem(`lga-metrics-data-item-${key}`);
+    let itemConfig: DataItemDetailedConfig | null = null;
+
+    if (stored) {
+      try {
+        itemConfig = JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to parse data item config:', e);
+      }
+    }
+
+    setCurrentDataItem({ key, title, config: itemConfig });
+    setShowDataItemForm(true);
+  };
+
+  const handleSaveDataItemConfig = (config: DataItemDetailedConfig) => {
+    if (!currentDataItem) return;
+    localStorage.setItem(`lga-metrics-data-item-${currentDataItem.key}`, JSON.stringify(config));
+    setShowDataItemForm(false);
+    setCurrentDataItem(null);
+  };
+
+  const config = getStoredConfig();
+
+  // Map data item keys to their display properties
+  const dataItemMap = {
+    buildingApprovals: {
+      icon: Home,
+      value: metrics.buildingApprovals.current.toLocaleString(),
+      change: metrics.buildingApprovals.change,
+      trend: metrics.buildingApprovals.trend
+    },
+    housingTarget: {
+      icon: Target,
+      value: metrics.housingTarget.target.toLocaleString(),
+      progress: metrics.housingTarget.progressPercent
+    },
+    daApprovals: {
+      icon: CheckCircle,
+      value: metrics.developmentApplications.approved.toLocaleString(),
+      submitted: metrics.developmentApplications.submitted.toLocaleString(),
+      approvalRate: metrics.developmentApplications.approvalRate
+    }
+  };
+
+  // Filter enabled data items
+  const enabledItems = Object.entries(config.dataItems).filter(([_, item]) => item.enabled);
+
   return (
-    <Card className="shadow-lg border border-border/50">
+    <>
+    <Card className="shadow-lg border border-border/50 cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all" onDoubleClick={handleDoubleClick}>
       <CardHeader className="pb-4">
         <CardTitle className="text-xl flex items-center gap-3">
           <Building2 className="h-6 w-6 text-primary" />
@@ -125,60 +260,81 @@ export function LGAMetrics({ selectedLGA }: LGAMetricsProps) {
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Building Approvals */}
+        {/* Dynamic Data Items */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-primary/5 border border-primary/10 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Home className="h-5 w-5 text-primary" />
-              {metrics.buildingApprovals.trend === 'up' ? (
-                <TrendingUp className="h-4 w-4 text-green-500" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-red-500" />
-              )}
-            </div>
-            <div className="text-2xl font-bold text-foreground mb-1">
-              {metrics.buildingApprovals.current.toLocaleString()}
-            </div>
-            <div className="text-sm text-muted-foreground mb-1">Building Approvals</div>
-            <div className={`text-xs ${metrics.buildingApprovals.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {metrics.buildingApprovals.change >= 0 ? '+' : ''}{metrics.buildingApprovals.change}% from last year
-            </div>
-          </div>
+          {enabledItems.map(([key, item]) => {
+            const itemData = dataItemMap[key as keyof typeof dataItemMap];
+            if (!itemData) return null;
 
-          <div className="bg-chart-2/5 border border-chart-2/10 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <Target className="h-5 w-5 text-chart-2" />
-              <div className="text-xs bg-chart-2/20 text-chart-2 px-2 py-1 rounded">
-                {metrics.housingTarget.progressPercent}%
-              </div>
-            </div>
-            <div className="text-2xl font-bold text-foreground mb-1">
-              {metrics.housingTarget.target.toLocaleString()}
-            </div>
-            <div className="text-sm text-muted-foreground mb-1">Housing Target (5yr)</div>
-            <div className="w-full bg-chart-2/10 rounded-full h-2">
-              <div 
-                className="bg-chart-2 h-2 rounded-full" 
-                style={{ width: `${Math.min(metrics.housingTarget.progressPercent, 100)}%` }}
-              />
-            </div>
-          </div>
+            const Icon = itemData.icon;
 
-          <div className="bg-chart-3/5 border border-chart-3/10 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <CheckCircle className="h-5 w-5 text-chart-3" />
-              <div className="text-xs bg-chart-3/20 text-chart-3 px-2 py-1 rounded">
-                {metrics.developmentApplications.approvalRate}%
+            return (
+              <div
+                key={key}
+                className="bg-primary/5 border border-primary/10 rounded-lg p-4 hover:bg-primary/10 hover:shadow-md hover:scale-[1.02] transition-all cursor-pointer"
+                onDoubleClick={(e) => handleDataItemDoubleClick(key, item.title, e)}
+              >
+                {key === 'buildingApprovals' && (
+                  <>
+                    <div className="flex items-center justify-between mb-2">
+                      <Icon className="h-5 w-5 text-primary" />
+                      {itemData.trend === 'up' ? (
+                        <TrendingUp className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4 text-red-500" />
+                      )}
+                    </div>
+                    <div className="text-2xl font-bold text-foreground mb-1">
+                      {itemData.value}
+                    </div>
+                    <div className="text-sm text-muted-foreground mb-1">{item.title}</div>
+                    <div className={`text-xs ${itemData.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {itemData.change >= 0 ? '+' : ''}{itemData.change}% {item.subtitle}
+                    </div>
+                  </>
+                )}
+
+                {key === 'housingTarget' && (
+                  <>
+                    <div className="flex items-center justify-between mb-2">
+                      <Icon className="h-5 w-5 text-primary" />
+                      <div className="text-xs bg-primary/20 text-primary px-2 py-1 rounded">
+                        {itemData.progress}%
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-foreground mb-1">
+                      {itemData.value}
+                    </div>
+                    <div className="text-sm text-muted-foreground mb-1">{item.title}</div>
+                    <div className="w-full bg-primary/10 rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full"
+                        style={{ width: `${Math.min(itemData.progress, 100)}%` }}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {key === 'daApprovals' && (
+                  <>
+                    <div className="flex items-center justify-between mb-2">
+                      <Icon className="h-5 w-5 text-primary" />
+                      <div className="text-xs bg-primary/20 text-primary px-2 py-1 rounded">
+                        {itemData.approvalRate}%
+                      </div>
+                    </div>
+                    <div className="text-2xl font-bold text-foreground mb-1">
+                      {itemData.value}
+                    </div>
+                    <div className="text-sm text-muted-foreground mb-1">{item.title}</div>
+                    <div className="text-xs text-primary">
+                      {itemData.submitted} {item.subtitle}
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
-            <div className="text-2xl font-bold text-foreground mb-1">
-              {metrics.developmentApplications.approved.toLocaleString()}
-            </div>
-            <div className="text-sm text-muted-foreground mb-1">DA Approvals</div>
-            <div className="text-xs text-chart-3">
-              {metrics.developmentApplications.submitted.toLocaleString()} submitted
-            </div>
-          </div>
+            );
+          })}
         </div>
 
         {/* Construction Activity */}
@@ -258,5 +414,24 @@ export function LGAMetrics({ selectedLGA }: LGAMetricsProps) {
         )}
       </CardContent>
     </Card>
+
+    <LGAMetricsConfigForm
+      isOpen={showConfigForm}
+      onClose={() => setShowConfigForm(false)}
+      onSave={handleSaveConfig}
+      currentConfig={currentConfig}
+    />
+
+    <DataItemConfigForm
+      isOpen={showDataItemForm}
+      onClose={() => {
+        setShowDataItemForm(false);
+        setCurrentDataItem(null);
+      }}
+      onSave={handleSaveDataItemConfig}
+      currentConfig={currentDataItem?.config || null}
+      itemTitle={currentDataItem?.title || ''}
+    />
+    </>
   );
 }

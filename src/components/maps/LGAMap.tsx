@@ -115,10 +115,11 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
           touchZoom: false
         });
 
-        // Add base layer
-        leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
-          maxZoom: 18
+        // Add dark mode base layer
+        leaflet.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '© OpenStreetMap contributors © CARTO',
+          maxZoom: 19,
+          subdomains: 'abcd'
         }).addTo(mapRef.current);
 
         // Default view of NSW - centered on mainland (excludes remote islands)

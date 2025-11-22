@@ -4,10 +4,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Database, RefreshCw, AlertCircle, ChevronDown } from "lucide-react";
 import { TestCardConnectionForm } from './TestCardConnectionForm';
+import { AustraliaStateMap } from '@/components/maps/AustraliaStateMap';
+
+import type { LGA } from '@/components/filters/LGALookup';
 
 interface TestSearchCardProps {
   isAdminMode?: boolean;
   onAdminClick?: () => void;
+  selectedLGA?: LGA | null;
+  onLGAChange?: (lga: LGA | null) => void;
 }
 
 interface LGAOption {
@@ -33,8 +38,14 @@ interface ConnectionInfo {
   table: string;
 }
 
-export function TestSearchCard({ isAdminMode = false, onAdminClick }: TestSearchCardProps) {
+export function TestSearchCard({
+  isAdminMode = false,
+  onAdminClick,
+  selectedLGA: parentSelectedLGA,
+  onLGAChange
+}: TestSearchCardProps) {
   const [selectedLGA, setSelectedLGA] = useState<string>('');
+  const [selectedState, setSelectedState] = useState<string>('New South Wales');
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [lgaOptions, setLgaOptions] = useState<LGAOption[]>([]);
@@ -47,9 +58,11 @@ export function TestSearchCard({ isAdminMode = false, onAdminClick }: TestSearch
   const [currentConfig, setCurrentConfig] = useState<any>(null);
 
   // Fetch LGAs from database
-  const fetchLGAs = async () => {
+  const fetchLGAs = async (stateName?: string) => {
     setIsLoadingLGAs(true);
     try {
+      const stateToFetch = stateName || selectedState;
+
       // Get stored config for database connection
       const storedConfig = localStorage.getItem('search-geography-card-config');
       const config = storedConfig ? JSON.parse(storedConfig) : {
@@ -63,7 +76,7 @@ export function TestSearchCard({ isAdminMode = false, onAdminClick }: TestSearch
         schema: config.schema,
         table: config.table,
         state_column: 'ste_name21',
-        state_value: 'New South Wales',
+        state_value: stateToFetch,
         lga_column: 'lga_name24'
       });
 
@@ -153,8 +166,18 @@ export function TestSearchCard({ isAdminMode = false, onAdminClick }: TestSearch
     setIsDropdownOpen(false);
     fetchDataForLGA(lgaName);
 
-    // Emit custom event for other cards to listen to
+    // Call parent's onLGAChange callback to update dashboard state
     const lgaOption = lgaOptions.find(lga => lga.lga_name === lgaName);
+    if (onLGAChange && lgaOption) {
+      const lgaObject: LGA = {
+        id: lgaOption.lga_code,
+        name: lgaOption.lga_name
+      };
+      console.log('[TestSearchCard] Calling onLGAChange with:', lgaObject);
+      onLGAChange(lgaObject);
+    }
+
+    // Also emit custom event for backward compatibility
     const event = new CustomEvent('search-geography-lga-selected', {
       detail: {
         lgaName: lgaName,
@@ -164,31 +187,29 @@ export function TestSearchCard({ isAdminMode = false, onAdminClick }: TestSearch
     window.dispatchEvent(event);
   };
 
-  // Handle double click for admin mode
+  // Handle double click to configure
   const handleDoubleClick = () => {
-    if (isAdminMode) {
-      const config = {
-        host: 'mecone-data-lake.postgres.database.azure.com',
-        port: 5432,
-        database: 'research&insights',
-        user: 'db_admin',
-        passwordPath: '/users/ben/permissions/.env.admin',
-        schema: 'housing_dashboard',
-        table: 'search',
-        column: 'lga_name24',
-        row: 1,
-        customQuery: '',
-        useCustomQuery: false,
-        filterIntegration: {
-          enabled: true,
-          lgaColumn: 'lga_name24',
-          dynamicFiltering: true
-        }
-      };
-      setCurrentConfig(config);
-      setShowConnectionForm(true);
-      onAdminClick?.();
-    }
+    const config = {
+      host: 'mecone-data-lake.postgres.database.azure.com',
+      port: 5432,
+      database: 'research&insights',
+      user: 'db_admin',
+      passwordPath: '/users/ben/permissions/.env.admin',
+      schema: 'housing_dashboard',
+      table: 'search',
+      column: 'lga_name24',
+      row: 1,
+      customQuery: '',
+      useCustomQuery: false,
+      filterIntegration: {
+        enabled: true,
+        lgaColumn: 'lga_name24',
+        dynamicFiltering: true
+      }
+    };
+    setCurrentConfig(config);
+    setShowConnectionForm(true);
+    onAdminClick?.();
   };
 
   const handleSaveConfig = (newConfig: any) => {
@@ -205,12 +226,18 @@ export function TestSearchCard({ isAdminMode = false, onAdminClick }: TestSearch
     setCurrentConfig(newConfig);
   };
 
+  // Handle state selection from map
+  const handleStateClick = (stateName: string) => {
+    setSelectedState(stateName);
+    setSelectedLGA(''); // Clear LGA selection
+    setSearchQuery(''); // Clear search
+    fetchLGAs(stateName); // Fetch LGAs for selected state
+  };
+
   return (
     <>
     <Card
-      className={`shadow-lg border border-border/50 h-fit ${
-        isAdminMode ? 'cursor-pointer hover:ring-2 hover:ring-purple-500 hover:shadow-purple-500/25 hover:shadow-lg transition-all' : ''
-      }`}
+      className="shadow-lg border border-border/50 h-fit cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all"
       onDoubleClick={handleDoubleClick}
     >
       <CardHeader className="pb-3">
@@ -234,39 +261,22 @@ export function TestSearchCard({ isAdminMode = false, onAdminClick }: TestSearch
             </button>
           </div>
         </div>
-
-        {/* Current Selection - Always visible to prevent resizing */}
-        <div className="mt-3 bg-primary/10 border border-primary/20 rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <div>
-              {selectedLGA ? (
-                <>
-                  <div className="font-semibold text-foreground">{selectedLGA}</div>
-                  <div className="text-xs text-muted-foreground">
-                    NSW LGA
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="font-semibold text-muted-foreground">No Selection</div>
-                  <div className="text-xs text-muted-foreground">
-                    Choose an LGA to view specific data
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* Australia State Map */}
+        <AustraliaStateMap
+          selectedState={selectedState}
+          onStateClick={handleStateClick}
+        />
+
         {/* Searchable Dropdown */}
         <div className="relative">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Search NSW LGAs..."
+              placeholder={`Search ${selectedState === 'New South Wales' ? 'NSW' : selectedState} LGAs...`}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -329,20 +339,27 @@ export function TestSearchCard({ isAdminMode = false, onAdminClick }: TestSearch
           )}
         </div>
 
-
-        {/* Connection Status */}
-        <div className="text-xs text-muted-foreground border-t pt-3">
-          {connection ? (
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              <span>Live</span>
+        {/* Current Selection - Always visible to prevent resizing */}
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              {selectedLGA ? (
+                <>
+                  <div className="font-semibold text-foreground">{selectedLGA}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {selectedState === 'New South Wales' ? 'NSW' : selectedState} LGA
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="font-semibold text-muted-foreground">No LGA Selected</div>
+                  <div className="text-xs text-muted-foreground">
+                    Choose an LGA from {selectedState === 'New South Wales' ? 'NSW' : selectedState}
+                  </div>
+                </>
+              )}
             </div>
-          ) : (
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-              <span>Select an LGA to connect</span>
-            </div>
-          )}
+          </div>
         </div>
       </CardContent>
     </Card>

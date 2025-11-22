@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Database, Settings, Save, RefreshCw, AlertCircle, CheckCircle, FolderOpen, FileText } from "lucide-react";
 
@@ -191,9 +192,17 @@ export function TestCardConnectionForm({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-      <div className="bg-background border border-border rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
+  return createPortal(
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        className="bg-background border border-border rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <Card className="border-0 shadow-none">
           <CardHeader className="pb-4 border-b border-border">
             <div className="flex items-center justify-between">
@@ -524,6 +533,7 @@ export function TestCardConnectionForm({
           </CardContent>
         </Card>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

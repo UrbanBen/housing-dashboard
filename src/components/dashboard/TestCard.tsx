@@ -252,29 +252,27 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
   };
 
   const handleDoubleClick = () => {
-    if (isAdminMode) {
-      const config = {
-        host: 'mecone-data-lake.postgres.database.azure.com',
-        port: 5432,
-        database: 'research&insights',
-        user: 'db_admin',
-        passwordPath: '/users/ben/permissions/.env.admin',
-        schema: connection?.schema || 'housing_dashboard',
-        table: connection?.table || 'search',
-        column: data?.column || 'lga_name24',
-        row: data?.row || 1,
-        customQuery: '',
-        useCustomQuery: false,
-        filterIntegration: {
-          enabled: false,
-          lgaColumn: 'lga_name24',
-          dynamicFiltering: false
-        }
-      };
-      setCurrentConfig(config);
-      setShowConnectionForm(true);
-      onAdminClick?.();
-    }
+    const config = {
+      host: 'mecone-data-lake.postgres.database.azure.com',
+      port: 5432,
+      database: 'research&insights',
+      user: 'db_admin',
+      passwordPath: '/users/ben/permissions/.env.admin',
+      schema: connection?.schema || 'housing_dashboard',
+      table: connection?.table || 'search',
+      column: data?.column || 'lga_name24',
+      row: data?.row || 1,
+      customQuery: '',
+      useCustomQuery: false,
+      filterIntegration: {
+        enabled: false,
+        lgaColumn: 'lga_name24',
+        dynamicFiltering: false
+      }
+    };
+    setCurrentConfig(config);
+    setShowConnectionForm(true);
+    onAdminClick?.();
   };
 
   const handleSaveConfig = (newConfig: any) => {
@@ -295,9 +293,7 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
   return (
     <>
     <Card
-      className={`shadow-lg border border-border/50 h-fit ${
-        isAdminMode ? 'cursor-pointer hover:ring-2 hover:ring-purple-500 hover:shadow-purple-500/25 hover:shadow-lg transition-all' : ''
-      }`}
+      className="shadow-lg border border-border/50 h-fit cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all"
       onDoubleClick={handleDoubleClick}
     >
       <CardHeader className="pb-3">

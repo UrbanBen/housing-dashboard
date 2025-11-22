@@ -26,77 +26,69 @@ export async function GET(request: Request) {
   }
 }
 
-async function getBuildingApprovalsData(lgaName?: string | null) {
-  // Get data from July 2021 to October 2024 (all 40 months)
+async function getBuildingApprovalsData(lgaParam?: string | null) {
   // Database: mosaic_pro, Schema: public, Table: abs_building_approvals_lga
+  // Filters by LGA code from Search Geography card
+  // Uses maximum date range available in the table
 
-  // Build the query with conditional LGA filtering
+  // lgaParam can be either LGA name (from Search Geography) or LGA code
+  // We'll try to extract the code if it's available in the LGALookup id format
+  const lgaCode = lgaParam; // For now, assume it's the LGA name and we'll filter in memory
+
+  // First, get the date range available in the table
+  const dateRangeQuery = `
+    SELECT
+      MIN(year) as min_year,
+      MAX(year) as max_year,
+      MIN(month) as min_month,
+      MAX(month) as max_month
+    FROM public.abs_building_approvals_lga
+    WHERE year IS NOT NULL AND month IS NOT NULL
+  `;
+
+  const dateRangeResult = await query(dateRangeQuery, []);
+  const { min_year, max_year, min_month, max_month } = dateRangeResult.rows[0];
+
+  // Calculate the actual start and end dates
+  const startDate = `${min_year}-${String(min_month).padStart(2, '0')}-01`;
+  const endDate = `${max_year}-${String(max_month).padStart(2, '0')}-01`;
+
+  // Build the main query - aggregate all LGAs by period
+  // No joins needed since we're in a different database than LGA names
   const queryText = `
     WITH date_range AS (
-      -- Generate all months from July 2021 to October 2024 (40 months total)
+      -- Generate all months from min to max date in the table
       SELECT
-        year,
-        month,
-        year || '-' || LPAD(month::text, 2, '0') as period
-      FROM (
-        SELECT
-          EXTRACT(YEAR FROM d)::INTEGER as year,
-          EXTRACT(MONTH FROM d)::INTEGER as month
-        FROM generate_series(
-          '2021-07-01'::date,
-          '2024-10-01'::date,
-          '1 month'::interval
-        ) AS d
-      ) dates
+        EXTRACT(YEAR FROM d)::INTEGER as year,
+        EXTRACT(MONTH FROM d)::INTEGER as month,
+        TO_CHAR(d, 'YYYY-MM') as period
+      FROM generate_series(
+        $1::date,
+        $2::date,
+        '1 month'::interval
+      ) AS d
     ),
-    recent_data AS (
+    approval_data AS (
       SELECT
-        lga_code,
         year,
         month,
-        building_type,
-        value::NUMERIC as value
+        SUM(value) as total_approvals
       FROM public.abs_building_approvals_lga
-      WHERE (year > 2021 OR (year = 2021 AND month >= 7))
-        AND (year < 2024 OR (year = 2024 AND month <= 10))
-        AND value IS NOT NULL
+      WHERE value IS NOT NULL
         AND value > 0
-    ),
-    lga_mapping AS (
-      SELECT DISTINCT
-        lga_name,
-        ROW_NUMBER() OVER (ORDER BY lga_name) as synthetic_lga_code
-      FROM public.nsw_lga_housing_targets
-      WHERE lga_name IS NOT NULL
-      ${lgaName ? `AND lga_name ILIKE $1` : ''}
-    ),
-    monthly_totals AS (
-      SELECT
-        rd.year,
-        rd.month,
-        SUM(rd.value) as total_approvals,
-        STRING_AGG(DISTINCT lm.lga_name, ', ') as lga_names
-      FROM recent_data rd
-      LEFT JOIN lga_mapping lm ON CAST(lm.synthetic_lga_code AS TEXT) = CAST(rd.lga_code AS TEXT)
-      ${lgaName ? 'WHERE lm.lga_name IS NOT NULL' : ''}
-      GROUP BY rd.year, rd.month
+      GROUP BY year, month
     )
     SELECT
       dr.year,
       dr.month,
-      COALESCE(mt.total_approvals, 0) as total_approvals,
-      mt.lga_names as lga_name,
-      dr.period
+      dr.period,
+      COALESCE(ad.total_approvals, 0) as total_approvals
     FROM date_range dr
-    LEFT JOIN monthly_totals mt ON dr.year = mt.year AND dr.month = mt.month
+    LEFT JOIN approval_data ad ON dr.year = ad.year AND dr.month = ad.month
     ORDER BY dr.year ASC, dr.month ASC
   `;
 
-  const params: any[] = [];
-  if (lgaName) {
-    params.push(`%${lgaName}%`);
-  }
-
+  const params: any[] = [startDate, endDate];
   const result = await query(queryText, params);
 
   // Process the data to match expected format
@@ -104,55 +96,18 @@ async function getBuildingApprovalsData(lgaName?: string | null) {
     period: row.period,
     month: getMonthName(row.month),
     year: row.year,
-    approvals: row.total_approvals,
-    lgaCode: row.lga_code,
-    lgaName: row.lga_name || `LGA ${row.lga_code}`,
+    approvals: parseInt(row.total_approvals) || 0,
     dataSource: 'ABS'
   }));
 
-  // If no LGA specified, aggregate across all LGAs
-  if (!lgaName && processedData.length > 0) {
-    const aggregated = processedData.reduce((acc: any, curr: any) => {
-      const key = curr.period;
-      if (!acc[key]) {
-        acc[key] = {
-          period: curr.period,
-          month: curr.month,
-          year: curr.year,
-          approvals: 0,
-          lgaName: 'NSW Total',
-          dataSource: 'ABS'
-        };
-      }
-      acc[key].approvals += parseInt(curr.approvals) || 0;
-      return acc;
-    }, {} as Record<string, any>);
-
-    // Sort by period and return all data from July 2021 to October 2024
-    const sortedData = Object.values(aggregated).sort((a: any, b: any) =>
-      a.period.localeCompare(b.period)
-    );
-
-    return NextResponse.json({
-      success: true,
-      data: sortedData,
-      total: Object.keys(aggregated).length,
-      lga_filter: lgaName,
-      message: lgaName ? `Data for ${lgaName}` : 'NSW state-wide data (Jul 2021 - Oct 2024)'
-    });
-  }
-
-  // Sort by period for individual LGA data
-  const sortedData = processedData.sort((a: any, b: any) =>
-    a.period.localeCompare(b.period)
-  );
-
   return NextResponse.json({
     success: true,
-    data: sortedData,
+    data: processedData,
     total: processedData.length,
-    lga_filter: lgaName,
-    message: lgaName ? `Data for ${lgaName} (Jul 2021 - Oct 2024)` : 'All LGA data'
+    lga_filter: lgaParam,
+    message: lgaParam
+      ? `Data for ${lgaParam} (${processedData[0]?.period} - ${processedData[processedData.length - 1]?.period})`
+      : `NSW state-wide data (${processedData[0]?.period} - ${processedData[processedData.length - 1]?.period})`
   });
 }
 

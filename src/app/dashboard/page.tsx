@@ -190,6 +190,12 @@ export default function DashboardPage() {
     setIsEditMode(!isEditMode);
   };
 
+  // Clear drag state helper function
+  const clearDragState = useCallback(() => {
+    setActiveTemplate(null);
+    setActiveCard(null);
+  }, []);
+
   // Drag event handlers
   const handleDragStart = (event: DragStartEvent) => {
     console.log('Drag start:', event);
@@ -211,8 +217,7 @@ export default function DashboardPage() {
     });
 
     const { active, over } = event;
-    setActiveTemplate(null);
-    setActiveCard(null);
+    clearDragState();
 
     if (!over) {
       console.log('⚠️ No drop target detected');
@@ -354,6 +359,8 @@ export default function DashboardPage() {
               isAdminMode={isAdminMode}
               cards={cards}
               setCards={setCards}
+              activeCard={activeCard}
+              clearDragState={clearDragState}
             />
           </div>
         </div>

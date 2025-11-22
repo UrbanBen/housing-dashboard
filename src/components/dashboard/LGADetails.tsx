@@ -1,9 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, Users, BarChart3 } from "lucide-react";
+import { Clock, Users, BarChart3, Home, Building2, Square } from "lucide-react";
 import type { LGA } from '@/components/filters/LGALookup';
+import { LGADetailsConfigForm, type LGADetailsConfig } from './LGADetailsConfigForm';
+import { DataItemConfigForm, type DataItemDetailedConfig } from './DataItemConfigForm';
 
 interface LGADetailsProps {
   selectedLGA: LGA | null;
@@ -14,6 +16,7 @@ const getLGAData = (lga: LGA | null) => {
   if (!lga || lga.id === 'nsw-state') {
     // NSW State-wide aggregated data (all 128 LGAs combined)
     return {
+      area: 800000, // NSW total area in km²
       buildingApprovals: 147200, // Aggregated across all NSW LGAs
       averageApprovalTime: 42,
       developmentApplications: 165300,
@@ -36,6 +39,7 @@ const getLGAData = (lga: LGA | null) => {
   const finalMultiplier = baseMultiplier * regionMultiplier;
 
   return {
+    area: lga.area || 0,
     buildingApprovals: Math.round(2840 * finalMultiplier),
     averageApprovalTime: Math.round(45 + (Math.random() - 0.5) * 20),
     developmentApplications: Math.round(3200 * finalMultiplier),
@@ -48,10 +52,161 @@ const getLGAData = (lga: LGA | null) => {
 };
 
 export function LGADetails({ selectedLGA }: LGADetailsProps) {
+  const [showConfigForm, setShowConfigForm] = useState(false);
+  const [currentConfig, setCurrentConfig] = useState<LGADetailsConfig | null>(null);
+  const [showDataItemForm, setShowDataItemForm] = useState(false);
+  const [currentDataItem, setCurrentDataItem] = useState<{ key: string; title: string; config: DataItemDetailedConfig | null } | null>(null);
+
+  // Get stored configuration
+  const getStoredConfig = (): LGADetailsConfig => {
+    const defaultConfig: LGADetailsConfig = {
+      host: 'mecone-data-lake.postgres.database.azure.com',
+      port: 5432,
+      database: 'research&insights',
+      user: 'db_admin',
+      passwordPath: '/users/ben/permissions/.env.admin',
+      schema: 'housing_dashboard',
+      table: 'search',
+      lgaNameColumn: 'lga_name24',
+      filterIntegration: {
+        enabled: true,
+        sourceCardId: 'search-geography-card',
+        sourceCardType: 'search-geography-card',
+        autoRefresh: true
+      },
+      dataItems: {
+        area: {
+          enabled: true,
+          title: 'Area',
+          subtitle: 'Administrative Area'
+        },
+        avgProcessingDays: {
+          enabled: true,
+          title: 'Average DA Processing',
+          subtitle: 'Processing Time'
+        },
+        developmentApplications: {
+          enabled: true,
+          title: 'Development Applications',
+          subtitle: 'Total DAs'
+        },
+        landReleases: {
+          enabled: true,
+          title: 'Land Releases',
+          subtitle: 'Lots Released'
+        },
+        completions: {
+          enabled: true,
+          title: 'Completions',
+          subtitle: 'Units Completed'
+        }
+      }
+    };
+
+    // Check if we're in the browser before accessing localStorage
+    if (typeof window === 'undefined') {
+      return defaultConfig;
+    }
+
+    const stored = localStorage.getItem('lga-details-config');
+    if (stored) {
+      try {
+        const parsedConfig = JSON.parse(stored);
+        return {
+          ...defaultConfig,
+          ...parsedConfig,
+          filterIntegration: {
+            ...defaultConfig.filterIntegration,
+            ...(parsedConfig.filterIntegration || {})
+          },
+          dataItems: {
+            ...defaultConfig.dataItems,
+            ...(parsedConfig.dataItems || {})
+          }
+        };
+      } catch (e) {
+        console.error('Failed to parse stored LGA details config:', e);
+      }
+    }
+    return defaultConfig;
+  };
+
+  // Handle double click to configure card
+  const handleDoubleClick = () => {
+    const config = getStoredConfig();
+    setCurrentConfig(config);
+    setShowConfigForm(true);
+  };
+
+  const handleSaveConfig = (newConfig: LGADetailsConfig) => {
+    localStorage.setItem('lga-details-config', JSON.stringify(newConfig));
+    setCurrentConfig(newConfig);
+  };
+
+  // Handle double click on individual data item
+  const handleDataItemDoubleClick = (key: string, title: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    const stored = localStorage.getItem(`lga-details-data-item-${key}`);
+    let itemConfig: DataItemDetailedConfig | null = null;
+
+    if (stored) {
+      try {
+        itemConfig = JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to parse data item config:', e);
+      }
+    }
+
+    setCurrentDataItem({ key, title, config: itemConfig });
+    setShowDataItemForm(true);
+  };
+
+  const handleSaveDataItemConfig = (config: DataItemDetailedConfig) => {
+    if (!currentDataItem) return;
+    localStorage.setItem(`lga-details-data-item-${currentDataItem.key}`, JSON.stringify(config));
+    setShowDataItemForm(false);
+    setCurrentDataItem(null);
+  };
+
   const data = getLGAData(selectedLGA);
+  const config = getStoredConfig();
+
+  // Map data item keys to their display properties
+  const dataItemMap = {
+    area: {
+      icon: Square,
+      value: `${Math.round(data.area).toLocaleString()} km²`,
+      subtitle: 'Administrative Area'
+    },
+    avgProcessingDays: {
+      icon: Clock,
+      value: `${data.averageApprovalTime} days`,
+      subtitle: 'Processing Time'
+    },
+    developmentApplications: {
+      icon: BarChart3,
+      value: data.developmentApplications.toLocaleString(),
+      subtitle: 'Total DAs'
+    },
+    landReleases: {
+      icon: Home,
+      value: data.landReleases.toLocaleString(),
+      subtitle: 'Lots Released'
+    },
+    completions: {
+      icon: Building2,
+      value: data.completions.toLocaleString(),
+      subtitle: 'Units Completed'
+    }
+  };
+
+  // Filter enabled data items
+  const enabledItems = Object.entries(config.dataItems).filter(([_, item]) => item.enabled);
 
   return (
-    <Card className="shadow-lg border border-border/50 h-fit">
+    <>
+    <Card className="shadow-lg border border-border/50 h-fit cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all" onDoubleClick={handleDoubleClick}>
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
           <BarChart3 className="h-6 w-6 text-primary" />
@@ -69,135 +224,34 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Processing Times */}
-        <div>
-          <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Processing Metrics
-          </h4>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Average DA Processing</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-foreground">{data.averageApprovalTime} days</span>
-                <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary rounded-full" 
-                    style={{ width: `${Math.min((60 - data.averageApprovalTime) / 60 * 100, 100)}%` }}
-                  />
+        {/* Processing Metrics */}
+        <div className="grid grid-cols-2 gap-4">
+          {enabledItems.map(([key, item]) => {
+            const itemData = dataItemMap[key as keyof typeof dataItemMap];
+            if (!itemData) return null;
+
+            const Icon = itemData.icon;
+
+            return (
+              <div
+                key={key}
+                className="bg-primary/5 border border-primary/10 rounded-lg p-4 hover:bg-primary/10 hover:shadow-md hover:scale-[1.02] transition-all cursor-pointer"
+                onDoubleClick={(e) => handleDataItemDoubleClick(key, item.title, e)}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium text-muted-foreground">{item.title}</span>
+                </div>
+                <div className="text-3xl font-bold text-foreground mb-1">
+                  {itemData.value}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {item.subtitle}
                 </div>
               </div>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Development Applications</span>
-              <span className="text-sm font-medium text-foreground">{data.developmentApplications.toLocaleString()}</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Land Releases</span>
-              <span className="text-sm font-medium text-foreground">{data.landReleases.toLocaleString()} lots</span>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Completions</span>
-              <span className="text-sm font-medium text-foreground">{data.completions.toLocaleString()} units</span>
-            </div>
-          </div>
+            );
+          })}
         </div>
-
-        {/* LGA Context (if LGA selected) */}
-        {selectedLGA && (
-          <div className="border-t pt-4">
-            <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              {selectedLGA.id === 'nsw-state' ? 'NSW State Context' : 'LGA Context'}
-            </h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              {selectedLGA.id === 'nsw-state' ? (
-                // NSW State-wide context
-                <>
-                  <div>
-                    <span className="text-muted-foreground">Population</span>
-                    <div className="font-medium text-foreground">
-                      8.2M (approx)
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">LGAs</span>
-                    <div className="font-medium text-foreground">
-                      128 Total
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Units per 1,000</span>
-                    <div className="font-medium text-foreground">
-                      18.0
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Completion Rate</span>
-                    <div className="font-medium text-foreground">
-                      {Math.round((data.completions / data.constructionStarts) * 100)}%
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Urban LGAs</span>
-                    <div className="font-medium text-foreground text-xs">
-                      43 Urban
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Rural LGAs</span>
-                    <div className="font-medium text-foreground">
-                      85 Rural
-                    </div>
-                  </div>
-                </>
-              ) : (
-                // Individual LGA context
-                <>
-                  <div>
-                    <span className="text-muted-foreground">Population</span>
-                    <div className="font-medium text-foreground">
-                      {selectedLGA.population ? selectedLGA.population.toLocaleString() : 'N/A'}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Type</span>
-                    <div className="font-medium text-foreground">
-                      {selectedLGA.urbanity === 'U' ? 'Urban' : 'Rural'}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Units per 1,000</span>
-                    <div className="font-medium text-foreground">
-                      {selectedLGA.population ? ((data.buildingApprovals / selectedLGA.population) * 1000).toFixed(1) : 'N/A'}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Completion Rate</span>
-                    <div className="font-medium text-foreground">
-                      {Math.round((data.completions / data.constructionStarts) * 100)}%
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Council</span>
-                    <div className="font-medium text-foreground text-xs">
-                      {selectedLGA.councilName?.replace(' COUNCIL', '') || selectedLGA.region}
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">ABS Code</span>
-                    <div className="font-medium text-foreground">
-                      {selectedLGA.id}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Filter Status */}
         <div className="text-xs text-muted-foreground text-center pt-2 border-t">
@@ -208,5 +262,24 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
         </div>
       </CardContent>
     </Card>
+
+    <LGADetailsConfigForm
+      isOpen={showConfigForm}
+      onClose={() => setShowConfigForm(false)}
+      onSave={handleSaveConfig}
+      currentConfig={currentConfig}
+    />
+
+    <DataItemConfigForm
+      isOpen={showDataItemForm}
+      onClose={() => {
+        setShowDataItemForm(false);
+        setCurrentDataItem(null);
+      }}
+      onSave={handleSaveDataItemConfig}
+      currentConfig={currentDataItem?.config || null}
+      itemTitle={currentDataItem?.title || ''}
+    />
+    </>
   );
 }

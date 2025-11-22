@@ -39,6 +39,7 @@ interface DraggableCardProps {
   isDragging?: boolean;
   effectiveColumns?: number;
   onDeleteCard?: (cardId: string) => void;
+  isBeingDragged?: boolean;
 }
 
 export function DraggableCard({
@@ -49,7 +50,8 @@ export function DraggableCard({
   onLGAChange,
   isDragging = false,
   effectiveColumns = 4,
-  onDeleteCard
+  onDeleteCard,
+  isBeingDragged = false
 }: DraggableCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const cardRef = React.useRef<HTMLDivElement>(null);
@@ -134,17 +136,13 @@ export function DraggableCard({
                   <GitBranch className="h-6 w-6 text-primary" />
                   <div>
                                           <CardTitle className="text-xl">Housing Development Pipeline</CardTitle>
-                    
+
                                           <CardDescription className="text-base mt-1">
                         End-to-end flow from land release through to building completion
                       </CardDescription>
-                    
+
                   </div>
                 </div>
-                                  <div className="text-xs bg-highlight/10 text-highlight px-3 py-1 rounded-full font-medium">
-                    Active Pipeline
-                  </div>
-                
               </div>
             </CardHeader>
             <CardContent className="pt-2">
@@ -267,71 +265,69 @@ export function DraggableCard({
 
       case 'kpi-cards':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                          <Card className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent"></div>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Median Home Price</CardTitle>
-                  <DollarSign className="h-5 w-5 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-foreground mb-2">$485,200</div>
-                  <p className="text-sm flex items-center text-primary">
+          <Card className="shadow-lg border border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-xl transition-shadow">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <BarChart3 className="h-6 w-6 text-primary" />
+                <CardTitle>Market KPIs</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Median Home Price */}
+                <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 hover:bg-primary/10 transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-medium text-muted-foreground">Median Home Price</span>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-1">$485,200</div>
+                  <div className="text-xs flex items-center text-primary">
                     <TrendingUp className="h-4 w-4 mr-1" />
                     +2.4% from last month
-                  </p>
-                </CardContent>
-              </Card>
-            
+                  </div>
+                </div>
 
-                          <Card className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-chart-2/5 to-transparent"></div>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Market Velocity</CardTitle>
-                  <Activity className="h-5 w-5 text-chart-2" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-foreground mb-2">18 days</div>
-                  <p className="text-sm flex items-center text-chart-2">
+                {/* Market Velocity */}
+                <div className="bg-chart-2/5 border border-chart-2/10 rounded-lg p-4 hover:bg-chart-2/10 transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Activity className="h-5 w-5 text-chart-2" />
+                    <span className="text-sm font-medium text-muted-foreground">Market Velocity</span>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-1">18 days</div>
+                  <div className="text-xs flex items-center text-chart-2">
                     <TrendingDown className="h-4 w-4 mr-1" />
                     -3 days from last month
-                  </p>
-                </CardContent>
-              </Card>
-            
+                  </div>
+                </div>
 
-                          <Card className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-chart-3/5 to-transparent"></div>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Housing Inventory</CardTitle>
-                  <Home className="h-5 w-5 text-chart-3" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-foreground mb-2">2,847</div>
-                  <p className="text-sm flex items-center text-chart-3">
+                {/* Housing Inventory */}
+                <div className="bg-chart-3/5 border border-chart-3/10 rounded-lg p-4 hover:bg-chart-3/10 transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Home className="h-5 w-5 text-chart-3" />
+                    <span className="text-sm font-medium text-muted-foreground">Housing Inventory</span>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-1">2,847</div>
+                  <div className="text-xs flex items-center text-chart-3">
                     <TrendingUp className="h-4 w-4 mr-1" />
                     +8.2% from last month
-                  </p>
-                </CardContent>
-              </Card>
-            
+                  </div>
+                </div>
 
-                          <Card className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-highlight/5 to-transparent"></div>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Price-to-Income Ratio</CardTitle>
-                  <TrendingUp className="h-5 w-5 text-highlight" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-foreground mb-2">4.2x</div>
-                  <p className="text-sm flex items-center text-highlight">
+                {/* Price-to-Income Ratio */}
+                <div className="bg-highlight/5 border border-highlight/10 rounded-lg p-4 hover:bg-highlight/10 transition-all">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="h-5 w-5 text-highlight" />
+                    <span className="text-sm font-medium text-muted-foreground">Price-to-Income Ratio</span>
+                  </div>
+                  <div className="text-3xl font-bold text-foreground mb-1">4.2x</div>
+                  <div className="text-xs flex items-center text-highlight">
                     <TrendingUp className="h-4 w-4 mr-1" />
                     +0.3 from last quarter
-                  </p>
-                </CardContent>
-              </Card>
-            
-          </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         );
 
       case 'market-forecast':
@@ -912,6 +908,11 @@ export function DraggableCard({
   };
 
   const getColumnSpan = () => {
+    // Special override for kpi-cards - always 1 column
+    if (card.id === 'kpi-cards') {
+      return 1;
+    }
+
     const baseSpan = {
       'small': 1,
       'medium': 2,
@@ -925,20 +926,6 @@ export function DraggableCard({
   // Calculate row span based on actual content height
   const updateRowSpan = React.useCallback(() => {
     if (cardRef.current) {
-      // Special override for housing-pipeline card
-      if (card.id === 'housing-pipeline') {
-        setRowSpan(15);
-        console.log(`🔍 Card: ${card.id} (size: ${card.size}) - FORCED to 15 rows`);
-        return;
-      }
-
-      // Special override for kpi-cards card
-      if (card.id === 'kpi-cards') {
-        setRowSpan(4);
-        console.log(`🔍 Card: ${card.id} (size: ${card.size}) - FORCED to 4 rows`);
-        return;
-      }
-
       const cardHeight = cardRef.current.offsetHeight;
       const gap = 16; // 1rem gap
       const rowHeight = 20; // grid-auto-rows value
@@ -946,35 +933,17 @@ export function DraggableCard({
       // Calculate how many 20px rows this card needs
       const calculatedRowSpan = Math.ceil((cardHeight + gap) / (rowHeight + gap));
 
-      // Expected rowSpan based on min-height for each size
-      const expectedRowSpan = {
-        small: Math.ceil((240 + gap) / (rowHeight + gap)),   // ~7 rows
-        medium: Math.ceil((412 + gap) / (rowHeight + gap)),  // ~12 rows
-        large: Math.ceil((784 + gap) / (rowHeight + gap)),   // ~22 rows
-        xl: Math.ceil((1056 + gap) / (rowHeight + gap))      // ~30 rows
-      }[card.size] || calculatedRowSpan;
-
-      // Use the maximum of calculated or expected to ensure card doesn't shrink
-      const finalRowSpan = Math.max(calculatedRowSpan, expectedRowSpan);
-
       // DIAGNOSTIC LOGGING
       console.log(`🔍 Card: ${card.id} (size: ${card.size})`, {
         offsetHeight: cardHeight,
         calculatedRowSpan,
-        expectedRowSpan,
-        finalRowSpan,
-        expectedMinHeight: {
-          small: 240,
-          medium: 412,
-          large: 784,
-          xl: 1056
-        }[card.size],
+        gridHeight: calculatedRowSpan * (rowHeight + gap),
         scrollHeight: cardRef.current.scrollHeight,
         clientHeight: cardRef.current.clientHeight,
         boundingRect: cardRef.current.getBoundingClientRect().height
       });
 
-      setRowSpan(finalRowSpan);
+      setRowSpan(calculatedRowSpan);
     }
   }, [card.id, card.size]);
 
@@ -1005,47 +974,47 @@ export function DraggableCard({
         style={{
           ...style,
           gridColumn: `span ${getColumnSpan()}`,
-          gridRowEnd: `span ${rowSpan}`
+          gridRow: `span ${rowSpan}`,
+          position: 'relative'
         }}
-        className={`draggable-card ${isDragging ? 'dragging' : ''}`}
+        className={`draggable-card ${isDragging ? 'dragging' : ''} outline-none focus:outline-none focus-visible:outline-none`}
         data-card-id={card.id}
         data-size={card.size}
         suppressHydrationWarning={true}
         {...(isAdminMode ? {} : attributes)}
       >
-      {/* Edit Mode Controls - Delete and Drag Handle */}
-      {isEditMode && !isSortableDragging && (
-        <div className="absolute top-2 right-2 z-10 flex gap-1">
-          {/* Delete Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowDeleteConfirm(true);
-            }}
-            className="p-2 bg-red-500/80 backdrop-blur rounded cursor-pointer hover:bg-red-600 transition-all opacity-80 hover:opacity-100"
-            title="Delete card"
-          >
-            <Trash2 className="h-4 w-4 text-white" />
-          </button>
-
-          {/* Drag Handle - Small grab area */}
-          <div
-            className="p-2 bg-background/80 backdrop-blur rounded cursor-move hover:bg-background transition-all opacity-60 hover:opacity-100"
-            {...listeners}
-            title="Drag to rearrange"
-          >
-            <GripVertical className="h-4 w-4 text-muted-foreground" />
-          </div>
-        </div>
-      )}
-
-      {!isEditMode && !isSortableDragging && (
+      {/* Drag Handle - Always visible, positioned to avoid conflicts */}
+      {!isSortableDragging && (
         <div
-          className="drag-handle absolute top-2 right-2 z-10 p-2 bg-background/80 backdrop-blur rounded cursor-move hover:bg-background transition-all opacity-60 hover:opacity-100"
+          className={`absolute top-2 z-10 p-2 bg-background/80 backdrop-blur rounded cursor-move hover:bg-background transition-all opacity-60 hover:opacity-100 ${
+            isEditMode ? 'right-14' : 'right-2'
+          }`}
           {...listeners}
+          title="Drag to rearrange"
         >
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
+      )}
+
+      {/* Delete Button - Only in Edit Mode */}
+      {isEditMode && !isSortableDragging && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!isBeingDragged) {
+              setShowDeleteConfirm(true);
+            }
+          }}
+          disabled={isBeingDragged}
+          className={`absolute top-2 right-2 z-10 p-2 backdrop-blur rounded transition-all ${
+            isBeingDragged
+              ? 'bg-gray-500/50 cursor-not-allowed opacity-50'
+              : 'bg-red-500/80 cursor-pointer hover:bg-red-600 opacity-80 hover:opacity-100'
+          }`}
+          title={isBeingDragged ? "Cannot delete while dragging" : "Delete card"}
+        >
+          <Trash2 className="h-4 w-4 text-white" />
+        </button>
       )}
 
       {isAdminMode && (
@@ -1091,10 +1060,15 @@ export function DraggableCard({
                   </button>
                   <button
                     onClick={() => {
-                      if (onDeleteCard) {
-                        onDeleteCard(card.id);
-                      }
+                      // Close modal first to prevent setState on unmounted component
                       setShowDeleteConfirm(false);
+
+                      // Delete card on next tick after modal closes
+                      if (onDeleteCard) {
+                        setTimeout(() => {
+                          onDeleteCard(card.id);
+                        }, 0);
+                      }
                     }}
                     className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded transition-colors"
                   >
