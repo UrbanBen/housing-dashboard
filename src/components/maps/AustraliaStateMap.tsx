@@ -143,7 +143,7 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
 
   if (!geoJSON || svgPaths.size === 0) {
     return (
-      <div className="w-full h-80 flex items-center justify-center border border-border/50 rounded-lg" style={{ backgroundColor: '#181818' }}>
+      <div className="w-full h-80 flex items-center justify-center border border-border/50 rounded-lg" style={{ backgroundColor: '#000000' }}>
         <div className="text-xs text-muted-foreground">Loading map...</div>
       </div>
     );
@@ -155,7 +155,7 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
       <svg
         viewBox="110 5 45 43"
         className="w-full h-80 border border-border/50 rounded-lg"
-        style={{ backgroundColor: '#181818' }}
+        style={{ backgroundColor: '#000000' }}
         preserveAspectRatio="xMidYMid meet"
       >
         {/* Render unselected states first */}
@@ -166,7 +166,7 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
               key={stateName}
               d={pathData}
               style={{
-                fill: '#3a3a3a',
+                fill: '#090909',
                 fillOpacity: 1,
                 stroke: '#22c55e',
                 strokeWidth: 0.15,
@@ -181,7 +181,7 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
                 e.currentTarget.style.strokeOpacity = '1';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.fill = '#3a3a3a';
+                e.currentTarget.style.fill = '#090909';
                 e.currentTarget.style.fillOpacity = '1';
                 e.currentTarget.style.stroke = '#22c55e';
                 e.currentTarget.style.strokeOpacity = '0.6';
