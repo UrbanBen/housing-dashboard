@@ -25,6 +25,7 @@ export type CardType =
   | 'abs-lga-map'
   | 'test-card'
   | 'search-geography-card'
+  | 'age-by-sex'
   // New template types from AdminToolbar
   | 'blank-card'
   | 'geography-search'
@@ -273,6 +274,14 @@ const defaultCards: DashboardCard[] = [
     size: 'small',
     category: 'lga',
     gridArea: 'abs-lga-map'
+  },
+  {
+    id: 'age-by-sex',
+    type: 'age-by-sex',
+    title: 'Age by Sex',
+    size: 'small',
+    category: 'charts',
+    gridArea: 'age-by-sex'
   },
 ];
 

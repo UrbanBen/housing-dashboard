@@ -21,6 +21,7 @@ import { HousingSankeyChart } from '@/components/charts/HousingSankeyChart';
 import { TestCard } from './TestCard';
 import { TestSearchCard } from './TestSearchCard';
 import { ABSLGAMap } from './ABSLGAMap';
+import { AgeBySexCard } from './AgeBySexCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   TrendingUp, TrendingDown, Activity, Home, DollarSign, Building, GitBranch, MapPin,
@@ -890,6 +891,15 @@ export function DraggableCard({
             onAdminClick={() => {}}
             selectedLGA={selectedLGA}
             onLGAChange={onLGAChange}
+          />
+        );
+
+      case 'age-by-sex':
+        return (
+          <AgeBySexCard
+            selectedLGA={selectedLGA}
+            isAdminMode={isAdminMode}
+            onAdminClick={() => {}}
           />
         );
 
