@@ -25,9 +25,9 @@ export async function POST(request: NextRequest) {
     let password: string;
     try {
       const envContent = fs.readFileSync(passwordPath, 'utf8');
-      const passwordMatch = envContent.match(/DB_PASSWORD=(.+)/);
+      const passwordMatch = envContent.match(/(?:POSTGRES_PASSWORD|DB_PASSWORD)=(.+)/);
       if (!passwordMatch) {
-        throw new Error('DB_PASSWORD not found in file');
+        throw new Error('POSTGRES_PASSWORD or DB_PASSWORD not found in file');
       }
       password = passwordMatch[1].trim();
     } catch (error) {
