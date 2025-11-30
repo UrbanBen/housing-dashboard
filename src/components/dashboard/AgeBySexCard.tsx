@@ -48,8 +48,8 @@ export function AgeBySexCard({ selectedLGA, isAdminMode = false, onAdminClick }:
             host: 'mecone-data-lake.postgres.database.azure.com',
             port: 5432,
             database: 'research&insights',
-            user: 'db_readonly',
-            passwordPath: '/users/ben/permissions/.env.readonly',
+            user: 'db_admin',
+            passwordPath: '/users/ben/permissions/.env.admin',
             schema: 's12_census',
             table: 'cen11_age_by_sex_lga',
             lgaColumn: 'lga_name24'
