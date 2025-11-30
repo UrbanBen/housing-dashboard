@@ -143,7 +143,7 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
 
   if (!geoJSON || svgPaths.size === 0) {
     return (
-      <div className="w-full h-80 flex items-center justify-center border border-border/50 rounded-lg bg-black">
+      <div className="w-full h-80 flex items-center justify-center border border-border/50 rounded-lg" style={{ backgroundColor: '#181818' }}>
         <div className="text-xs text-muted-foreground">Loading map...</div>
       </div>
     );
@@ -154,7 +154,8 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
       <div className="text-xs text-muted-foreground mb-2 text-center">Select State</div>
       <svg
         viewBox="110 5 45 43"
-        className="w-full h-80 border border-border/50 rounded-lg bg-black"
+        className="w-full h-80 border border-border/50 rounded-lg"
+        style={{ backgroundColor: '#181818' }}
         preserveAspectRatio="xMidYMid meet"
       >
         {/* Render unselected states first */}
@@ -165,11 +166,11 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
               key={stateName}
               d={pathData}
               style={{
-                fill: 'hsl(var(--background) / 0.75)',
+                fill: '#3a3a3a',
                 fillOpacity: 1,
-                stroke: 'hsl(var(--background) / 0.75)',
-                strokeWidth: 0.3,
-                strokeOpacity: 1,
+                stroke: '#22c55e',
+                strokeWidth: 0.15,
+                strokeOpacity: 0.6,
                 cursor: 'pointer',
                 transition: 'all 0.2s'
               }}
@@ -177,13 +178,13 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
                 e.currentTarget.style.fill = '#22c55e';
                 e.currentTarget.style.fillOpacity = '0.2';
                 e.currentTarget.style.stroke = '#22c55e';
-                e.currentTarget.style.strokeOpacity = '0.2';
+                e.currentTarget.style.strokeOpacity = '1';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.fill = 'hsl(var(--background) / 0.75)';
+                e.currentTarget.style.fill = '#3a3a3a';
                 e.currentTarget.style.fillOpacity = '1';
-                e.currentTarget.style.stroke = 'hsl(var(--background) / 0.75)';
-                e.currentTarget.style.strokeOpacity = '1';
+                e.currentTarget.style.stroke = '#22c55e';
+                e.currentTarget.style.strokeOpacity = '0.6';
               }}
               onClick={() => onStateClick(stateName)}
             >
@@ -200,7 +201,7 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
               fill: '#22c55e',
               fillOpacity: 0.2,
               stroke: '#22c55e',
-              strokeWidth: 0.3,
+              strokeWidth: 0.2,
               strokeOpacity: 1,
               cursor: 'pointer',
               transition: 'all 0.2s'
