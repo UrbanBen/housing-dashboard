@@ -145,6 +145,13 @@ const cardTemplates: CardTemplate[] = [
     icon: LineChart,
     description: 'LGA-specific dwelling approvals trend'
   },
+  {
+    id: 'age-by-sex',
+    title: 'Age by Sex',
+    category: 'charts',
+    icon: PieChart,
+    description: 'Population breakdown by gender'
+  },
 
   // KPI & Metrics
   {
@@ -295,11 +302,18 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
 
   // Special bright green styling for LGA Dwelling Approvals
   const isLGADwellingApprovals = template.id === 'lga-dwelling-approvals';
+  const isAgeBySex = template.id === 'age-by-sex';
+
   const styles = isLGADwellingApprovals ? {
     bg: 'bg-zinc-900',
     border: 'border-[#00FF41]/50',
     text: 'text-[#00FF41]',
     hover: 'hover:border-[#00FF41] hover:shadow-[0_0_15px_rgba(0,255,65,0.5)]'
+  } : isAgeBySex ? {
+    bg: 'bg-zinc-900',
+    border: 'border-[#f8ba33]/50',
+    text: 'text-[#f8ba33]',
+    hover: 'hover:border-[#f8ba33] hover:shadow-[0_0_15px_rgba(248,186,51,0.5)]'
   } : categoryStyles[template.category];
 
   return (
