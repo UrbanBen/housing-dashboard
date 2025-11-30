@@ -127,6 +127,16 @@ const defaultCards: DashboardCard[] = [
     category: 'lga',
     gridArea: 'test-card'
   },
+
+  // Age by Sex
+  {
+    id: 'age-by-sex',
+    type: 'age-by-sex',
+    title: 'Age by Sex',
+    size: 'small',
+    category: 'charts',
+    gridArea: 'age-by-sex'
+  },
 ];
 
 export default function DashboardPage() {
