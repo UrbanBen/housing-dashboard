@@ -136,6 +136,11 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
           title: 'Total Residential Value',
           subtitle: 'FYTD Total Value'
         },
+        area: {
+          enabled: true,
+          title: 'LGA Area',
+          subtitle: 'Square Kilometers'
+        },
         accordTarget: {
           enabled: true,
           title: 'National Housing Accord Target',
