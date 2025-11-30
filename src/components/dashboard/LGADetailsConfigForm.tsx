@@ -27,6 +27,7 @@ export interface LGADetailsConfig {
     autoRefresh: boolean;
   };
   dataItems: {
+    area: DataItemConfig;
     avgProcessingDays: DataItemConfig;
     developmentApplications: DataItemConfig;
     landReleases: DataItemConfig;
@@ -42,6 +43,11 @@ interface LGADetailsConfigFormProps {
 }
 
 const defaultDataItems = {
+  area: {
+    enabled: true,
+    title: 'Area',
+    subtitle: 'Administrative Area'
+  },
   avgProcessingDays: {
     enabled: true,
     title: 'Average DA Processing',
