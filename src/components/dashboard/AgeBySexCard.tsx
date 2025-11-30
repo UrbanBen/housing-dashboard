@@ -12,7 +12,7 @@ interface AgeBySexCardProps {
 }
 
 interface AgeBySexData {
-  lga_name24: string;
+  lga_name_2021: string;
   male_total: number;
   female_total: number;
   total_persons: number;
@@ -52,7 +52,7 @@ export function AgeBySexCard({ selectedLGA, isAdminMode = false, onAdminClick }:
             passwordPath: '/users/ben/permissions/.env.admin',
             schema: 's12_census',
             table: 'cen11_age_by_sex_lga',
-            lgaColumn: 'lga_name24'
+            lgaColumn: 'lga_name_2021'
           })
         });
 
@@ -190,7 +190,7 @@ export function AgeBySexCard({ selectedLGA, isAdminMode = false, onAdminClick }:
             </div>
 
             <div className="text-xs text-center text-muted-foreground">
-              {data.lga_name24}
+              {data.lga_name_2021}
             </div>
           </div>
         )}

@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     // Query for age by sex data
     const query = `
       SELECT
-        ${lgaColumn} as lga_name24,
+        ${lgaColumn} as lga_name_2021,
         COALESCE(SUM(CASE WHEN sex = 'Male' THEN total ELSE 0 END), 0) as male_total,
         COALESCE(SUM(CASE WHEN sex = 'Female' THEN total ELSE 0 END), 0) as female_total,
         COALESCE(SUM(total), 0) as total_persons
