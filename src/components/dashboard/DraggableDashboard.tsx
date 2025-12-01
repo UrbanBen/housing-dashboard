@@ -80,6 +80,7 @@ interface DroppableDashboardGridProps {
   onLGAChange: (lga: LGA | null) => void;
   onDeleteCard: (cardId: string) => void;
   activeCard: DashboardCard | null;
+  onCardSizeChange: (cardId: string, size: 'small' | 'medium' | 'large') => void;
 }
 
 function DroppableDashboardGrid({
@@ -90,7 +91,8 @@ function DroppableDashboardGrid({
   selectedLGA,
   onLGAChange,
   onDeleteCard,
-  activeCard
+  activeCard,
+  onCardSizeChange
 }: DroppableDashboardGridProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: 'dashboard-grid',
@@ -141,6 +143,7 @@ function DroppableDashboardGrid({
             effectiveColumns={effectiveColumns}
             onDeleteCard={onDeleteCard}
             isBeingDragged={activeCard?.id === card.id}
+            onCardSizeChange={onCardSizeChange}
           />
         );
       })}
@@ -283,6 +286,14 @@ const defaultCards: DashboardCard[] = [
     category: 'charts',
     gridArea: 'age-by-sex'
   },
+  {
+    id: 'dwelling-type',
+    type: 'dwelling-type',
+    title: 'Dwelling Type',
+    size: 'medium',
+    category: 'charts',
+    gridArea: 'dwelling-type'
+  },
 ];
 
 export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode, cards, setCards, activeCard, clearDragState }: DraggableDashboardProps) {
@@ -304,6 +315,17 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
       return newCards;
     });
   }, [setCards, clearDragState, activeCard]);
+
+  // Handle card size change
+  const handleCardSizeChange = React.useCallback((cardId: string, size: 'small' | 'medium' | 'large') => {
+    setCards(currentCards => {
+      const newCards = currentCards.map(card =>
+        card.id === cardId ? { ...card, size } : card
+      );
+      localStorage.setItem('dashboard-layout', JSON.stringify(newCards));
+      return newCards;
+    });
+  }, [setCards]);
 
   // Calculate effective columns based on screen size and max setting
   const getEffectiveColumns = React.useCallback(() => {
@@ -384,6 +406,7 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
             onLGAChange={onLGAChange}
             onDeleteCard={handleDeleteCard}
             activeCard={activeCard}
+            onCardSizeChange={handleCardSizeChange}
           />
         </SortableContext>
       </div>

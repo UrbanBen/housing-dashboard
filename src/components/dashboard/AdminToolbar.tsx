@@ -152,6 +152,13 @@ const cardTemplates: CardTemplate[] = [
     icon: PieChart,
     description: 'Population breakdown by gender'
   },
+  {
+    id: 'dwelling-type',
+    title: 'Dwelling Type',
+    category: 'charts',
+    icon: Percent,
+    description: 'Dwelling composition by type'
+  },
 
   // KPI & Metrics
   {
@@ -303,6 +310,7 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
   // Special bright green styling for LGA Dwelling Approvals
   const isLGADwellingApprovals = template.id === 'lga-dwelling-approvals';
   const isAgeBySex = template.id === 'age-by-sex';
+  const isDwellingType = template.id === 'dwelling-type';
 
   const styles = isLGADwellingApprovals ? {
     bg: 'bg-zinc-900',
@@ -314,6 +322,11 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
     border: 'border-[#f8ba33]/50',
     text: 'text-[#f8ba33]',
     hover: 'hover:border-[#f8ba33] hover:shadow-[0_0_15px_rgba(248,186,51,0.5)]'
+  } : isDwellingType ? {
+    bg: 'bg-zinc-900',
+    border: 'border-[#eab308]/50',
+    text: 'text-[#eab308]',
+    hover: 'hover:border-[#eab308] hover:shadow-[0_0_15px_rgba(234,179,8,0.5)]'
   } : categoryStyles[template.category];
 
   return (

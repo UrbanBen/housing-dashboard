@@ -27,7 +27,7 @@ export function MarketOverview() {
           <Tooltip
             contentStyle={{
               backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
+              border: '2px solid #22c55e',
               borderRadius: '6px',
               color: 'hsl(var(--card-foreground))'
             }}
@@ -35,18 +35,33 @@ export function MarketOverview() {
               value.toLocaleString(),
               name === 'current' ? 'Current Month' : 'Previous Month'
             ]}
+            cursor={false}
           />
-          <Bar 
-            dataKey="previous" 
-            fill="hsl(var(--muted))" 
+          <Bar
+            dataKey="previous"
+            fill="hsl(var(--muted))"
             radius={[0, 0, 4, 4]}
             name="previous"
+            activeBar={{
+              fill: 'hsl(var(--muted))',
+              opacity: 0.8,
+              stroke: '#4ade80',
+              strokeWidth: 3,
+              filter: 'drop-shadow(0 0 8px rgba(74, 222, 128, 0.8))'
+            }}
           />
-          <Bar 
-            dataKey="current" 
-            fill="hsl(var(--chart-2))" 
+          <Bar
+            dataKey="current"
+            fill="hsl(var(--chart-2))"
             radius={[4, 4, 0, 0]}
             name="current"
+            activeBar={{
+              fill: 'hsl(var(--chart-2))',
+              opacity: 0.8,
+              stroke: '#4ade80',
+              strokeWidth: 3,
+              filter: 'drop-shadow(0 0 8px rgba(74, 222, 128, 0.8))'
+            }}
           />
         </BarChart>
       </ResponsiveContainer>

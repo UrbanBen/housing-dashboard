@@ -50,15 +50,14 @@ export async function POST(request: NextRequest) {
 
     await client.connect();
 
-    // Query for age by sex data grouped by age
+    // Query for dwelling type data
     const query = `
       SELECT
-        age5p_age_in_five_year_groups as age,
-        sexp_sex as sex,
-        value as total
+        dwtd_dwelling_type as dwelling_type,
+        value
       FROM ${schema}.${table}
       WHERE ${lgaColumn} = $1
-      ORDER BY age5p_age_in_five_year_groups, sexp_sex
+      ORDER BY dwtd_dwelling_type
     `;
 
     const result = await client.query(query, [lgaName]);
@@ -79,7 +78,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching age by sex data:', error);
+    console.error('Error fetching dwelling type data:', error);
 
     if (client) {
       try {
@@ -91,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'Failed to fetch age by sex data',
+        error: error instanceof Error ? error.message : 'Failed to fetch dwelling type data',
         details: error instanceof Error ? error.stack : undefined
       },
       { status: 500 }

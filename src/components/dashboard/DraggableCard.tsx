@@ -22,6 +22,7 @@ import { TestCard } from './TestCard';
 import { TestSearchCard } from './TestSearchCard';
 import { ABSLGAMap } from './ABSLGAMap';
 import { AgeBySexCard } from './AgeBySexCard';
+import { DwellingTypeCard } from './DwellingTypeCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   TrendingUp, TrendingDown, Activity, Home, DollarSign, Building, GitBranch, MapPin,
@@ -41,6 +42,7 @@ interface DraggableCardProps {
   effectiveColumns?: number;
   onDeleteCard?: (cardId: string) => void;
   isBeingDragged?: boolean;
+  onCardSizeChange?: (cardId: string, size: 'small' | 'medium' | 'large') => void;
 }
 
 export function DraggableCard({
@@ -52,7 +54,8 @@ export function DraggableCard({
   isDragging = false,
   effectiveColumns = 4,
   onDeleteCard,
-  isBeingDragged = false
+  isBeingDragged = false,
+  onCardSizeChange
 }: DraggableCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const cardRef = React.useRef<HTMLDivElement>(null);
@@ -70,18 +73,6 @@ export function DraggableCard({
     disabled: false, // Allow dragging to rearrange cards
     animateLayoutChanges: () => false,
   });
-
-  // Debug logging
-  React.useEffect(() => {
-    console.log('[DraggableCard] Render state:', {
-      cardId: card.id,
-      cardTitle: card.title,
-      isEditMode,
-      isAdminMode,
-      isSortableDragging,
-      shouldShowDelete: isEditMode && !isSortableDragging
-    });
-  }, [isEditMode, isAdminMode, isSortableDragging, card.id, card.title]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -903,6 +894,15 @@ export function DraggableCard({
           />
         );
 
+      case 'dwelling-type':
+        return (
+          <DwellingTypeCard
+            selectedLGA={selectedLGA}
+            isAdminMode={isAdminMode}
+            onAdminClick={() => {}}
+          />
+        );
+
       default:
         return (
           <Card className="shadow-lg border border-border/50">
@@ -1034,6 +1034,54 @@ export function DraggableCard({
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
           </svg>
           Click to configure
+        </div>
+      )}
+
+      {/* Grid Span Controls - Only for specific cards in Edit Mode */}
+      {isEditMode && !isSortableDragging && onCardSizeChange && ['housing-pipeline', 'building-approvals-chart', 'market-overview', 'age-by-sex', 'dwelling-type'].includes(card.id) && (
+        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10 flex gap-1 bg-background/90 backdrop-blur border border-border rounded-lg p-1 shadow-lg pointer-events-auto">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onCardSizeChange(card.id, 'small');
+            }}
+            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors pointer-events-auto ${
+              card.size === 'small'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+            }`}
+            title="1 column wide"
+          >
+            1
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onCardSizeChange(card.id, 'medium');
+            }}
+            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors pointer-events-auto ${
+              card.size === 'medium'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+            }`}
+            title="2 columns wide"
+          >
+            2
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onCardSizeChange(card.id, 'large');
+            }}
+            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors pointer-events-auto ${
+              card.size === 'large'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+            }`}
+            title="3 columns wide"
+          >
+            3
+          </button>
         </div>
       )}
 

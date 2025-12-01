@@ -264,13 +264,13 @@ export function HousingSankeyChart() {
       
       {/* Enhanced Tooltip */}
       {hoveredFlow && (
-        <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm border border-border rounded-lg p-4 shadow-xl z-10 min-w-[200px]">
+        <div className="absolute top-4 right-4 bg-card/95 backdrop-blur-sm border-2 border-[#22c55e] rounded-lg p-4 shadow-xl z-10 min-w-[200px]">
           <div className="flex items-center gap-2 mb-2">
-            <div 
-              className="w-3 h-3 rounded-full" 
+            <div
+              className="w-3 h-3 rounded-full"
               style={{ backgroundColor: flows[parseInt(hoveredFlow.replace('flow-', ''))].color }}
             />
-            <div className="text-sm font-semibold text-foreground">Flow Details</div>
+            <div className="text-sm font-semibold text-[#22c55e]">Flow Details</div>
           </div>
           <div className="space-y-1">
             <div className="text-xs text-muted-foreground">
@@ -279,7 +279,7 @@ export function HousingSankeyChart() {
             <div className="text-xs text-muted-foreground">
               To: {getNodeById(flows[parseInt(hoveredFlow.replace('flow-', ''))].target).name.replace('\n', ' ')}
             </div>
-            <div className="text-lg font-bold text-primary">
+            <div className="text-lg font-bold text-[#22c55e]">
               {flows[parseInt(hoveredFlow.replace('flow-', ''))].value.toLocaleString()} units
             </div>
           </div>

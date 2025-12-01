@@ -220,7 +220,7 @@ export const LGADwellingApprovalsChart = forwardRef<LGADwellingApprovalsChartRef
           <Tooltip
             contentStyle={{
               backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
+              border: '2px solid #22c55e',
               borderRadius: '6px',
               color: 'hsl(var(--card-foreground))'
             }}
