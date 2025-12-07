@@ -33,34 +33,17 @@ const DWELLING_COLORS: { [key: string]: string } = {
   'Shipping': '#a1a1aa',                         // Lighter zinc
 };
 
-// Custom label component for multi-line labels
-const CustomArcLinkLabel = (props: any) => {
-  const { x, y, label, textAnchor, datum } = props;
-  const lines = String(label).split('\n');
-
-  return (
-    <text
-      x={x}
-      y={y}
-      textAnchor={textAnchor}
-      dominantBaseline="central"
-      style={{
-        fill: 'hsl(var(--foreground))',
-        fontSize: '11px',
-        pointerEvents: 'none'
-      }}
-    >
-      {lines.map((line: string, i: number) => (
-        <tspan
-          key={i}
-          x={x}
-          dy={i === 0 ? '-1.2em' : '1.2em'}
-        >
-          {line}
-        </tspan>
-      ))}
-    </text>
-  );
+// Abbreviate dwelling type names for labels
+const abbreviateDwellingType = (type: string): string => {
+  const abbreviations: { [key: string]: string } = {
+    'Occupied private dwellings': 'Occupied',
+    'Unoccupied private dwellings': 'Unoccupied',
+    'Non-private dwellings': 'Non-private',
+    'Migratory': 'Migratory',
+    'Off-shore': 'Off-shore',
+    'Shipping': 'Shipping'
+  };
+  return abbreviations[type] || type;
 };
 
 export function DwellingTypeCard({ selectedLGA, isAdminMode = false, onAdminClick }: DwellingTypeCardProps) {
@@ -178,10 +161,10 @@ export function DwellingTypeCard({ selectedLGA, isAdminMode = false, onAdminClic
         {selectedLGA && pieData.length > 0 && !isLoading && !error && (
           <div className="space-y-4">
             {/* Nivo Pie Chart */}
-            <div className="h-96">
+            <div className="h-[500px]">
               <ResponsivePie
                 data={pieData}
-                margin={{ top: 60, right: 220, bottom: 100, left: 220 }}
+                margin={{ top: 80, right: 280, bottom: 80, left: 280 }}
                 innerRadius={0.5}
                 padAngle={0.7}
                 cornerRadius={3}
@@ -193,26 +176,21 @@ export function DwellingTypeCard({ selectedLGA, isAdminMode = false, onAdminClic
                   modifiers: [['darker', 0.2]]
                 }}
                 enableArcLinkLabels={true}
-                arcLinkLabelsSkipAngle={0}
+                arcLinkLabelsSkipAngle={5}
                 arcLinkLabelsTextColor="hsl(var(--foreground))"
                 arcLinkLabelsThickness={2}
                 arcLinkLabelsColor={{ from: 'color' }}
-                arcLinkLabelComponent={CustomArcLinkLabel}
+                arcLinkLabelsOffset={15}
+                arcLinkLabelsDiagonalLength={20}
+                arcLinkLabelsStraightLength={20}
                 arcLinkLabel={(d) => {
                   const totalDwellings = data?.reduce((sum, item) => sum + item.value, 0) || 0;
                   const percentage = totalDwellings > 0 ? (d.value / totalDwellings) * 100 : 0;
                   const count = Number(d.value).toLocaleString('en-US');
-
-                  // Add line breaks: before "private", after ":", and before percentage
-                  let label = d.label.toString();
-                  label = label.replace(' private', '\nprivate');
-                  return `${label}:\n${percentage.toFixed(1)}%\n(${count})`;
+                  const abbrev = abbreviateDwellingType(d.label.toString());
+                  return `${abbrev}: ${percentage.toFixed(1)}% (${count})`;
                 }}
-                arcLabelsSkipAngle={15}
-                arcLabelsTextColor={{
-                  from: 'color',
-                  modifiers: [['darker', 2]]
-                }}
+                enableArcLabels={false}
                 tooltip={({ datum }) => {
                   const totalDwellings = data?.reduce((sum, item) => sum + item.value, 0) || 0;
                   const percentage = totalDwellings > 0 ? (datum.value / totalDwellings) * 100 : 0;
