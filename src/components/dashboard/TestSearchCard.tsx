@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Database, RefreshCw, AlertCircle, ChevronDown } from "lucide-react";
 import { TestCardConnectionForm } from './TestCardConnectionForm';
@@ -56,6 +57,56 @@ export function TestSearchCard({
   const [error, setError] = useState<string | null>(null);
   const [showConnectionForm, setShowConnectionForm] = useState(false);
   const [currentConfig, setCurrentConfig] = useState<any>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const isClickInsideInput = inputRef.current && inputRef.current.contains(target);
+      const isClickInsideDropdown = dropdownRef.current && dropdownRef.current.contains(target);
+
+      if (!isClickInsideInput && !isClickInsideDropdown) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isDropdownOpen]);
+
+  // Update dropdown position on scroll
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+
+    const handleScroll = () => {
+      updateDropdownPosition();
+    };
+
+    window.addEventListener('scroll', handleScroll, true);
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, [isDropdownOpen]);
+
+  // Update dropdown position when it opens
+  const updateDropdownPosition = () => {
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  };
 
   // Fetch LGAs from database
   const fetchLGAs = async (stateName?: string) => {
@@ -171,7 +222,9 @@ export function TestSearchCard({
     if (onLGAChange && lgaOption) {
       const lgaObject: LGA = {
         id: lgaOption.lga_code,
-        name: lgaOption.lga_name
+        name: lgaOption.lga_name,
+        region: 'Unknown',
+        population: null
       };
       console.log('[TestSearchCard] Calling onLGAChange with:', lgaObject);
       onLGAChange(lgaObject);
@@ -245,7 +298,9 @@ export function TestSearchCard({
           <div className="flex items-center gap-3">
             <Database className="h-5 w-5 text-primary" />
             <div>
-              <CardTitle className="text-lg">Search Geography</CardTitle>
+              <CardTitle className="text-lg">
+                Search Geography{selectedLGA ? ` - ${selectedLGA} ${selectedState === 'New South Wales' ? 'NSW' : selectedState} LGA` : ''}
+              </CardTitle>
               <p className="text-xs text-muted-foreground mt-1">
                 Search by State, Region or LGA
               </p>
@@ -253,7 +308,7 @@ export function TestSearchCard({
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchLGAs}
+              onClick={() => fetchLGAs()}
               className="p-1 hover:bg-muted rounded-sm transition-colors"
               title="Refresh LGA list"
             >
@@ -275,16 +330,19 @@ export function TestSearchCard({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
+              ref={inputRef}
               type="text"
               placeholder={`Search ${selectedState === 'New South Wales' ? 'NSW' : selectedState} LGAs...`}
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setIsDropdownOpen(true);
+                updateDropdownPosition();
               }}
               onFocus={() => {
                 setIsDropdownOpen(true);
                 setSearchQuery(''); // Clear search to show all LGAs when focusing
+                updateDropdownPosition();
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && filteredLGAs.length > 0) {
@@ -298,9 +356,11 @@ export function TestSearchCard({
             />
             <button
               onClick={() => {
-                setIsDropdownOpen(!isDropdownOpen);
-                if (!isDropdownOpen) {
+                const newState = !isDropdownOpen;
+                setIsDropdownOpen(newState);
+                if (newState) {
                   setSearchQuery(''); // Clear search to show all LGAs
+                  updateDropdownPosition();
                 }
               }}
               className="absolute right-3 top-1/2 transform -translate-y-1/2"
@@ -312,55 +372,43 @@ export function TestSearchCard({
               />
             </button>
           </div>
-
-          {/* Dropdown List */}
-          {isDropdownOpen && (
-            <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto">
-              {isLoadingLGAs ? (
-                <div className="p-3 text-sm text-muted-foreground text-center">
-                  Loading LGAs...
-                </div>
-              ) : filteredLGAs.length > 0 ? (
-                filteredLGAs.map((lga) => (
-                  <button
-                    key={lga.lga_code || lga.lga_name}
-                    onClick={() => handleSelectLGA(lga.lga_name)}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
-                  >
-                    {lga.lga_name}
-                  </button>
-                ))
-              ) : (
-                <div className="p-3 text-sm text-muted-foreground text-center">
-                  No LGAs found
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-        {/* Current Selection - Always visible to prevent resizing */}
-        <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
-          <div className="flex items-center justify-between">
-            <div>
-              {selectedLGA ? (
-                <>
-                  <div className="font-semibold text-foreground">{selectedLGA}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {selectedState === 'New South Wales' ? 'NSW' : selectedState} LGA
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="font-semibold text-muted-foreground">No LGA Selected</div>
-                  <div className="text-xs text-muted-foreground">
-                    Choose an LGA from {selectedState === 'New South Wales' ? 'NSW' : selectedState}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
+        {/* Dropdown List - Rendered as Portal */}
+        {isMounted && isDropdownOpen && createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: 'fixed',
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`,
+              zIndex: 99999
+            }}
+            className="bg-background border border-border rounded-md shadow-2xl max-h-60 overflow-auto"
+          >
+            {isLoadingLGAs ? (
+              <div className="p-3 text-sm text-muted-foreground text-center">
+                Loading LGAs...
+              </div>
+            ) : filteredLGAs.length > 0 ? (
+              filteredLGAs.map((lga) => (
+                <button
+                  key={lga.lga_code || lga.lga_name}
+                  onClick={() => handleSelectLGA(lga.lga_name)}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+                >
+                  {lga.lga_name}
+                </button>
+              ))
+            ) : (
+              <div className="p-3 text-sm text-muted-foreground text-center">
+                No LGAs found
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
       </CardContent>
     </Card>
 

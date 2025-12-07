@@ -274,7 +274,7 @@ export function LGAMetrics({ selectedLGA }: LGAMetricsProps) {
                 className="bg-primary/5 border border-primary/10 rounded-lg p-4 hover:bg-primary/10 hover:shadow-md hover:scale-[1.02] transition-all cursor-pointer"
                 onDoubleClick={(e) => handleDataItemDoubleClick(key, item.title, e)}
               >
-                {key === 'buildingApprovals' && (
+                {key === 'buildingApprovals' && 'trend' in itemData && 'change' in itemData && (
                   <>
                     <div className="flex items-center justify-between mb-2">
                       <Icon className="h-5 w-5 text-primary" />
@@ -294,7 +294,7 @@ export function LGAMetrics({ selectedLGA }: LGAMetricsProps) {
                   </>
                 )}
 
-                {key === 'housingTarget' && (
+                {key === 'housingTarget' && 'progress' in itemData && (
                   <>
                     <div className="flex items-center justify-between mb-2">
                       <Icon className="h-5 w-5 text-primary" />
@@ -315,7 +315,7 @@ export function LGAMetrics({ selectedLGA }: LGAMetricsProps) {
                   </>
                 )}
 
-                {key === 'daApprovals' && (
+                {key === 'daApprovals' && 'approvalRate' in itemData && 'submitted' in itemData && (
                   <>
                     <div className="flex items-center justify-between mb-2">
                       <Icon className="h-5 w-5 text-primary" />

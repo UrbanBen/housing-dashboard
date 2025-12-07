@@ -26,6 +26,7 @@ export type CardType =
   | 'test-card'
   | 'search-geography-card'
   | 'age-by-sex'
+  | 'dwelling-type'
   // New template types from AdminToolbar
   | 'blank-card'
   | 'geography-search'
@@ -104,8 +105,8 @@ function DroppableDashboardGrid({
       className={`
         dashboard-grid
         ${isEditMode ? 'edit-mode' : ''}
-        ${isOver ? 'bg-[#00FF41]/10 border-2 border-dashed border-[#00FF41]' : isAdminMode ? 'border-2 border-dashed border-[#00FF41]/30' : ''}
-        ${isAdminMode ? 'min-h-[60vh] rounded-lg p-4' : ''}
+        ${isOver && !isEditMode ? 'bg-[#00FF41]/10 border-2 border-dashed border-[#00FF41]' : ''}
+        ${isAdminMode && !isEditMode ? 'border-2 border-dashed border-[#00FF41]/30 min-h-[60vh] rounded-lg p-4' : ''}
         transition-all duration-300 ease-in-out
       `}
       style={{
@@ -290,7 +291,7 @@ const defaultCards: DashboardCard[] = [
     id: 'dwelling-type',
     type: 'dwelling-type',
     title: 'Dwelling Type',
-    size: 'medium',
+    size: 'small',
     category: 'charts',
     gridArea: 'dwelling-type'
   },
@@ -387,14 +388,6 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
 
   return (
     <div className="w-full">
-      {isEditMode && (
-        <div className="mb-6 px-6 py-3 bg-orange-500/10 backdrop-blur rounded-lg border border-orange-500/20">
-          <div className="text-sm text-orange-600 font-medium">
-            ✏️ Edit Mode Active - Drag cards to rearrange • Changes save automatically
-          </div>
-        </div>
-      )}
-
       <div suppressHydrationWarning={true}>
         <SortableContext items={cards.map(card => card.id)} strategy={rectSortingStrategy}>
           <DroppableDashboardGrid
@@ -445,14 +438,15 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
         }
 
         .dashboard-grid.edit-mode .draggable-card {
-          border: 2px dashed hsl(var(--border));
-          background: hsl(var(--card) / 0.8);
+          border: 2px solid rgb(249 115 22 / 0.5);
+          background: hsl(var(--card) / 0.95);
           border-radius: 0.75rem;
+          box-shadow: 0 0 0 1px rgb(249 115 22 / 0.2);
         }
 
         .dashboard-grid.edit-mode .draggable-card:hover {
-          border-color: hsl(var(--primary));
-          box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3);
+          border-color: rgb(249 115 22 / 0.8);
+          box-shadow: 0 0 0 2px rgb(249 115 22 / 0.4);
           border-radius: 0.75rem;
         }
 

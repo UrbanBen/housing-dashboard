@@ -245,7 +245,7 @@ export default function DashboardPage() {
           id: `${template.id}-${Date.now()}`,
           type: template.id as CardType,
           title: template.title,
-          size: 'medium',
+          size: 'small',
           category: template.category,
           ...template.defaultConfig
         };
@@ -256,7 +256,28 @@ export default function DashboardPage() {
         }
 
         setCards(currentCards => {
-          const newCards = [...currentCards, newCard];
+          let newCards: DashboardCard[];
+
+          // If dropped on a specific card, insert after that card
+          if (over.id !== 'dashboard-grid') {
+            const overIndex = currentCards.findIndex(card => card.id === over.id);
+            if (overIndex !== -1) {
+              // Insert after the card we dropped on
+              newCards = [
+                ...currentCards.slice(0, overIndex + 1),
+                newCard,
+                ...currentCards.slice(overIndex + 1)
+              ];
+              console.log(`📍 Inserted card at position ${overIndex + 1}`);
+            } else {
+              // Fallback: add to end
+              newCards = [...currentCards, newCard];
+            }
+          } else {
+            // Dropped on grid itself, add to end
+            newCards = [...currentCards, newCard];
+          }
+
           localStorage.setItem('dashboard-layout', JSON.stringify(newCards));
           console.log('💾 Updated cards:', newCards.length, 'cards');
           return newCards;
@@ -307,10 +328,23 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
               {isAdminMode && (
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-[#00FF41] animate-pulse"></div>
-                  <span className="text-sm font-medium text-[#00FF41]">
+                  <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                  <span className="text-sm font-medium text-orange-500 orange-glow-pulse">
                     Edit Mode - Drag cards from sidebar
                   </span>
+                  <style jsx>{`
+                    @keyframes glowPulse {
+                      0%, 100% {
+                        text-shadow: 0 0 10px rgb(249 115 22 / 0.5), 0 0 20px rgb(249 115 22 / 0.3);
+                      }
+                      50% {
+                        text-shadow: 0 0 20px rgb(249 115 22 / 0.8), 0 0 30px rgb(249 115 22 / 0.5);
+                      }
+                    }
+                    .orange-glow-pulse {
+                      animation: glowPulse 2s ease-in-out infinite;
+                    }
+                  `}</style>
                 </div>
               )}
 
@@ -338,7 +372,7 @@ export default function DashboardPage() {
                 className={`text-xs px-3 py-1 rounded transition-colors ${
                   isAdminMode
                     ? 'bg-[#00FF41]/20 text-[#00FF41] hover:bg-[#00FF41]/30'
-                    : 'bg-muted/20 text-muted-foreground hover:bg-muted/30'
+                    : 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30'
                 }`}
               >
                 {isAdminMode ? 'Exit Edit' : 'Edit'}
@@ -359,7 +393,7 @@ export default function DashboardPage() {
           {/* Admin Toolbar - appears when admin mode is enabled */}
           <AdminToolbar isVisible={isAdminMode} onResetLayout={resetLayout} />
 
-          <div className="flex-1 w-full px-6 py-8 overflow-auto">
+          <div className={`flex-1 w-full px-6 py-8 overflow-auto ${isEditMode ? 'bg-orange-500/10' : ''}`}>
             {/* Draggable Dashboard */}
             <DraggableDashboard
               selectedLGA={selectedLGA}
@@ -378,11 +412,23 @@ export default function DashboardPage() {
         {/* Drag Overlay for templates and cards being dragged */}
         <DragOverlay>
           {activeTemplate ? (
-            <div className="transform rotate-3 shadow-2xl border-2 border-primary bg-card rounded-lg p-3 opacity-90">
-              <div className="flex flex-col items-center gap-1">
-                <activeTemplate.icon className="h-6 w-6" />
-                <span className="text-xs font-medium">{activeTemplate.title}</span>
-              </div>
+            <div className="dashboard-card-overlay" style={{ width: '350px' }}>
+              <DraggableCard
+                card={{
+                  id: `preview-${activeTemplate.id}`,
+                  type: activeTemplate.id as CardType,
+                  title: activeTemplate.title,
+                  size: 'small',
+                  category: activeTemplate.category,
+                  ...activeTemplate.defaultConfig
+                }}
+                isEditMode={false}
+                isAdminMode={isAdminMode}
+                selectedLGA={selectedLGA}
+                onLGAChange={handleLGAChange}
+                isDragging={true}
+                effectiveColumns={6}
+              />
             </div>
           ) : activeCard ? (
             <div className="dashboard-card-overlay">

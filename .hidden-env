@@ -1,0 +1,3 @@
+# Hidden .env file test
+HIDDEN_PASSWORD=secret_hidden_password
+HIDDEN_API_KEY=hidden_api_key_value

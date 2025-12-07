@@ -143,7 +143,7 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
 
   if (!geoJSON || svgPaths.size === 0) {
     return (
-      <div className="w-full h-80 flex items-center justify-center border border-border/50 rounded-lg" style={{ backgroundColor: '#000000' }}>
+      <div className="w-full h-[387px] flex items-center justify-center border border-border/50 rounded-lg" style={{ backgroundColor: '#000000' }}>
         <div className="text-xs text-muted-foreground">Loading map...</div>
       </div>
     );
@@ -151,10 +151,9 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
 
   return (
     <div className="mb-4">
-      <div className="text-xs text-muted-foreground mb-2 text-center">Select State</div>
       <svg
         viewBox="110 5 45 43"
-        className="w-full h-80 border border-border/50 rounded-lg"
+        className="w-full h-[387px] border border-border/50 rounded-lg"
         style={{ backgroundColor: '#000000' }}
         preserveAspectRatio="xMidYMid meet"
       >
@@ -211,10 +210,24 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
             <title>{selectedState}</title>
           </path>
         )}
+
+        {/* Selected state label inside map at bottom center */}
+        {selectedState && (
+          <text
+            x="132.5"
+            y="46"
+            textAnchor="middle"
+            style={{
+              fill: '#22c55e',
+              fontSize: '1.5px',
+              fontWeight: '600',
+              pointerEvents: 'none'
+            }}
+          >
+            {selectedState}
+          </text>
+        )}
       </svg>
-      <div className="text-xs text-center text-primary mt-1 font-medium">
-        {selectedState}
-      </div>
     </div>
   );
 }

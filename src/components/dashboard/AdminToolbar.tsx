@@ -58,6 +58,13 @@ const cardTemplates: CardTemplate[] = [
 
   // Search Cards
   {
+    id: 'search-geography-card',
+    title: 'Search Geography',
+    category: 'search',
+    icon: Search,
+    description: 'LGA/location search and selection'
+  },
+  {
     id: 'geography-search',
     title: 'Search Card',
     category: 'search',
@@ -311,8 +318,14 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
   const isLGADwellingApprovals = template.id === 'lga-dwelling-approvals';
   const isAgeBySex = template.id === 'age-by-sex';
   const isDwellingType = template.id === 'dwelling-type';
+  const isSearchGeography = template.id === 'search-geography-card';
 
-  const styles = isLGADwellingApprovals ? {
+  const styles = isSearchGeography ? {
+    bg: 'bg-zinc-900',
+    border: 'border-[#22c55e]/50',
+    text: 'text-[#22c55e]',
+    hover: 'hover:border-[#22c55e] hover:shadow-[0_0_15px_rgba(34,197,94,0.5)]'
+  } : isLGADwellingApprovals ? {
     bg: 'bg-zinc-900',
     border: 'border-[#00FF41]/50',
     text: 'text-[#00FF41]',

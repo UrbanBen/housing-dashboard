@@ -50,13 +50,14 @@ export async function POST(request: NextRequest) {
 
     await client.connect();
 
-    // Query for dwelling type data
+    // Query for dwelling type data with aggregation to handle potential duplicates
     const query = `
       SELECT
         dwtd_dwelling_type as dwelling_type,
-        value
+        SUM(value) as value
       FROM ${schema}.${table}
       WHERE ${lgaColumn} = $1
+      GROUP BY dwtd_dwelling_type
       ORDER BY dwtd_dwelling_type
     `;
 
