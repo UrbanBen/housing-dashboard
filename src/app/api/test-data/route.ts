@@ -131,11 +131,3 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 }
-
-// Clean up pool connections on shutdown
-process.on('SIGINT', async () => {
-  if (pool) {
-    await pool.end();
-  }
-  process.exit(0);
-});
