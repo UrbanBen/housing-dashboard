@@ -211,8 +211,8 @@ export async function healthCheck(): Promise<{
   admin: { status: 'ok' | 'error'; details?: string };
 }> {
   const result = {
-    readonly: { status: 'ok' as 'ok' | 'error' },
-    admin: { status: 'ok' as 'ok' | 'error' }
+    readonly: { status: 'ok' as 'ok' | 'error', details: undefined as string | undefined },
+    admin: { status: 'ok' as 'ok' | 'error', details: undefined as string | undefined }
   };
 
   // Test readonly pool
