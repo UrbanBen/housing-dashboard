@@ -144,6 +144,7 @@ export const authOptions: AuthOptions = {
                 name: profile.name,
                 email: profile.email,
                 image: profile.picture,
+                tier: 'free' as TierName,
               };
             },
           } as Provider,
