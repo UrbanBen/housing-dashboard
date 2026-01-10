@@ -1,11 +1,11 @@
 "use client";
 
 // Building Approvals Trend Chart
-// Data Source: ONLY Database mosaic_pro, Schema public, Table abs_building_approvals_lga
+// Data Source: ONLY Database research&insights, Schema housing_dashboard, Table building_approvals_nsw_lga
 // NO FALLBACK DATA - Only uses data from the database table
-// Date Range: 2021-01 to 2024-12 (actual data from Jul 2021 onwards)
-// Currently shows NSW state-wide totals
-// Auto-updates when LGA selection changes (LGA filtering to be implemented)
+// Date Range: Complete monthly data for NSW LGAs
+// Shows NSW state-wide totals or selected LGA data
+// Auto-updates when LGA selection changes from Search Geography card
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
 import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
@@ -16,6 +16,7 @@ interface ChartDataPoint {
   month: string;
   approvals: number;
   displayMonth: string;
+  year: number;
 }
 
 interface TrendChartProps {
@@ -54,11 +55,11 @@ export const TrendChart = forwardRef<TrendChartRef, TrendChartProps>(
   const getDefaultConfig = (): BuildingApprovalsConfig => ({
     host: 'mecone-data-lake.postgres.database.azure.com',
     port: 5432,
-    database: 'mosaic_pro',
-    user: 'mosaic_readonly',
-    passwordPath: '/users/ben/permissions/.env.readonly',
-    schema: 'public',
-    table: 'abs_building_approvals_lga',
+    database: 'research&insights',
+    user: 'db_admin',
+    passwordPath: '/users/ben/permissions/.env.admin',
+    schema: 'housing_dashboard',
+    table: 'building_approvals_nsw_lga',
     filterIntegration: {
       enabled: true,
       sourceCardId: 'search-geography-card',
@@ -109,7 +110,8 @@ export const TrendChart = forwardRef<TrendChartRef, TrendChartProps>(
           const chartData: ChartDataPoint[] = dbData.data.map((item: any) => ({
             month: item.period,
             approvals: item.approvals,
-            displayMonth: item.month.substring(0, 3)
+            displayMonth: item.month.substring(0, 3),
+            year: item.year
           }));
 
           setData(chartData);
@@ -144,6 +146,39 @@ export const TrendChart = forwardRef<TrendChartRef, TrendChartProps>(
     return value.toString();
   };
 
+  // Custom tick component for X-axis to show month and year on separate lines
+  const CustomXAxisTick = (props: any) => {
+    const { x, y, payload } = props;
+    const dataPoint = data.find(d => d.displayMonth === payload.value);
+
+    if (!dataPoint) return null;
+
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          x={0}
+          y={0}
+          dy={8}
+          textAnchor="middle"
+          fill="hsl(var(--muted-foreground))"
+          fontSize={12}
+        >
+          {dataPoint.displayMonth}
+        </text>
+        <text
+          x={0}
+          y={0}
+          dy={22}
+          textAnchor="middle"
+          fill="hsl(var(--muted-foreground))"
+          fontSize={10}
+        >
+          {dataPoint.year}
+        </text>
+      </g>
+    );
+  };
+
   if (loading) {
     return (
       <div className="w-full h-80 flex items-center justify-center">
@@ -169,12 +204,13 @@ export const TrendChart = forwardRef<TrendChartRef, TrendChartProps>(
     <>
       <div className="w-full h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 35 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--grid))" />
             <XAxis
               dataKey="displayMonth"
               stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
+              tick={<CustomXAxisTick />}
+              height={60}
             />
             <YAxis
               stroke="hsl(var(--muted-foreground))"
@@ -196,8 +232,7 @@ export const TrendChart = forwardRef<TrendChartRef, TrendChartProps>(
                 // Find the corresponding data point to get the correct year
                 const dataPoint = data.find(d => d.displayMonth === label);
                 if (dataPoint) {
-                  const year = dataPoint.month.split('-')[0];
-                  return `${label} ${year}`;
+                  return `${dataPoint.displayMonth} ${dataPoint.year}`;
                 }
                 return label;
               }}

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { getAdminPool } from '@/lib/db-pool';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -27,69 +28,75 @@ export async function GET(request: Request) {
 }
 
 async function getBuildingApprovalsData(lgaParam?: string | null) {
-  // Database: mosaic_pro, Schema: public, Table: abs_building_approvals_lga
-  // Filters by LGA code from Search Geography card
-  // Uses maximum date range available in the table
+  // Database: research&insights, Schema: housing_dashboard, Table: building_approvals_nsw_lga
+  // Table structure: lga_code, lga_name, "1/7/2024", "1/8/2024", ... (wide format)
+  // Unpivots date columns and filters by LGA name from Search Geography card
 
-  // lgaParam can be either LGA name (from Search Geography) or LGA code
-  // We'll try to extract the code if it's available in the LGALookup id format
-  const lgaCode = lgaParam; // For now, assume it's the LGA name and we'll filter in memory
+  const pool = getAdminPool();
 
-  // First, get the date range available in the table
-  const dateRangeQuery = `
-    SELECT
-      MIN(year) as min_year,
-      MAX(year) as max_year,
-      MIN(month) as min_month,
-      MAX(month) as max_month
-    FROM public.abs_building_approvals_lga
-    WHERE year IS NOT NULL AND month IS NOT NULL
-  `;
+  // Determine if this is a state-wide request or specific LGA
+  const isStateWide = !lgaParam || lgaParam.toLowerCase().includes('state-wide') || lgaParam.toLowerCase() === 'new south wales';
 
-  const dateRangeResult = await query(dateRangeQuery, []);
-  const { min_year, max_year, min_month, max_month } = dateRangeResult.rows[0];
+  let queryText: string;
+  let params: any[] = [];
 
-  // Calculate the actual start and end dates
-  const startDate = `${min_year}-${String(min_month).padStart(2, '0')}-01`;
-  const endDate = `${max_year}-${String(max_month).padStart(2, '0')}-01`;
-
-  // Build the main query - aggregate all LGAs by period
-  // No joins needed since we're in a different database than LGA names
-  const queryText = `
-    WITH date_range AS (
-      -- Generate all months from min to max date in the table
+  if (isStateWide) {
+    // Aggregate all LGAs for NSW state-wide view - unpivot date columns
+    queryText = `
+      WITH unpivoted AS (
+        SELECT
+          col.key as date_str,
+          COALESCE(col.value::text::integer, 0) as approvals
+        FROM housing_dashboard.building_approvals_nsw_lga,
+        LATERAL jsonb_each(to_jsonb(building_approvals_nsw_lga) - 'lga_code' - 'lga_name') col
+        WHERE col.key ~ '^[0-9]+/[0-9]+/[0-9]+$'
+      ),
+      parsed_dates AS (
+        SELECT
+          date_str,
+          TO_DATE(date_str, 'DD/MM/YYYY') as date,
+          SUM(approvals) as total_approvals
+        FROM unpivoted
+        GROUP BY date_str, TO_DATE(date_str, 'DD/MM/YYYY')
+      )
       SELECT
-        EXTRACT(YEAR FROM d)::INTEGER as year,
-        EXTRACT(MONTH FROM d)::INTEGER as month,
-        TO_CHAR(d, 'YYYY-MM') as period
-      FROM generate_series(
-        $1::date,
-        $2::date,
-        '1 month'::interval
-      ) AS d
-    ),
-    approval_data AS (
+        TO_CHAR(date, 'YYYY-MM') as period,
+        EXTRACT(YEAR FROM date)::INTEGER as year,
+        EXTRACT(MONTH FROM date)::INTEGER as month,
+        total_approvals
+      FROM parsed_dates
+      ORDER BY date ASC
+    `;
+  } else {
+    // Get data for specific LGA - unpivot date columns
+    queryText = `
+      WITH unpivoted AS (
+        SELECT
+          col.key as date_str,
+          COALESCE(col.value::text::integer, 0) as approvals
+        FROM housing_dashboard.building_approvals_nsw_lga,
+        LATERAL jsonb_each(to_jsonb(building_approvals_nsw_lga) - 'lga_code' - 'lga_name') col
+        WHERE lga_name = $1
+          AND col.key ~ '^[0-9]+/[0-9]+/[0-9]+$'
+      ),
+      parsed_dates AS (
+        SELECT
+          TO_DATE(date_str, 'DD/MM/YYYY') as date,
+          approvals as total_approvals
+        FROM unpivoted
+      )
       SELECT
-        year,
-        month,
-        SUM(value) as total_approvals
-      FROM public.abs_building_approvals_lga
-      WHERE value IS NOT NULL
-        AND value > 0
-      GROUP BY year, month
-    )
-    SELECT
-      dr.year,
-      dr.month,
-      dr.period,
-      COALESCE(ad.total_approvals, 0) as total_approvals
-    FROM date_range dr
-    LEFT JOIN approval_data ad ON dr.year = ad.year AND dr.month = ad.month
-    ORDER BY dr.year ASC, dr.month ASC
-  `;
+        TO_CHAR(date, 'YYYY-MM') as period,
+        EXTRACT(YEAR FROM date)::INTEGER as year,
+        EXTRACT(MONTH FROM date)::INTEGER as month,
+        total_approvals
+      FROM parsed_dates
+      ORDER BY date ASC
+    `;
+    params = [lgaParam];
+  }
 
-  const params: any[] = [startDate, endDate];
-  const result = await query(queryText, params);
+  const result = await pool.query(queryText, params);
 
   // Process the data to match expected format
   const processedData = result.rows.map((row: any) => ({
@@ -97,7 +104,7 @@ async function getBuildingApprovalsData(lgaParam?: string | null) {
     month: getMonthName(row.month),
     year: row.year,
     approvals: parseInt(row.total_approvals) || 0,
-    dataSource: 'ABS'
+    dataSource: 'Housing Dashboard'
   }));
 
   return NextResponse.json({
