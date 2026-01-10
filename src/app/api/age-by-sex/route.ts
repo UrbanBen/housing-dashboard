@@ -1,54 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from 'pg';
-import fs from 'fs';
+import { getReadonlyPool, executeQuery } from '@/lib/db-pool';
 
 interface RequestBody {
   lgaName: string;
-  host: string;
-  port: number;
-  database: string;
-  user: string;
-  passwordPath: string;
   schema: string;
   table: string;
   lgaColumn: string;
 }
 
 export async function POST(request: NextRequest) {
-  let client: Client | null = null;
-
   try {
     const body: RequestBody = await request.json();
-    const { lgaName, host, port, database, user, passwordPath, schema, table, lgaColumn } = body;
+    const { lgaName, schema, table, lgaColumn } = body;
 
-    // Read password from file
-    let password: string;
-    try {
-      const envContent = fs.readFileSync(passwordPath, 'utf8');
-      const passwordMatch = envContent.match(/(?:POSTGRES_PASSWORD|DB_PASSWORD|PASSWORD)=(.+)/);
-      if (!passwordMatch) {
-        throw new Error('Password not found in file');
-      }
-      password = passwordMatch[1].trim();
-    } catch (error) {
-      console.error('Error reading password file:', error);
-      return NextResponse.json(
-        { error: 'Failed to read database password' },
-        { status: 500 }
-      );
-    }
-
-    // Connect to database
-    client = new Client({
-      host,
-      port,
-      database,
-      user,
-      password,
-      ssl: { rejectUnauthorized: false }
-    });
-
-    await client.connect();
+    const pool = getReadonlyPool();
 
     // Query for age by sex data grouped by age
     const query = `
@@ -61,10 +26,7 @@ export async function POST(request: NextRequest) {
       ORDER BY age5p_age_in_five_year_groups, sexp_sex
     `;
 
-    const result = await client.query(query, [lgaName]);
-
-    await client.end();
-    client = null;
+    const result = await pool.query(query, [lgaName]);
 
     if (result.rows.length === 0) {
       return NextResponse.json(
@@ -80,14 +42,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching age by sex data:', error);
-
-    if (client) {
-      try {
-        await client.end();
-      } catch (endError) {
-        console.error('Error closing client:', endError);
-      }
-    }
 
     return NextResponse.json(
       {

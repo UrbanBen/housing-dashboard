@@ -56,6 +56,8 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
   const [currentConfig, setCurrentConfig] = useState<LGADetailsConfig | null>(null);
   const [showDataItemForm, setShowDataItemForm] = useState(false);
   const [currentDataItem, setCurrentDataItem] = useState<{ key: string; title: string; config: DataItemDetailedConfig | null } | null>(null);
+  const [areaData, setAreaData] = useState<number | null>(null);
+  const [isLoadingArea, setIsLoadingArea] = useState(false);
 
   // Get stored configuration
   const getStoredConfig = (): LGADetailsConfig => {
@@ -169,6 +171,48 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
     setCurrentDataItem(null);
   };
 
+  // Fetch area data from database when LGA changes
+  useEffect(() => {
+    const fetchAreaData = async () => {
+      if (!selectedLGA || selectedLGA.id === 'nsw-state') {
+        // For NSW state-wide, use hardcoded value
+        setAreaData(800000);
+        return;
+      }
+
+      setIsLoadingArea(true);
+
+      try {
+        const config = getStoredConfig();
+        const params = new URLSearchParams({
+          action: 'getAreaData',
+          schema: config.schema,
+          table: config.table,
+          areaColumn: 'areasqkm',
+          lgaNameColumn: config.lgaNameColumn,
+          lgaName: selectedLGA.name
+        });
+
+        const response = await fetch(`/api/test-search-data?${params}`);
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setAreaData(result.data.area_sqkm);
+        } else {
+          console.warn('Area data not found, using fallback:', result.error);
+          setAreaData(selectedLGA.area || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching area data:', error);
+        setAreaData(selectedLGA.area || 0);
+      } finally {
+        setIsLoadingArea(false);
+      }
+    };
+
+    fetchAreaData();
+  }, [selectedLGA]);
+
   const data = getLGAData(selectedLGA);
   const config = getStoredConfig();
 
@@ -176,7 +220,7 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
   const dataItemMap = {
     area: {
       icon: Square,
-      value: `${Math.round(data.area).toLocaleString()} km²`,
+      value: isLoadingArea ? 'Loading...' : `${Math.round(areaData || 0).toLocaleString()} km²`,
       subtitle: 'Administrative Area'
     },
     avgProcessingDays: {

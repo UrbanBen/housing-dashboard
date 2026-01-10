@@ -70,6 +70,8 @@ interface DraggableDashboardProps {
   setCards: React.Dispatch<React.SetStateAction<DashboardCard[]>>;
   activeCard: DashboardCard | null;
   clearDragState: () => void;
+  isLoggedIn?: boolean;
+  disableHover?: boolean;
 }
 
 interface DroppableDashboardGridProps {
@@ -82,6 +84,8 @@ interface DroppableDashboardGridProps {
   onDeleteCard: (cardId: string) => void;
   activeCard: DashboardCard | null;
   onCardSizeChange: (cardId: string, size: 'small' | 'medium' | 'large') => void;
+  isLoggedIn?: boolean;
+  disableHover?: boolean;
 }
 
 function DroppableDashboardGrid({
@@ -93,7 +97,9 @@ function DroppableDashboardGrid({
   onLGAChange,
   onDeleteCard,
   activeCard,
-  onCardSizeChange
+  onCardSizeChange,
+  isLoggedIn = true,
+  disableHover = false
 }: DroppableDashboardGridProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: 'dashboard-grid',
@@ -145,6 +151,8 @@ function DroppableDashboardGrid({
             onDeleteCard={onDeleteCard}
             isBeingDragged={activeCard?.id === card.id}
             onCardSizeChange={onCardSizeChange}
+            isLoggedIn={isLoggedIn}
+            disableHover={disableHover}
           />
         );
       })}
@@ -297,7 +305,7 @@ const defaultCards: DashboardCard[] = [
   },
 ];
 
-export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode, cards, setCards, activeCard, clearDragState }: DraggableDashboardProps) {
+export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode, cards, setCards, activeCard, clearDragState, isLoggedIn = true, disableHover = false }: DraggableDashboardProps) {
 
   // Handle card deletion
   const handleDeleteCard = React.useCallback((cardId: string) => {
@@ -400,6 +408,8 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
             onDeleteCard={handleDeleteCard}
             activeCard={activeCard}
             onCardSizeChange={handleCardSizeChange}
+            isLoggedIn={isLoggedIn}
+            disableHover={disableHover}
           />
         </SortableContext>
       </div>

@@ -296,12 +296,12 @@ export function TestSearchCard({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Database className="h-5 w-5 text-primary" />
+            <Database className="h-6 w-6 text-primary" />
             <div>
-              <CardTitle className="text-lg">
-                Search Geography{selectedLGA ? ` - ${selectedLGA} ${selectedState === 'New South Wales' ? 'NSW' : selectedState} LGA` : ''}
+              <CardTitle className="text-xl">
+                Search Geography{selectedLGA ? ` - ${selectedLGA} LGA, ${selectedState}` : ''}
               </CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Search by State, Region or LGA
               </p>
             </div>

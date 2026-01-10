@@ -1,49 +1,5 @@
 import { NextResponse } from 'next/server';
-import { Pool } from 'pg';
-import fs from 'fs';
-
-// Create a separate pool for the research&insights database
-const getResearchInsightsPool = () => {
-  // Read password from file if configured (same as test-search-data)
-  let password = process.env.DATABASE_PASSWORD;
-
-  try {
-    const passwordPath = '/users/ben/permissions/.env.admin';
-    if (fs.existsSync(passwordPath)) {
-      const content = fs.readFileSync(passwordPath, 'utf8');
-      const lines = content.split('\n');
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith('#')) continue;
-
-        const match = trimmed.match(/^([A-Z_]*PASSWORD)\s*=\s*(.*)$/);
-        if (match) {
-          let value = match[2];
-          value = value.replace(/^["']|["']$/g, '');
-          password = value;
-          break;
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error reading password file:', error);
-  }
-
-  return new Pool({
-    host: 'mecone-data-lake.postgres.database.azure.com',
-    port: 5432,
-    database: 'research&insights',
-    user: 'db_admin',
-    password: password,
-    ssl: {
-      rejectUnauthorized: false,
-    },
-    max: 5,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
-  });
-};
+import { getReadonlyPool, executeQuery } from '@/lib/db-pool';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -58,10 +14,8 @@ export async function GET(request: Request) {
     }, { status: 400 });
   }
 
-  let pool: Pool | null = null;
-
   try {
-    pool = getResearchInsightsPool();
+    const pool = getReadonlyPool();
 
     // Query the wide format table - lga_code and lga_name columns
     const queryText = `
@@ -127,10 +81,6 @@ export async function GET(request: Request) {
       error: 'Failed to fetch LGA dwelling approvals data',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
-  } finally {
-    if (pool) {
-      await pool.end();
-    }
   }
 }
 

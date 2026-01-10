@@ -43,6 +43,8 @@ interface DraggableCardProps {
   onDeleteCard?: (cardId: string) => void;
   isBeingDragged?: boolean;
   onCardSizeChange?: (cardId: string, size: 'small' | 'medium' | 'large') => void;
+  isLoggedIn?: boolean;
+  disableHover?: boolean;
 }
 
 export function DraggableCard({
@@ -55,7 +57,9 @@ export function DraggableCard({
   effectiveColumns = 4,
   onDeleteCard,
   isBeingDragged = false,
-  onCardSizeChange
+  onCardSizeChange,
+  isLoggedIn = true,
+  disableHover = false
 }: DraggableCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const cardRef = React.useRef<HTMLDivElement>(null);
@@ -82,6 +86,13 @@ export function DraggableCard({
   };
 
   const renderCardContent = () => {
+    // Helper to get card className with conditional hover effects
+    const getCardClassName = (additionalClasses = '') => {
+      const baseClasses = 'shadow-lg border border-border/50 transition-all';
+      const hoverClasses = disableHover ? '' : 'hover:ring-2 hover:ring-primary/50 hover:shadow-xl';
+      return `${baseClasses} ${hoverClasses} ${additionalClasses}`.trim();
+    };
+
     switch (card.type) {
       case 'lga-lookup':
         return (
@@ -121,7 +132,7 @@ export function DraggableCard({
 
       case 'housing-pipeline':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -141,7 +152,7 @@ export function DraggableCard({
                               <div className="h-96">
                   <HousingSankeyChart />
                 </div>
-              
+
             </CardContent>
           </Card>
         );
@@ -152,7 +163,7 @@ export function DraggableCard({
         const chartRef = useRef<TrendChartRef>(null);
 
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader
               className="pb-4 cursor-pointer"
               onDoubleClick={() => chartRef.current?.openConfig()}
@@ -199,7 +210,7 @@ export function DraggableCard({
         const chartRef = useRef<LGADwellingApprovalsChartRef>(null);
 
         return (
-          <Card className="shadow-lg border-2 border-[#00FF41]/30 hover:border-[#00FF41] transition-colors">
+          <Card className={getCardClassName()}>
             <CardHeader
               className="pb-4 cursor-pointer"
               onDoubleClick={() => chartRef.current?.openConfig()}
@@ -207,9 +218,9 @@ export function DraggableCard({
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <LineChart className="h-6 w-6 text-[#00FF41]" />
+                  <LineChart className="h-6 w-6 text-primary" />
                   <div>
-                    <CardTitle className="text-xl text-white">
+                    <CardTitle className="text-xl">
                       Dwelling Approvals by LGA
                       {selectedLGA && (
                         <span className="text-base font-normal text-muted-foreground ml-2">
@@ -236,28 +247,28 @@ export function DraggableCard({
 
       case 'market-overview':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader className="pb-4">
                               <CardTitle className="flex items-center gap-3 text-xl">
                   <Activity className="h-6 w-6 text-chart-2" />
                   Market Overview
                 </CardTitle>
-              
+
                               <CardDescription className="text-base">
                   Key housing market indicators and health metrics comparison
                 </CardDescription>
-              
+
             </CardHeader>
             <CardContent className="pt-2">
                               <MarketOverview />
-              
+
             </CardContent>
           </Card>
         );
 
       case 'kpi-cards':
         return (
-          <Card className="shadow-lg border border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-xl transition-shadow">
+          <Card className={getCardClassName('bg-card/50 backdrop-blur-sm')}>
             <CardHeader className="pb-4">
               <div className="flex items-center gap-3">
                 <BarChart3 className="h-6 w-6 text-primary" />
@@ -324,13 +335,13 @@ export function DraggableCard({
 
       case 'market-forecast':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="text-xl text-foreground flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-primary" />
                   Market Forecast
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -356,13 +367,13 @@ export function DraggableCard({
 
       case 'regional-comparison':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="text-xl text-foreground flex items-center gap-2">
                   <Home className="h-5 w-5 text-chart-3" />
                   Regional Comparison
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -388,13 +399,13 @@ export function DraggableCard({
 
       case 'data-freshness':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="text-xl text-foreground flex items-center gap-2">
                   <Activity className="h-5 w-5 text-chart-4" />
                   Data Freshness
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -447,12 +458,12 @@ export function DraggableCard({
       // New template types from AdminToolbar
       case 'blank-card':
         return (
-          <Card className="shadow-lg border border-border/50 min-h-[200px]">
+          <Card className={getCardClassName('min-h-[200px]')}>
             <CardHeader>
                               <CardTitle>Blank Card</CardTitle>
-              
+
                               <CardDescription>Click to configure data source and content</CardDescription>
-              
+
             </CardHeader>
             <CardContent className="flex items-center justify-center h-32">
                               <div className="text-center text-muted-foreground">
@@ -475,13 +486,13 @@ export function DraggableCard({
 
       case 'interactive-map':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <Map className="h-5 w-5" />
                   Interactive Map
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="h-64 bg-muted/20 rounded-lg flex items-center justify-center">
@@ -491,7 +502,7 @@ export function DraggableCard({
                     <p className="text-xs">Configure data source to display boundaries</p>
                   </div>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
@@ -499,18 +510,18 @@ export function DraggableCard({
       case 'location-details':
         return (
                       <LGADetails selectedLGA={selectedLGA} />
-          
+
         );
 
       case 'bar-chart':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
                   Bar Chart
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
@@ -520,20 +531,20 @@ export function DraggableCard({
                     <p className="text-xs">Configure data source and display options</p>
                   </div>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'line-chart':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <LineChart className="h-5 w-5" />
                   Line Chart
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
@@ -543,20 +554,20 @@ export function DraggableCard({
                     <p className="text-xs">Configure data source for time series</p>
                   </div>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'pie-chart':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <PieChart className="h-5 w-5" />
                   Pie Chart
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
@@ -566,20 +577,20 @@ export function DraggableCard({
                     <p className="text-xs">Configure data source for proportional breakdown</p>
                   </div>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'trend-chart':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
                   Trend Analysis
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
@@ -589,14 +600,14 @@ export function DraggableCard({
                     <p className="text-xs">Configure data source with forecasting</p>
                   </div>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'housing-affordability':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <Home className="h-5 w-5" />
@@ -625,13 +636,13 @@ export function DraggableCard({
 
       case 'property-values':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5" />
                   Property Values
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="space-y-4">
@@ -641,20 +652,20 @@ export function DraggableCard({
                   </div>
                   <p className="text-xs text-center text-muted-foreground">Configure data source for property valuations</p>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'population-metrics':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   Population Data
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="space-y-4">
@@ -670,20 +681,20 @@ export function DraggableCard({
                   </div>
                   <p className="text-xs text-center text-muted-foreground">Configure data source for demographics</p>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'development-stats':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <Building className="h-5 w-5" />
                   Development Statistics
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="space-y-4">
@@ -699,20 +710,20 @@ export function DraggableCard({
                   </div>
                   <p className="text-xs text-center text-muted-foreground">Configure data source for construction data</p>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'data-table':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <Grid3X3 className="h-5 w-5" />
                   Data Table
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
@@ -722,20 +733,20 @@ export function DraggableCard({
                     <p className="text-xs">Configure data source for tabular display</p>
                   </div>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'comparison-table':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <Layout className="h-5 w-5" />
                   Comparison Table
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
@@ -745,20 +756,20 @@ export function DraggableCard({
                     <p className="text-xs">Configure data source for side-by-side comparisons</p>
                   </div>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'time-series':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
                   Time Series
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
@@ -768,20 +779,20 @@ export function DraggableCard({
                     <p className="text-xs">Configure data source for time-based analysis</p>
                   </div>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'progress-tracker':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <Clock className="h-5 w-5" />
                   Progress Tracker
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="space-y-4">
@@ -796,14 +807,14 @@ export function DraggableCard({
                   </div>
                   <p className="text-xs text-center text-muted-foreground">Configure data source for goal tracking</p>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'insights-panel':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
@@ -828,40 +839,40 @@ export function DraggableCard({
 
       case 'percentage-display':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <Percent className="h-5 w-5" />
                   Percentage Display
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="text-center p-6">
                   <p className="text-6xl font-bold text-primary">85%</p>
                   <p className="text-sm text-muted-foreground mt-2">Configure metric name and data source</p>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
 
       case 'counter-display':
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
                               <CardTitle className="flex items-center gap-2">
                   <Hash className="h-5 w-5" />
                   Counter Display
                 </CardTitle>
-              
+
             </CardHeader>
             <CardContent>
                               <div className="text-center p-6">
                   <p className="text-6xl font-bold text-primary">1,247</p>
                   <p className="text-sm text-muted-foreground mt-2">Configure counter name and data source</p>
                 </div>
-              
+
             </CardContent>
           </Card>
         );
@@ -905,7 +916,7 @@ export function DraggableCard({
 
       default:
         return (
-          <Card className="shadow-lg border border-border/50">
+          <Card className={getCardClassName()}>
             <CardHeader>
               <CardTitle>Unknown Card Type</CardTitle>
             </CardHeader>
@@ -1086,8 +1097,9 @@ export function DraggableCard({
       )}
 
 
-      <div className={isEditMode ? 'pointer-events-none' : (isAdminMode ? 'pointer-events-auto' : '')}>
+      <div className={`relative ${isEditMode ? 'pointer-events-none' : (isAdminMode ? 'pointer-events-auto' : '')}`}>
         {renderCardContent()}
+
       </div>
 
       {/* Delete Confirmation Dialog */}

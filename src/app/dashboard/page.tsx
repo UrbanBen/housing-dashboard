@@ -1,10 +1,16 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { LGALookup, type LGA } from "@/components/filters/LGALookup";
 import { DraggableDashboard, type DashboardCard, type CardType } from "@/components/dashboard/DraggableDashboard";
 import { DraggableCard } from "@/components/dashboard/DraggableCard";
 import { AdminToolbar } from "@/components/dashboard/AdminToolbar";
+import { LoginModal } from "@/components/auth/LoginModal";
+import { canAccessCard } from "@/lib/tiers";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DndContext,
   DragEndEvent,
@@ -140,6 +146,8 @@ const defaultCards: DashboardCard[] = [
 ];
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [selectedLGA, setSelectedLGA] = useState<LGA | null>(null);
   const [maxColumns, setMaxColumns] = useState<number>(6);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -147,6 +155,36 @@ export default function DashboardPage() {
   const [activeTemplate, setActiveTemplate] = useState<any>(null);
   const [cards, setCards] = useState<DashboardCard[]>(defaultCards);
   const [activeCard, setActiveCard] = useState<DashboardCard | null>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Authentication check - allow access without login for now (free tier)
+  // In production, you might want to require auth for all users
+  const userTier = session?.user?.tier || 'free';
+
+  // Determine if user is logged in (stable during loading states)
+  const isLoggedIn = status === 'authenticated' && !!session;
+  const isUnauthenticated = status === 'unauthenticated';
+
+  // Show login modal when definitely unauthenticated (not during loading)
+  useEffect(() => {
+    if (isUnauthenticated) {
+      setShowLoginModal(true);
+    } else if (isLoggedIn) {
+      setShowLoginModal(false);
+    }
+    // Don't change modal state during 'loading' status
+  }, [isLoggedIn, isUnauthenticated]);
+
+  // Filter cards based on user's tier
+  const accessibleCards = cards.filter(card =>
+    canAccessCard(userTier, card.type)
+  );
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    await signOut({ redirect: false });
+    setShowLoginModal(true);
+  };
 
   // Debug: Log selectedLGA changes
   useEffect(() => {
@@ -311,7 +349,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-black">
       {/* Navigation Bar */}
-      <nav className="border-b border-border bg-card/50 backdrop-blur">
+      <nav className="border-b border-border bg-card">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -326,6 +364,41 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              {/* User Profile and Tier Display */}
+              {session ? (
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{session.user.name || session.user.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {userTier.toUpperCase()} Tier
+                      {userTier !== 'pro' && (
+                        <span
+                          className="ml-2 text-primary cursor-pointer hover:underline"
+                          onClick={() => router.push('/pricing')}
+                        >
+                          Upgrade
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSignOut}
+                  >
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push('/login')}
+                >
+                  Sign In
+                </Button>
+              )}
+
               {isAdminMode && (
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
@@ -405,6 +478,8 @@ export default function DashboardPage() {
               setCards={setCards}
               activeCard={activeCard}
               clearDragState={clearDragState}
+              isLoggedIn={isLoggedIn}
+              disableHover={showLoginModal}
             />
           </div>
         </div>
@@ -428,6 +503,7 @@ export default function DashboardPage() {
                 onLGAChange={handleLGAChange}
                 isDragging={true}
                 effectiveColumns={6}
+                isLoggedIn={isLoggedIn}
               />
             </div>
           ) : activeCard ? (
@@ -440,6 +516,7 @@ export default function DashboardPage() {
                 onLGAChange={handleLGAChange}
                 isDragging={true}
                 effectiveColumns={6}
+                isLoggedIn={isLoggedIn}
               />
             </div>
           ) : null}
@@ -454,6 +531,9 @@ export default function DashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal isOpen={showLoginModal} />
     </div>
   );
 }

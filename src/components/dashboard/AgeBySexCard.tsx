@@ -210,7 +210,7 @@ export function AgeBySexCard({ selectedLGA, isAdminMode = false, onAdminClick }:
   };
 
   return (
-    <Card className="shadow-lg border border-border/50">
+    <Card className="shadow-lg border border-border/50 hover:ring-2 hover:ring-primary/50 hover:shadow-xl transition-all">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

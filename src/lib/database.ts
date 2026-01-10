@@ -1,48 +1,16 @@
-import { Pool, PoolClient } from 'pg';
+import { PoolClient } from 'pg';
+import { getReadonlyPool, getClient as getPoolClient } from './db-pool';
 
-// Database configuration for Azure PostgreSQL
-const dbConfig = {
-  host: 'mecone-data-lake.postgres.database.azure.com',
-  port: 5432,
-  database: process.env.POSTGRES_DATABASE || 'housing_insights',
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  ssl: {
-    rejectUnauthorized: false, // Required for Azure PostgreSQL
-  },
-  // Connection pool settings
-  max: 20, // Maximum number of connections
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-  maxUses: 7500, // Dispose connection after 7500 uses
-};
-
-// Global connection pool
-let pool: Pool | null = null;
-
-// Initialize connection pool
-function getPool(): Pool {
-  if (!pool) {
-    console.log('Initializing PostgreSQL connection pool...');
-    pool = new Pool(dbConfig);
-    
-    // Handle pool errors
-    pool.on('error', (err) => {
-      console.error('PostgreSQL pool error:', err);
-    });
-    
-    // Handle connection events
-    pool.on('connect', () => {
-      console.log('PostgreSQL client connected');
-    });
-  }
-  
-  return pool;
-}
+/**
+ * Legacy database.ts - Now uses centralized db-pool
+ *
+ * This file is maintained for backward compatibility with existing code.
+ * New code should import directly from '@/lib/db-pool' instead.
+ */
 
 // Get a database client from the pool
 export async function getClient(): Promise<PoolClient> {
-  const pool = getPool();
+  const pool = getReadonlyPool();
   const client = await pool.connect();
   return client;
 }
@@ -79,12 +47,9 @@ export async function testConnection(): Promise<{ success: boolean; message: str
 }
 
 // Close all connections (useful for cleanup)
+// NOTE: This is now a no-op since pools are managed centrally
 export async function closePool(): Promise<void> {
-  if (pool) {
-    console.log('Closing PostgreSQL connection pool...');
-    await pool.end();
-    pool = null;
-  }
+  console.warn('closePool() is deprecated. Use closeAllPools() from db-pool instead.');
 }
 
 // Database schema types

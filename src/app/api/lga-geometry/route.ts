@@ -1,64 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
-import fs from 'fs';
-
-// Connection pool
-let pool: Pool | null = null;
-
-function getPool(): Pool {
-  if (!pool) {
-    console.log('Initializing PostgreSQL connection pool for LGA Geometry...');
-
-    // Read password from file if configured
-    let password = process.env.DATABASE_PASSWORD;
-
-    try {
-      const passwordPath = '/users/ben/permissions/.env.admin';
-      if (fs.existsSync(passwordPath)) {
-        const content = fs.readFileSync(passwordPath, 'utf8');
-        const lines = content.split('\n');
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || trimmed.startsWith('#')) continue;
-
-          const match = trimmed.match(/^([A-Z_]*PASSWORD)\s*=\s*(.*)$/);
-          if (match) {
-            let value = match[2];
-            value = value.replace(/^["']|["']$/g, '');
-            password = value;
-            console.log('Password loaded from file for LGA Geometry');
-            break;
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error reading password file for LGA Geometry:', error);
-    }
-
-    pool = new Pool({
-      host: 'mecone-data-lake.postgres.database.azure.com',
-      port: 5432,
-      database: 'research&insights',
-      user: 'db_admin',
-      password: password,
-      ssl: {
-        rejectUnauthorized: false
-      },
-      max: 5,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 30000,
-      query_timeout: 30000,
-    });
-
-    pool.on('error', (err) => {
-      console.error('Unexpected pool error:', err);
-      pool = null;
-    });
-  }
-
-  return pool;
-}
+import { getReadonlyPool, executeQuery } from '@/lib/db-pool';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -86,7 +27,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const pool = getPool();
+    const pool = getReadonlyPool();
 
     // Query to get the geometry data
     // Convert geometry to GeoJSON format for easier handling
@@ -161,7 +102,7 @@ export async function GET(request: NextRequest) {
           host: 'mecone-data-lake.postgres.database.azure.com',
           port: 5432,
           database: 'research&insights',
-          user: 'db_admin',
+          user: 'mosaic_readonly',
           schema,
           table
         }
