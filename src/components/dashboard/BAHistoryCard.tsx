@@ -188,31 +188,30 @@ export function BAHistoryCard({ selectedLGA, cardWidth = 'large' }: BAHistoryCar
 
             {/* Line Chart */}
             <ResponsiveContainer width="100%" height={chartConfig.height}>
-                <LineChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                  <XAxis
-                    dataKey="month"
-                    tick={{ fontSize: 11 }}
-                    tickFormatter={(value) => {
-                      const date = new Date(value);
-                      return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                    }}
-                  />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="total_approvals"
-                    name="Total Approvals"
-                    stroke="#6366f1"
-                    strokeWidth={2}
-                    dot={{ fill: '#6366f1', r: 3 }}
-                    activeDot={{ r: 6, stroke: '#4ade80', strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+              <LineChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                  }}
+                />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="total_approvals"
+                  name="Total Approvals"
+                  stroke="#6366f1"
+                  strokeWidth={2}
+                  dot={{ fill: '#6366f1', r: 3 }}
+                  activeDot={{ r: 6, stroke: '#4ade80', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         )}
       </CardContent>
