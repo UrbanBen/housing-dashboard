@@ -8,6 +8,7 @@ import type { LGA } from '@/components/filters/LGALookup';
 
 interface BAHistoryCardProps {
   selectedLGA: LGA | null;
+  cardWidth?: 'small' | 'medium' | 'large' | 'xl';
 }
 
 interface HistoryData {
@@ -15,7 +16,7 @@ interface HistoryData {
   total_approvals: number;
 }
 
-export function BAHistoryCard({ selectedLGA }: BAHistoryCardProps) {
+export function BAHistoryCard({ selectedLGA, cardWidth = 'large' }: BAHistoryCardProps) {
   const [data, setData] = useState<HistoryData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,6 +61,44 @@ export function BAHistoryCard({ selectedLGA }: BAHistoryCardProps) {
 
     fetchData();
   }, [selectedLGA]);
+
+  // Responsive configuration based on card width
+  const getChartConfig = () => {
+    switch (cardWidth) {
+      case 'small':
+        return {
+          height: 250,
+          summaryGrid: 'grid grid-cols-1 gap-2 mb-4',
+          fontSize: 'text-base',
+        };
+      case 'medium':
+        return {
+          height: 300,
+          summaryGrid: 'grid grid-cols-3 gap-2 mb-5',
+          fontSize: 'text-xl',
+        };
+      case 'large':
+        return {
+          height: 350,
+          summaryGrid: 'grid grid-cols-3 gap-3 mb-6',
+          fontSize: 'text-2xl',
+        };
+      case 'xl':
+        return {
+          height: 400,
+          summaryGrid: 'grid grid-cols-3 gap-4 mb-6',
+          fontSize: 'text-3xl',
+        };
+      default:
+        return {
+          height: 350,
+          summaryGrid: 'grid grid-cols-3 gap-3 mb-6',
+          fontSize: 'text-2xl',
+        };
+    }
+  };
+
+  const chartConfig = getChartConfig();
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -119,23 +158,23 @@ export function BAHistoryCard({ selectedLGA }: BAHistoryCardProps) {
         {!loading && !error && data.length > 0 && (
           <div className="space-y-4">
             {/* Summary Stats */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className={chartConfig.summaryGrid}>
               <div className="bg-blue-500/5 border border-blue-500/10 rounded-lg p-3 text-center hover:bg-blue-500/10 transition-all">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                <div className={`${chartConfig.fontSize} font-bold text-blue-600 dark:text-blue-400`}>
                   {summary?.total_approvals?.toLocaleString() || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Total Approvals</div>
               </div>
 
               <div className="bg-green-500/5 border border-green-500/10 rounded-lg p-3 text-center hover:bg-green-500/10 transition-all">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <div className={`${chartConfig.fontSize} font-bold text-green-600 dark:text-green-400`}>
                   {summary?.avg_per_period ? Number(summary.avg_per_period).toFixed(1) : '0'}
                 </div>
                 <div className="text-xs text-muted-foreground">Avg per Month</div>
               </div>
 
               <div className="bg-indigo-500/5 border border-indigo-500/10 rounded-lg p-3 text-center hover:bg-indigo-500/10 transition-all">
-                <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                <div className={`${chartConfig.fontSize} font-bold text-indigo-600 dark:text-indigo-400`}>
                   {data.length}
                 </div>
                 <div className="text-xs text-muted-foreground">Months of Data</div>
@@ -148,8 +187,7 @@ export function BAHistoryCard({ selectedLGA }: BAHistoryCardProps) {
             </div>
 
             {/* Line Chart */}
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={chartConfig.height}>
                 <LineChart data={data}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                   <XAxis
