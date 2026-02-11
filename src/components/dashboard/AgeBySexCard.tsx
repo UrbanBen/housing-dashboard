@@ -67,6 +67,13 @@ export function AgeBySexCard({ selectedLGA, isAdminMode = false, onAdminClick }:
         const result = await response.json();
 
         if (!response.ok) {
+          // Gracefully handle "no data" case without throwing error
+          if (result.error?.includes('No data found')) {
+            setData([]);
+            setPyramidData([]);
+            setIsLoading(false);
+            return;
+          }
           throw new Error(result.error || 'Failed to fetch age by sex data');
         }
 
@@ -210,12 +217,12 @@ export function AgeBySexCard({ selectedLGA, isAdminMode = false, onAdminClick }:
   };
 
   return (
-    <Card className="shadow-lg border border-border/50 hover:ring-2 hover:ring-primary/50 hover:shadow-xl transition-all">
+    <Card className="bg-card/50 backdrop-blur-sm shadow-lg border-2 border-[#eab308] hover:ring-2 hover:ring-[#eab308]/50 hover:shadow-xl transition-all">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Users className="h-6 w-6 text-primary" />
-            <CardTitle className="text-xl">
+            <Users className="h-6 w-6 text-[#eab308]" />
+            <CardTitle className="text-xl text-[#eab308]">
               Age by Sex{selectedLGA ? ` - ${selectedLGA.name}` : ''}
             </CardTitle>
           </div>

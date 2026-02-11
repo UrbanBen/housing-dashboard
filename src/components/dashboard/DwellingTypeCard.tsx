@@ -23,14 +23,14 @@ interface NivoPieData {
   color: string;
 }
 
-// Muted color palette for 6 dwelling types
+// Various shades of green for 6 dwelling types
 const DWELLING_COLORS: { [key: string]: string } = {
-  'Occupied private dwellings': '#64748b',      // Slate
-  'Unoccupied private dwellings': '#94a3b8',    // Lighter slate
-  'Non-private dwellings': '#78716c',            // Stone
-  'Migratory': '#a8a29e',                        // Lighter stone
-  'Off-shore': '#71717a',                        // Zinc
-  'Shipping': '#a1a1aa',                         // Lighter zinc
+  'Occupied private dwellings': '#052e16',      // Darkest green
+  'Unoccupied private dwellings': '#166534',    // Dark green
+  'Non-private dwellings': '#22c55e',            // Bright green
+  'Migratory': '#4ade80',                        // Light green
+  'Off-shore': '#86efac',                        // Lighter green
+  'Shipping': '#bbf7d0',                         // Lightest green
 };
 
 // Abbreviate dwelling type names for labels
@@ -116,12 +116,12 @@ export function DwellingTypeCard({ selectedLGA, isAdminMode = false, onAdminClic
 
 
   return (
-    <Card className="shadow-lg border border-border/50 hover:ring-2 hover:ring-primary/50 hover:shadow-xl transition-all">
+    <Card className="bg-card/50 backdrop-blur-sm shadow-lg border-2 border-[#eab308] hover:ring-2 hover:ring-[#eab308]/50 hover:shadow-xl transition-all">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Home className="h-6 w-6 text-primary" />
-            <CardTitle className="text-xl">
+            <Home className="h-6 w-6 text-[#eab308]" />
+            <CardTitle className="text-xl text-[#eab308]">
               Dwelling Type{selectedLGA ? ` - ${selectedLGA.name}` : ''}
             </CardTitle>
           </div>
@@ -159,12 +159,12 @@ export function DwellingTypeCard({ selectedLGA, isAdminMode = false, onAdminClic
         )}
 
         {selectedLGA && pieData.length > 0 && !isLoading && !error && (
-          <div className="space-y-4">
+          <div className="space-y-0">
             {/* Nivo Pie Chart */}
             <div className="h-[500px]">
               <ResponsivePie
                 data={pieData}
-                margin={{ top: 80, right: 280, bottom: 80, left: 280 }}
+                margin={{ top: 30, right: 60, bottom: 0, left: 60 }}
                 innerRadius={0.5}
                 padAngle={0.7}
                 cornerRadius={3}
@@ -175,21 +175,119 @@ export function DwellingTypeCard({ selectedLGA, isAdminMode = false, onAdminClic
                   from: 'color',
                   modifiers: [['darker', 0.2]]
                 }}
-                enableArcLinkLabels={true}
-                arcLinkLabelsSkipAngle={5}
-                arcLinkLabelsTextColor="hsl(var(--foreground))"
-                arcLinkLabelsThickness={2}
-                arcLinkLabelsColor={{ from: 'color' }}
-                arcLinkLabelsOffset={15}
-                arcLinkLabelsDiagonalLength={20}
-                arcLinkLabelsStraightLength={20}
-                arcLinkLabel={(d) => {
+                enableArcLinkLabels={false}
+                layers={['arcs', 'arcLabels', 'legends', ({ dataWithArc, centerX, centerY }: any) => {
                   const totalDwellings = data?.reduce((sum, item) => sum + item.value, 0) || 0;
-                  const percentage = totalDwellings > 0 ? (d.value / totalDwellings) * 100 : 0;
-                  const count = Number(d.value).toLocaleString('en-US');
-                  const abbrev = abbreviateDwellingType(d.label.toString());
-                  return `${abbrev}: ${percentage.toFixed(1)}% (${count})`;
-                }}
+
+                  return (
+                    <g key="custom-labels">
+                      {dataWithArc.map((datum: any) => {
+                        const percentage = totalDwellings > 0 ? (datum.value / totalDwellings) * 100 : 0;
+                        const count = Number(datum.value).toLocaleString('en-US');
+                        const abbrev = abbreviateDwellingType(datum.label.toString());
+
+                        // If section is > 10%, place label over the pie chart section
+                        if (percentage > 10) {
+                          // Calculate midpoint angle of the arc
+                          const midAngle = datum.arc.startAngle + (datum.arc.endAngle - datum.arc.startAngle) / 2;
+
+                          // Position label further from center (closer to outer edge of donut)
+                          const pieRadius = Math.min(centerX, centerY) * 0.75;
+                          const innerRadius = pieRadius * 0.5; // innerRadius is 0.5 of the pie
+                          // Move "Occupied" label further out
+                          const labelPercentage = datum.label === 'Occupied private dwellings' ? 0.96 : 0.925;
+                          const labelRadius = innerRadius + (pieRadius - innerRadius) * labelPercentage;
+
+                          const labelX = centerX + Math.sin(midAngle) * labelRadius;
+                          const labelY = centerY - Math.cos(midAngle) * labelRadius;
+
+                          return (
+                            <g key={datum.id}>
+                              <text
+                                x={labelX}
+                                y={labelY - 8}
+                                textAnchor="middle"
+                                style={{ fill: 'white', fontSize: 13, fontWeight: 600 }}
+                              >
+                                {abbrev}
+                              </text>
+                              <text
+                                x={labelX}
+                                y={labelY + 8}
+                                textAnchor="middle"
+                                style={{ fill: 'white', fontSize: 13, fontWeight: 600 }}
+                              >
+                                {percentage.toFixed(1)}%
+                              </text>
+                            </g>
+                          );
+                        }
+
+                        // For sections ≤ 10%, keep the external labels with lines
+                        let startAngle = datum.arc.startAngle + (datum.arc.endAngle - datum.arc.startAngle) / 2;
+                        let endAngle = startAngle;
+
+                        // Adjust angles for specific labels if needed
+                        if (datum.label === 'Occupied private dwellings') {
+                          startAngle -= (90 * Math.PI / 180);
+                          endAngle = Math.PI / 4;
+                        }
+
+                        if (datum.label === 'Non-private dwellings') {
+                          endAngle += (15 * Math.PI / 180);
+                        }
+
+                        const pieRadius = Math.min(centerX, centerY) * 0.75;
+                        const outerRadius = Math.max(centerX, centerY) * 0.9;
+
+                        const startX = centerX + Math.sin(startAngle) * pieRadius;
+                        const startY = centerY - Math.cos(startAngle) * pieRadius;
+
+                        const linkX = centerX + Math.sin(endAngle) * outerRadius;
+                        const linkY = centerY - Math.cos(endAngle) * outerRadius;
+
+                        const textAnchor = linkX > centerX ? 'start' : 'end';
+
+                        return (
+                          <g key={datum.id}>
+                            <line
+                              x1={startX}
+                              y1={startY}
+                              x2={linkX}
+                              y2={linkY}
+                              stroke="#ffffff"
+                              strokeWidth={2}
+                            />
+                            <text
+                              x={linkX}
+                              y={linkY - 14}
+                              textAnchor={textAnchor}
+                              style={{ fill: 'hsl(var(--foreground))', fontSize: 13, fontWeight: 500 }}
+                            >
+                              {abbrev}:
+                            </text>
+                            <text
+                              x={linkX}
+                              y={linkY}
+                              textAnchor={textAnchor}
+                              style={{ fill: 'hsl(var(--foreground))', fontSize: 13, fontWeight: 500 }}
+                            >
+                              {percentage.toFixed(1)}%
+                            </text>
+                            <text
+                              x={linkX}
+                              y={linkY + 14}
+                              textAnchor={textAnchor}
+                              style={{ fill: 'hsl(var(--foreground))', fontSize: 13, fontWeight: 500 }}
+                            >
+                              ({count})
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                }]}
                 enableArcLabels={false}
                 tooltip={({ datum }) => {
                   const totalDwellings = data?.reduce((sum, item) => sum + item.value, 0) || 0;
@@ -211,23 +309,32 @@ export function DwellingTypeCard({ selectedLGA, isAdminMode = false, onAdminClic
             </div>
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/50">
+            <div className="grid grid-cols-3 gap-4 -mt-5 pt-3 border-t border-border/50">
               {data && data.map((item) => {
                 const total = data.reduce((sum, d) => sum + d.value, 0);
                 const percentage = total > 0 ? (item.value / total) * 100 : 0;
                 return (
-                  <div key={item.dwelling_type} className="text-left">
+                  <div key={item.dwelling_type} className="flex flex-col items-center text-center">
                     <div className="flex items-center gap-2 mb-1">
                       <div
-                        className="w-3 h-3 rounded-full"
+                        className="w-6 h-6 rounded-full"
                         style={{ backgroundColor: DWELLING_COLORS[item.dwelling_type] || '#94a3b8' }}
                       />
-                      <div className="text-xs text-muted-foreground truncate">
-                        {item.dwelling_type}
-                      </div>
                     </div>
-                    <div className="text-sm font-bold ml-5">
-                      {item.value.toLocaleString()} ({percentage.toFixed(1)}%)
+                    <div className="text-sm text-muted-foreground mb-1">
+                      {item.dwelling_type === 'Non-private dwellings' ? (
+                        <>
+                          Non-private<br />dwellings
+                        </>
+                      ) : (
+                        item.dwelling_type
+                      )}
+                    </div>
+                    <div className="text-sm font-bold">
+                      {item.value.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      ({percentage.toFixed(1)}%)
                     </div>
                   </div>
                 );

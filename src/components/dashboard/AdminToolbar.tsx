@@ -27,7 +27,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  RotateCcw
+  RotateCcw,
+  Globe,
+  GitCompare,
+  History,
+  MessageSquare
 } from "lucide-react";
 import type { DashboardCard } from './DraggableDashboard';
 
@@ -139,13 +143,6 @@ const cardTemplates: CardTemplate[] = [
     description: 'Historical data over periods'
   },
   {
-    id: 'scatter-plot',
-    title: 'Scatter Plot',
-    category: 'charts',
-    icon: Activity,
-    description: 'Correlation visualization'
-  },
-  {
     id: 'lga-dwelling-approvals',
     title: 'Building Approvals by LGA',
     category: 'charts',
@@ -165,6 +162,167 @@ const cardTemplates: CardTemplate[] = [
     category: 'charts',
     icon: Percent,
     description: 'Dwelling composition by type'
+  },
+  {
+    id: 'country-of-birth',
+    title: 'Country of Birth',
+    category: 'charts',
+    icon: Globe,
+    description: 'Population by country of birth'
+  },
+  {
+    id: 'australian-born',
+    title: 'Australian Born',
+    category: 'charts',
+    icon: MapPin,
+    description: 'Australian-born vs overseas-born population'
+  },
+  {
+    id: 'citizenship',
+    title: 'Australian Citizenship',
+    category: 'charts',
+    icon: Users,
+    description: 'Citizenship breakdown 2011-2021'
+  },
+  {
+    id: 'citizenship-trend',
+    title: 'Australian Citizenship Trend',
+    category: 'charts',
+    icon: TrendingUp,
+    description: 'Citizenship trends over time'
+  },
+  {
+    id: 'income',
+    title: 'Rental Affordability - Census 2021',
+    category: 'kpi',
+    icon: DollarSign,
+    description: 'Average household/personal income and weekly rent with rankings'
+  },
+  {
+    id: 'da-daily',
+    title: 'DA Daily Activity',
+    category: 'charts',
+    icon: Calendar,
+    description: 'Last 30 days of DA determinations'
+  },
+  {
+    id: 'da-weekly',
+    title: 'DA Weekly Trends',
+    category: 'charts',
+    icon: BarChart3,
+    description: 'Last 12 weeks DA trends'
+  },
+  {
+    id: 'da-monthly',
+    title: 'DA Monthly Summary',
+    category: 'charts',
+    icon: TrendingUp,
+    description: 'Last 12 months DA summary'
+  },
+  {
+    id: 'da-13-month',
+    title: 'DA 13-Month Overview',
+    category: 'charts',
+    icon: Activity,
+    description: '13-month DA trend analysis'
+  },
+  {
+    id: 'da-yoy',
+    title: 'DA Year-over-Year',
+    category: 'charts',
+    icon: GitCompare,
+    description: 'Last 12 vs previous 12 months'
+  },
+  {
+    id: 'da-history',
+    title: 'DA Complete History',
+    category: 'charts',
+    icon: History,
+    description: 'All available DA data'
+  },
+  {
+    id: 'oc-daily',
+    title: 'OC Daily Activity',
+    category: 'charts',
+    icon: Calendar,
+    description: 'Last 30 days of OC determinations'
+  },
+  {
+    id: 'oc-weekly',
+    title: 'OC Weekly Trends',
+    category: 'charts',
+    icon: BarChart3,
+    description: 'Last 12 weeks OC trends'
+  },
+  {
+    id: 'oc-monthly',
+    title: 'OC Monthly Summary',
+    category: 'charts',
+    icon: TrendingUp,
+    description: 'Last 12 months OC summary'
+  },
+  {
+    id: 'oc-13-month',
+    title: 'OC 13-Month Overview',
+    category: 'charts',
+    icon: Activity,
+    description: '13-month OC trend analysis'
+  },
+  {
+    id: 'oc-yoy',
+    title: 'OC Year-over-Year',
+    category: 'charts',
+    icon: GitCompare,
+    description: 'Last 12 vs previous 12 months'
+  },
+  {
+    id: 'oc-history',
+    title: 'OC Complete History',
+    category: 'charts',
+    icon: History,
+    description: 'All available OC data'
+  },
+  {
+    id: 'ba-daily',
+    title: 'BA Daily Activity',
+    category: 'charts',
+    icon: Calendar,
+    description: 'Last 30 days of BA determinations'
+  },
+  {
+    id: 'ba-weekly',
+    title: 'BA Weekly Trends',
+    category: 'charts',
+    icon: BarChart3,
+    description: 'Last 12 weeks BA trends'
+  },
+  {
+    id: 'ba-monthly',
+    title: 'BA Monthly Summary',
+    category: 'charts',
+    icon: TrendingUp,
+    description: 'Last 12 months BA summary'
+  },
+  {
+    id: 'ba-13-month',
+    title: 'BA 13-Month Overview',
+    category: 'charts',
+    icon: Activity,
+    description: '13-month BA trend analysis'
+  },
+  {
+    id: 'ba-yoy',
+    title: 'BA Year-over-Year',
+    category: 'charts',
+    icon: GitCompare,
+    description: 'Last 12 vs previous 12 months'
+  },
+  {
+    id: 'ba-history',
+    title: 'BA Complete History',
+    category: 'charts',
+    icon: History,
+    description: 'All available BA data'
   },
 
   // KPI & Metrics
@@ -196,43 +354,8 @@ const cardTemplates: CardTemplate[] = [
     icon: Users,
     description: 'Demographics'
   },
-  {
-    id: 'development-stats',
-    title: 'Development',
-    category: 'kpi',
-    icon: Building,
-    description: 'Construction data'
-  },
-  {
-    id: 'percentage-display',
-    title: 'Percentage',
-    category: 'kpi',
-    icon: Percent,
-    description: 'Large % displays'
-  },
-  {
-    id: 'counter-display',
-    title: 'Counter',
-    category: 'kpi',
-    icon: Hash,
-    description: 'Large numbers'
-  },
-  {
-    id: 'progress-tracker',
-    title: 'Progress',
-    category: 'kpi',
-    icon: Clock,
-    description: 'Goal tracking'
-  },
 
   // Data Tables
-  {
-    id: 'data-table',
-    title: 'Data Table',
-    category: 'data',
-    icon: Grid3X3,
-    description: 'Sortable table'
-  },
   {
     id: 'comparison-table',
     title: 'Comparison',
@@ -255,16 +378,122 @@ const cardTemplates: CardTemplate[] = [
     category: 'data',
     icon: Database,
     description: 'Connection test'
+  },
+  {
+    id: 'feedback',
+    title: 'User Feedback',
+    category: 'data',
+    icon: MessageSquare,
+    description: 'Collect user feedback and suggestions'
+  },
+
+  // Core LGA Cards (previously not in library)
+  {
+    id: 'lga-lookup',
+    title: 'LGA Lookup',
+    category: 'search',
+    icon: Search,
+    description: 'Core LGA search and selection'
+  },
+  {
+    id: 'lga-details',
+    title: 'LGA Details',
+    category: 'data',
+    icon: MapPin,
+    description: 'Detailed LGA information panel'
+  },
+  {
+    id: 'lga-insights',
+    title: 'LGA Map Insights',
+    category: 'map',
+    icon: Map,
+    description: 'LGA boundary visualization with insights'
+  },
+  {
+    id: 'lga-metrics',
+    title: 'LGA Metrics',
+    category: 'kpi',
+    icon: Activity,
+    description: 'Key LGA statistics display'
+  },
+
+  // Housing & Development Cards (previously not in library)
+  {
+    id: 'housing-pipeline',
+    title: 'Housing Pipeline',
+    category: 'charts',
+    icon: Building,
+    description: 'Housing development pipeline overview'
+  },
+  {
+    id: 'building-approvals-chart',
+    title: 'Building Approvals Chart',
+    category: 'charts',
+    icon: TrendingUp,
+    description: 'Building approvals trend visualization'
+  },
+  {
+    id: 'market-overview',
+    title: 'Market Overview',
+    category: 'charts',
+    icon: BarChart3,
+    description: 'Market summary and analysis'
+  },
+  {
+    id: 'market-forecast',
+    title: 'Market Forecast',
+    category: 'charts',
+    icon: TrendingUp,
+    description: 'Future market predictions'
+  },
+  {
+    id: 'regional-comparison',
+    title: 'Regional Comparison',
+    category: 'charts',
+    icon: GitCompare,
+    description: 'Compare multiple regions side-by-side'
+  },
+
+  // System & Utility Cards (previously not in library)
+  {
+    id: 'data-freshness',
+    title: 'Data Freshness',
+    category: 'kpi',
+    icon: Clock,
+    description: 'Data update status indicator'
+  },
+  {
+    id: 'kpi-cards',
+    title: 'KPI Cards',
+    category: 'kpi',
+    icon: Activity,
+    description: 'Multiple KPI dashboard display'
+  },
+
+  // ABS-Specific Cards (previously not in library)
+  {
+    id: 'abs-geography-search',
+    title: 'ABS Geography Search',
+    category: 'search',
+    icon: Search,
+    description: 'ABS statistical geography search'
+  },
+  {
+    id: 'abs-lga-map',
+    title: 'ABS LGA Map',
+    category: 'map',
+    icon: Map,
+    description: 'ABS boundary visualization'
   }
 ];
 
-// Category styling with green highlights
+// Category styling with orange highlights for Edit Mode
 const categoryStyles = {
   'blank': {
     bg: 'bg-zinc-900',
-    border: 'border-[#00FF41]/30',
-    text: 'text-[#00FF41]',
-    hover: 'hover:border-[#00FF41] hover:shadow-[0_0_10px_rgba(0,255,65,0.3)]'
+    border: 'border-orange-500/30',
+    text: 'text-orange-500',
+    hover: 'hover:border-orange-500 hover:shadow-[0_0_10px_rgba(249,115,22,0.3)]'
   },
   'search': {
     bg: 'bg-zinc-900',
@@ -319,6 +548,37 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
   const isAgeBySex = template.id === 'age-by-sex';
   const isDwellingType = template.id === 'dwelling-type';
   const isSearchGeography = template.id === 'search-geography-card';
+  const isCountryOfBirth = template.id === 'country-of-birth';
+  const isAustralianBorn = template.id === 'australian-born';
+  const isCitizenship = template.id === 'citizenship';
+  const isCitizenshipTrend = template.id === 'citizenship-trend';
+  const isIncome = template.id === 'income';
+
+  // OC cards - all styled in red (#ef4444)
+  const isOCDaily = template.id === 'oc-daily';
+  const isOCWeekly = template.id === 'oc-weekly';
+  const isOCMonthly = template.id === 'oc-monthly';
+  const isOC13Month = template.id === 'oc-13-month';
+  const isOCYoY = template.id === 'oc-yoy';
+  const isOCHistory = template.id === 'oc-history';
+
+  // BA cards - all styled in blue (#6366f1)
+  const isBADaily = template.id === 'ba-daily';
+  const isBAWeekly = template.id === 'ba-weekly';
+  const isBAMonthly = template.id === 'ba-monthly';
+  const isBA13Month = template.id === 'ba-13-month';
+  const isBAYoY = template.id === 'ba-yoy';
+  const isBAHistory = template.id === 'ba-history';
+
+  // Census data cards - all styled in yellow (#eab308)
+  const isCensusCard = isAgeBySex || isDwellingType || isCountryOfBirth ||
+                       isAustralianBorn || isCitizenship || isCitizenshipTrend || isIncome;
+
+  // OC cards grouped
+  const isOCCard = isOCDaily || isOCWeekly || isOCMonthly || isOC13Month || isOCYoY || isOCHistory;
+
+  // BA cards grouped
+  const isBACard = isBADaily || isBAWeekly || isBAMonthly || isBA13Month || isBAYoY || isBAHistory;
 
   const styles = isSearchGeography ? {
     bg: 'bg-zinc-900',
@@ -327,19 +587,24 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
     hover: 'hover:border-[#22c55e] hover:shadow-[0_0_15px_rgba(34,197,94,0.5)]'
   } : isLGADwellingApprovals ? {
     bg: 'bg-zinc-900',
-    border: 'border-[#00FF41]/50',
-    text: 'text-[#00FF41]',
-    hover: 'hover:border-[#00FF41] hover:shadow-[0_0_15px_rgba(0,255,65,0.5)]'
-  } : isAgeBySex ? {
-    bg: 'bg-zinc-900',
-    border: 'border-[#f8ba33]/50',
-    text: 'text-[#f8ba33]',
-    hover: 'hover:border-[#f8ba33] hover:shadow-[0_0_15px_rgba(248,186,51,0.5)]'
-  } : isDwellingType ? {
+    border: 'border-orange-500/50',
+    text: 'text-orange-500',
+    hover: 'hover:border-orange-500 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)]'
+  } : isCensusCard ? {
     bg: 'bg-zinc-900',
     border: 'border-[#eab308]/50',
     text: 'text-[#eab308]',
     hover: 'hover:border-[#eab308] hover:shadow-[0_0_15px_rgba(234,179,8,0.5)]'
+  } : isOCCard ? {
+    bg: 'bg-zinc-900',
+    border: 'border-[#ef4444]/50',
+    text: 'text-[#ef4444]',
+    hover: 'hover:border-[#ef4444] hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]'
+  } : isBACard ? {
+    bg: 'bg-zinc-900',
+    border: 'border-[#6366f1]/50',
+    text: 'text-[#6366f1]',
+    hover: 'hover:border-[#6366f1] hover:shadow-[0_0_15px_rgba(99,102,241,0.5)]'
   } : categoryStyles[template.category];
 
   return (
@@ -348,6 +613,7 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
       style={style}
       {...listeners}
       {...attributes}
+      suppressHydrationWarning
       className={`
         flex flex-col items-center justify-center gap-2 p-4 rounded-lg border-2 cursor-grab
         transition-all duration-300
@@ -392,8 +658,8 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
       {/* Sidebar */}
       <div
         className={`
-          h-full bg-black/95 backdrop-blur-xl border-r border-[#00FF41]/20
-          shadow-[0_0_30px_rgba(0,255,65,0.1)]
+          h-full bg-black/95 backdrop-blur-xl border-r border-orange-500/20
+          shadow-[0_0_30px_rgba(249,115,22,0.1)]
           transition-all duration-500 ease-in-out
           flex flex-col
           overflow-hidden
@@ -401,23 +667,23 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
         `}
       >
         {/* Header */}
-        <div className="flex-shrink-0 p-4 border-b border-[#00FF41]/20 flex items-center justify-between">
+        <div className="flex-shrink-0 p-4 border-b border-orange-500/20 flex items-center justify-between">
           {isExpanded && (
             <div className="flex items-center gap-2">
-              <Layout className="h-5 w-5 text-[#00FF41]" />
-              <h3 className="font-bold text-[#00FF41] text-lg drop-shadow-[0_0_10px_rgba(0,255,65,0.5)]">
+              <Layout className="h-5 w-5 text-orange-500" />
+              <h3 className="font-bold text-orange-500 text-lg drop-shadow-[0_0_10px_rgba(249,115,22,0.5)]">
                 Card Library
               </h3>
             </div>
           )}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 rounded-lg bg-zinc-900 border border-[#00FF41]/30 hover:border-[#00FF41] hover:shadow-[0_0_10px_rgba(0,255,65,0.3)] transition-all"
+            className="p-2 rounded-lg bg-zinc-900 border border-orange-500/30 hover:border-orange-500 hover:shadow-[0_0_10px_rgba(249,115,22,0.3)] transition-all"
           >
             {isExpanded ? (
-              <ChevronLeft className="h-4 w-4 text-[#00FF41]" />
+              <ChevronLeft className="h-4 w-4 text-orange-500" />
             ) : (
-              <ChevronRight className="h-4 w-4 text-[#00FF41]" />
+              <ChevronRight className="h-4 w-4 text-orange-500" />
             )}
           </button>
         </div>
@@ -425,16 +691,16 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
         {isExpanded && (
           <>
             {/* Category Filter */}
-            <div className="flex-shrink-0 p-4 border-b border-[#00FF41]/20">
-              <div className="text-xs font-semibold text-[#00FF41] mb-2">CATEGORIES</div>
+            <div className="flex-shrink-0 p-4 border-b border-orange-500/20">
+              <div className="text-xs font-semibold text-orange-500 mb-2">CATEGORIES</div>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedCategory(null)}
                   className={`
                     px-3 py-1.5 rounded-md text-xs font-medium transition-all
                     ${!selectedCategory
-                      ? 'bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]'
-                      : 'bg-zinc-900 text-gray-400 border border-zinc-700 hover:border-[#00FF41]/50'
+                      ? 'bg-orange-500/20 text-orange-500 border border-orange-500'
+                      : 'bg-zinc-900 text-gray-400 border border-zinc-700 hover:border-orange-500/50'
                     }
                   `}
                 >
@@ -450,8 +716,8 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
                       className={`
                         px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1
                         ${selectedCategory === cat.id
-                          ? 'bg-[#00FF41]/20 text-[#00FF41] border border-[#00FF41]'
-                          : 'bg-zinc-900 text-gray-400 border border-zinc-700 hover:border-[#00FF41]/50'
+                          ? 'bg-orange-500/20 text-orange-500 border border-orange-500'
+                          : 'bg-zinc-900 text-gray-400 border border-zinc-700 hover:border-orange-500/50'
                         }
                       `}
                     >
@@ -465,7 +731,7 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
 
             {/* Card Templates Grid */}
             <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar">
-              <div className="text-xs font-semibold text-[#00FF41] mb-3">
+              <div className="text-xs font-semibold text-orange-500 mb-3">
                 {selectedCategory
                   ? `${categories.find(c => c.id === selectedCategory)?.label.toUpperCase()} CARDS`
                   : 'ALL CARDS'}
@@ -478,7 +744,7 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
             </div>
 
             {/* Reset Layout Button */}
-            <div className="flex-shrink-0 p-4 border-t border-[#00FF41]/20">
+            <div className="flex-shrink-0 p-4 border-t border-orange-500/20">
               <button
                 onClick={onResetLayout}
                 className="w-full px-4 py-2.5 rounded-lg bg-zinc-900 border border-red-500/30 text-red-400 hover:border-red-500 hover:bg-red-500/10 hover:shadow-[0_0_10px_rgba(239,68,68,0.3)] transition-all flex items-center justify-center gap-2 text-sm font-medium"
@@ -491,7 +757,7 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
             {/* Footer Tip */}
             <div className="flex-shrink-0 p-4 bg-zinc-950">
               <div className="text-xs text-gray-400 text-center">
-                💡 <span className="text-[#00FF41]">Drag</span> cards to dashboard • <span className="text-[#00FF41]">Double-click</span> to configure
+                💡 <span className="text-orange-500">Drag</span> cards to dashboard • <span className="text-orange-500">Double-click</span> to configure
               </div>
             </div>
           </>
@@ -509,10 +775,10 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
                     setIsExpanded(true);
                     setSelectedCategory(cat.id);
                   }}
-                  className="w-full p-2 rounded-lg bg-zinc-900 border border-[#00FF41]/30 hover:border-[#00FF41] hover:shadow-[0_0_10px_rgba(0,255,65,0.3)] transition-all"
+                  className="w-full p-2 rounded-lg bg-zinc-900 border border-orange-500/30 hover:border-orange-500 hover:shadow-[0_0_10px_rgba(249,115,22,0.3)] transition-all"
                   title={cat.label}
                 >
-                  <Icon className="h-5 w-5 text-[#00FF41] mx-auto" />
+                  <Icon className="h-5 w-5 text-orange-500 mx-auto" />
                 </button>
               );
             })}

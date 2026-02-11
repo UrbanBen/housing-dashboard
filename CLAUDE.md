@@ -96,3 +96,108 @@
 - Geographic focus and scope
 - Interactive feature requirements
 - Deployment platform and hosting strategy
+
+# Database Access Restrictions
+
+## CRITICAL SECURITY RULES
+
+Claude Code MUST follow these rules when working with databases:
+
+1. **ONLY** access database: `research&insights`
+2. **NEVER** connect to: `mosaic_pro`, `postgres`, or any other database
+3. **CAN** access any schema within `research&insights` database
+4. **ALWAYS** use the connection pool from `@/lib/db-pool`
+5. **NEVER** create direct database connections with custom configs
+
+## When Generating Scripts
+
+- All database scripts MUST import from `@/lib/db-pool`
+- All queries MUST go through `executeQuery()` or pool methods
+- No direct `pg.Client` or custom connection strings
+- All write operations MUST be logged
+
+## Validation Requirements
+
+Before ANY database operation, Claude Code must:
+1. Confirm database is `research&insights`
+2. Any schema within `research&insights` is allowed
+3. Log all operations for audit trail
+
+## Forbidden Actions
+
+❌ Connect to any database except `research&insights`
+❌ Modify database connection configs in `db-pool.ts`
+❌ Create scripts with hardcoded credentials
+❌ Bypass validation layers
+❌ Execute queries without validation
+❌ Access or reference `mosaic_pro` database in any code
+
+# Development Applications Feature - ON HOLD
+
+## Status: Awaiting DPHI API Subscription Key
+
+**Last Updated**: 2026-01-23
+
+### Current State: Implementation Complete, Awaiting API Access
+
+**✅ Completed:**
+1. Database table created: `housing_dashboard.development_applications`
+   - Stores monthly DA determination data by LGA
+   - Indexes for fast querying (lga_code, month_year, composite)
+   - Permissions granted to mosaic_readonly and db_admin
+
+2. Data fetching script: `scripts/fetch-development-applications.js`
+   - Fetches from DPHI ePlanning API: https://api.apps1.nsw.gov.au/eplanning/data/v0/OnlineDA
+   - Aggregates by LGA and month
+   - Categorizes as approved/refused/withdrawn
+   - Upserts to database (handles conflicts)
+   - Ready to run weekly via cron job
+
+3. API route: `src/app/api/development-applications/route.ts`
+   - POST endpoint accepting lgaName or lgaCode
+   - Returns last 12 months of data (configurable)
+   - Calculates summary statistics (approval rate, average per month)
+   - Uses readonly pool for queries
+
+4. Dashboard card: `src/components/dashboard/DevelopmentApplicationsCard.tsx`
+   - Line chart showing monthly DA trends (Recharts)
+   - Three lines: total determined, approved, refused
+   - Summary statistics with approval rate
+   - Auto-refreshes when LGA selected
+   - Purple theme in Card Library
+
+5. Card integration:
+   - Added to DraggableCard.tsx (renders the card)
+   - Added to DraggableDashboard.tsx (card type definition)
+   - Added to AdminToolbar.tsx (Card Library with purple styling)
+
+6. Documentation: `database/DEVELOPMENT_APPLICATIONS_SETUP.md`
+   - Complete setup guide with step-by-step instructions
+   - Troubleshooting section
+   - Cron job configuration options
+   - System architecture diagram
+
+**⏸️ Blocked - Awaiting:**
+
+DPHI API Subscription Key (required in header: `Ocp-Apim-Subscription-Key`)
+
+**How to Obtain:**
+1. Email: eplanning.integration@planning.nsw.gov.au
+2. Include: Organization name and contact person details
+3. Wait: 1-2 business days for approval
+4. Documentation: https://www.planningportal.nsw.gov.au/API-faqs
+
+**Once Key Received:**
+1. Add to `.env.local`: `DPHI_API_KEY=your-subscription-key-here`
+2. Run initial data fetch: `node scripts/fetch-development-applications.js`
+3. Set up cron job for weekly updates (Sunday 8 PM recommended)
+4. Verify card displays data when LGA selected
+
+**API Rate Limit:** 150 calls per 60 seconds
+
+**Next Actions When Unblocked:**
+- Test data fetching script with real API key
+- Verify data populates correctly in database
+- Confirm dashboard card displays properly
+- Set up automated weekly cron job
+- Monitor initial data quality and coverage

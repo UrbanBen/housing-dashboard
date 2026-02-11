@@ -11,6 +11,7 @@ import { LoginModal } from "@/components/auth/LoginModal";
 import { canAccessCard } from "@/lib/tiers";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   DndContext,
   DragEndEvent,
@@ -143,12 +144,67 @@ const defaultCards: DashboardCard[] = [
     category: 'charts',
     gridArea: 'age-by-sex'
   },
+
+  // Development Applications Comprehensive Cards
+  {
+    id: 'da-daily',
+    type: 'da-daily',
+    title: 'DA Daily Activity',
+    size: 'small',
+    category: 'charts',
+    gridArea: 'da-daily'
+  },
+  {
+    id: 'da-weekly',
+    type: 'da-weekly',
+    title: 'DA Weekly Trends',
+    size: 'small',
+    category: 'charts',
+    gridArea: 'da-weekly'
+  },
+  {
+    id: 'da-monthly',
+    type: 'da-monthly',
+    title: 'DA Monthly Summary',
+    size: 'small',
+    category: 'charts',
+    gridArea: 'da-monthly'
+  },
+  {
+    id: 'da-13-month',
+    type: 'da-13-month',
+    title: 'DA 13-Month Overview',
+    size: 'small',
+    category: 'charts',
+    gridArea: 'da-13-month'
+  },
+  {
+    id: 'da-yoy',
+    type: 'da-yoy',
+    title: 'DA Year-over-Year',
+    size: 'small',
+    category: 'charts',
+    gridArea: 'da-yoy'
+  },
+  {
+    id: 'da-history',
+    type: 'da-history',
+    title: 'DA Complete History',
+    size: 'small',
+    category: 'charts',
+    gridArea: 'da-history'
+  },
 ];
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [selectedLGA, setSelectedLGA] = useState<LGA | null>(null);
+  const [selectedLGA, setSelectedLGA] = useState<LGA | null>({
+    id: 'New South Wales',
+    name: 'New South Wales',
+    region: 'State/Territory',
+    population: null
+  });
   const [maxColumns, setMaxColumns] = useState<number>(6);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -156,6 +212,7 @@ export default function DashboardPage() {
   const [cards, setCards] = useState<DashboardCard[]>(defaultCards);
   const [activeCard, setActiveCard] = useState<DashboardCard | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   // Authentication check - allow access without login for now (free tier)
   // In production, you might want to require auth for all users
@@ -174,6 +231,21 @@ export default function DashboardPage() {
     }
     // Don't change modal state during 'loading' status
   }, [isLoggedIn, isUnauthenticated]);
+
+  // Track theme changes for logo styling
+  useEffect(() => {
+    const updateTheme = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+
+    updateTheme();
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Filter cards based on user's tier
   const accessibleCards = cards.filter(card =>
@@ -195,23 +267,83 @@ export default function DashboardPage() {
     }
   }, [selectedLGA, cards]);
 
-  // Load saved layout on component mount
+  // Load user preferences (layout, theme, etc.)
   useEffect(() => {
-    const savedLayout = localStorage.getItem('dashboard-layout');
-    if (savedLayout) {
-      try {
-        const parsedLayout = JSON.parse(savedLayout);
-        console.log('[DashboardPage] Loading cards from localStorage:', parsedLayout);
-        const dwellingCards = parsedLayout.filter((c: DashboardCard) => c.type === 'lga-dwelling-approvals');
-        if (dwellingCards.length > 0) {
-          console.log('[DashboardPage] Found lga-dwelling-approvals cards in localStorage:', dwellingCards);
+    const loadPreferences = async () => {
+      if (isLoggedIn && session?.user?.email) {
+        // Load from API for logged-in users
+        try {
+          const response = await fetch('/api/user-preferences');
+          if (response.ok) {
+            const prefs = await response.json();
+            console.log('[DashboardPage] Loaded preferences from API:', prefs);
+
+            if (prefs.dashboardLayout && prefs.dashboardLayout.length > 0) {
+              setCards(prefs.dashboardLayout);
+            }
+            if (prefs.maxColumns) {
+              setMaxColumns(prefs.maxColumns);
+            }
+            if (prefs.lastSelectedLGA) {
+              setSelectedLGA(prefs.lastSelectedLGA);
+            }
+          }
+        } catch (error) {
+          console.error('[DashboardPage] Failed to load preferences from API:', error);
+          // Fallback to localStorage on error
+          loadFromLocalStorage();
         }
-        setCards(parsedLayout);
-      } catch (error) {
-        console.error('Failed to load saved dashboard layout:', error);
+      } else {
+        // Load from localStorage for non-logged-in users
+        loadFromLocalStorage();
       }
-    }
-  }, []);
+    };
+
+    const loadFromLocalStorage = () => {
+      const savedLayout = localStorage.getItem('dashboard-layout');
+      if (savedLayout) {
+        try {
+          const parsedLayout = JSON.parse(savedLayout);
+          console.log('[DashboardPage] Loading cards from localStorage:', parsedLayout);
+          setCards(parsedLayout);
+        } catch (error) {
+          console.error('Failed to load saved dashboard layout:', error);
+        }
+      }
+    };
+
+    loadPreferences();
+  }, [isLoggedIn, session?.user?.email]);
+
+  // Save preferences when they change (debounced)
+  useEffect(() => {
+    const savePreferences = async () => {
+      if (isLoggedIn && session?.user?.email) {
+        // Save to API for logged-in users
+        try {
+          await fetch('/api/user-preferences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              dashboardLayout: cards,
+              maxColumns,
+              lastSelectedLGA: selectedLGA
+            })
+          });
+          console.log('[DashboardPage] Saved preferences to API');
+        } catch (error) {
+          console.error('[DashboardPage] Failed to save preferences to API:', error);
+        }
+      } else {
+        // Save to localStorage for non-logged-in users
+        localStorage.setItem('dashboard-layout', JSON.stringify(cards));
+      }
+    };
+
+    // Debounce saves by 500ms to avoid too many API calls
+    const timeoutId = setTimeout(savePreferences, 500);
+    return () => clearTimeout(timeoutId);
+  }, [cards, maxColumns, selectedLGA, isLoggedIn, session?.user?.email]);
 
   // Configure drag sensors
   const sensors = useSensors(
@@ -227,10 +359,29 @@ export default function DashboardPage() {
     setSelectedLGA(lga);
   }, []);
   
-  const resetLayout = () => {
+  const resetLayout = async () => {
     console.log('Reset Layout clicked');
     setCards(defaultCards);
-    localStorage.removeItem('dashboard-layout');
+
+    if (isLoggedIn && session?.user?.email) {
+      // Reset in API for logged-in users
+      try {
+        await fetch('/api/user-preferences', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dashboardLayout: defaultCards,
+            maxColumns: 6,
+            lastSelectedLGA: null
+          })
+        });
+      } catch (error) {
+        console.error('Failed to reset layout in API:', error);
+      }
+    } else {
+      // Reset in localStorage for non-logged-in users
+      localStorage.removeItem('dashboard-layout');
+    }
   };
 
   const toggleEditMode = () => {
@@ -347,21 +498,48 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen relative">
+      {/* Fixed gradient background - Dark mode only */}
+      <div className="fixed inset-0 dark:bg-gradient-to-tl dark:from-[#00FF41]/20 dark:via-black dark:to-black pointer-events-none light:hidden" style={{ zIndex: 0 }} />
+
+      {/* Fixed gradient background - Light mode only */}
+      <div
+        className="fixed inset-0 pointer-events-none dark:hidden"
+        style={{
+          zIndex: 0,
+          background: 'linear-gradient(to bottom right, #FAFBF0 0%, #FAFBF0 50%, #00D37F 100%)'
+        }}
+      />
+
       {/* Navigation Bar */}
-      <nav className="border-b border-border bg-card">
+      <nav className="border-b border-border bg-card relative" style={{ zIndex: 10 }}>
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <img 
-                src="/mosaic-logo.svg" 
-                alt="MOSAIC By Mecone Logo" 
-                className="h-10 w-40"
+            <div className="flex items-center gap-3">
+              <h2
+                className="text-[#223222] dark:text-[#00FF41] dark:drop-shadow-[0_0_10px_rgba(0,255,65,0.5)] dark:glow-text tracking-wide"
+                style={{
+                  fontFamily: '"DIN", "DIN Alternate", "DINPro", "FF DIN", "Helvetica Neue", "Arial", sans-serif',
+                  fontSize: '2.2rem',
+                  fontWeight: 300,
+                  letterSpacing: '0.05em'
+                }}
+              >
+                Spatio Dash
+              </h2>
+              <div
+                className="rounded-md bg-transparent border-4"
+                style={{
+                  width: '3.56rem',
+                  height: '2.2rem',
+                  borderRadius: '4px',
+                  borderColor: isDarkMode ? '#00FF41' : '#223222',
+                  boxShadow: isDarkMode
+                    ? '0 0 12px rgba(0, 255, 65, 0.8), 0 0 24px rgba(0, 255, 65, 0.5)'
+                    : 'none'
+                }}
               />
-              <div>
-                <h2 className="text-lg font-semibold text-[#00FF41] drop-shadow-[0_0_10px_rgba(0,255,65,0.5)] glow-text">Housing Analytics</h2>
-                <p className="text-sm text-muted-foreground">Analytic Insights and Intelligence</p>
-              </div>
+              <p className="text-sm text-muted-foreground ml-2">Analytic Insights and Intelligence</p>
             </div>
             <div className="flex items-center gap-4">
               {/* User Profile and Tier Display */}
@@ -369,8 +547,16 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-3">
                   <div className="text-right">
                     <p className="text-sm font-medium">{session.user.name || session.user.email}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {userTier.toUpperCase()} Tier
+                    <p className="text-xs">
+                      {userTier === 'pro' ? (
+                        <span className="pro-tier-glow">
+                          {userTier.toUpperCase()} Tier
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          {userTier.toUpperCase()} Tier
+                        </span>
+                      )}
                       {userTier !== 'pro' && (
                         <span
                           className="ml-2 text-primary cursor-pointer hover:underline"
@@ -383,8 +569,9 @@ export default function DashboardPage() {
                   </div>
                   <Button
                     variant="outline"
-                    size="sm"
+                    size="default"
                     onClick={handleSignOut}
+                    className="h-10 font-semibold bg-card border border-border hover:bg-accent transition-colors"
                   >
                     Sign Out
                   </Button>
@@ -392,12 +579,21 @@ export default function DashboardPage() {
               ) : (
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="default"
                   onClick={() => router.push('/login')}
+                  className="font-semibold shadow-lg hover:shadow-xl transition-all border-2"
+                  style={{
+                    borderColor: isDarkMode ? '#00FF41' : '#223222',
+                    color: isDarkMode ? '#00FF41' : '#223222',
+                    boxShadow: isDarkMode ? '0 0 8px rgba(0, 255, 65, 0.5)' : 'none'
+                  }}
                 >
                   Sign In
                 </Button>
               )}
+
+              {/* Theme Toggle */}
+              <ThemeToggle />
 
               {isAdminMode && (
                 <div className="flex items-center gap-2">
@@ -422,11 +618,11 @@ export default function DashboardPage() {
               )}
 
               <div className="flex items-center gap-2">
-                <label className="text-xs text-muted-foreground">Max Columns:</label>
+                <label className="text-sm text-muted-foreground">Max Columns:</label>
                 <select
                   value={maxColumns}
                   onChange={(e) => setMaxColumns(Number(e.target.value))}
-                  className="text-xs px-2 py-1 bg-card border border-border rounded hover:bg-accent transition-colors"
+                  className="h-10 px-4 py-2 text-sm bg-card border border-border rounded hover:bg-accent transition-colors font-semibold"
                 >
                   <option value={1}>1</option>
                   <option value={2}>2</option>
@@ -442,7 +638,7 @@ export default function DashboardPage() {
                   setIsAdminMode(!isAdminMode);
                   setIsEditMode(!isEditMode);
                 }}
-                className={`text-xs px-3 py-1 rounded transition-colors ${
+                className={`h-10 px-4 py-2 text-sm font-semibold rounded transition-colors ${
                   isAdminMode
                     ? 'bg-[#00FF41]/20 text-[#00FF41] hover:bg-[#00FF41]/30'
                     : 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30'
@@ -455,6 +651,34 @@ export default function DashboardPage() {
         </div>
       </nav>
 
+      {/* Floating Exit Edit Button - Only visible in Admin/Edit Mode */}
+      {isAdminMode && (
+        <button
+          onClick={() => {
+            setIsAdminMode(false);
+            setIsEditMode(false);
+          }}
+          className="fixed top-24 right-6 z-50 h-12 px-6 py-3 text-sm font-bold rounded-lg shadow-2xl transition-all duration-300 ease-in-out bg-[#00FF41]/20 text-[#00FF41] hover:bg-[#00FF41]/30 border-2 border-[#00FF41] hover:shadow-[0_0_20px_rgba(0,255,65,0.5)] backdrop-blur-sm animate-slide-in-right"
+          style={{
+            animation: 'slideInRight 0.3s ease-out'
+          }}
+        >
+          <style jsx>{`
+            @keyframes slideInRight {
+              from {
+                transform: translateX(100%);
+                opacity: 0;
+              }
+              to {
+                transform: translateX(0);
+                opacity: 1;
+              }
+            }
+          `}</style>
+          Exit Edit Mode
+        </button>
+      )}
+
       {/* DndContext wrapping both AdminToolbar and Dashboard */}
       <DndContext
         sensors={sensors}
@@ -462,7 +686,7 @@ export default function DashboardPage() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex h-full">
+        <div className="flex h-full relative" style={{ zIndex: 10 }}>
           {/* Admin Toolbar - appears when admin mode is enabled */}
           <AdminToolbar isVisible={isAdminMode} onResetLayout={resetLayout} />
 
@@ -524,7 +748,7 @@ export default function DashboardPage() {
       </DndContext>
 
       {/* Footer */}
-      <div className="mt-12 pt-8 border-t border-border">
+      <div className="mt-12 pt-8 border-t border-border relative" style={{ zIndex: 10 }}>
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
             Last updated: {new Date().toLocaleDateString()} • Data sources: Multiple MLS feeds, Australian Bureau of Statistics (ABS), Census Bureau, Federal Reserve
@@ -533,7 +757,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Login Modal */}
-      <LoginModal isOpen={showLoginModal} />
+      <div className="relative" style={{ zIndex: 9999 }}>
+        <LoginModal isOpen={showLoginModal} />
+      </div>
     </div>
   );
 }

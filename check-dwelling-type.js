@@ -1,4 +1,19 @@
 const { Client } = require('pg');
+const fs = require('fs');
+
+// Read database password from .env.local
+function getDbPassword() {
+  try {
+    const content = fs.readFileSync('.env.local', 'utf8');
+    const match = content.match(/^DB_ADMIN_PASSWORD\s*=\s*(.+)$/m);
+    if (match) {
+      return match[1].replace(/^["']|["']$/g, '');
+    }
+  } catch (error) {
+    console.error('Error reading .env.local:', error.message);
+  }
+  throw new Error('DB_ADMIN_PASSWORD not found in .env.local');
+}
 
 async function checkTable() {
   const client = new Client({
@@ -6,7 +21,7 @@ async function checkTable() {
     port: 5432,
     database: 'research&insights',
     user: 'db_admin',
-    password: 'MVN0u0LL9rw',
+    password: getDbPassword(),
     ssl: { rejectUnauthorized: false }
   });
 
