@@ -19,9 +19,18 @@ import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  // Check if this is an OAuth signup
+  const isOAuthSignup = searchParams.get('oauth') === 'true';
+  const oauthProvider = searchParams.get('provider');
+  const oauthEmail = searchParams.get('email') || '';
+  const oauthName = searchParams.get('name') || '';
+  const oauthImage = searchParams.get('image') || '';
+  const oauthProviderId = searchParams.get('providerId') || '';
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,18 +40,53 @@ export default function RegisterPage() {
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    const confirmPassword = formData.get('confirmPassword') as string;
     const name = formData.get('name') as string;
 
-    // Client-side validation
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      setIsLoading(false);
-      return;
-    }
-
     try {
+      if (isOAuthSignup && oauthProvider && oauthProviderId) {
+        // OAuth signup - create user without password
+        const response = await fetch('/api/auth/oauth-signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            name,
+            image: oauthImage,
+            provider: oauthProvider,
+            providerAccountId: oauthProviderId,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (data.details) {
+            setFieldErrors(data.details);
+          } else {
+            setError(data.error || 'OAuth signup failed');
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        // Success - redirect to login to sign in with Microsoft
+        router.push(`/login?message=Account created! Please sign in with ${oauthProvider}.`);
+        return;
+      }
+
+      // Regular email/password signup
+      const password = formData.get('password') as string;
+      const confirmPassword = formData.get('confirmPassword') as string;
+
+      // Client-side validation
+      if (password !== confirmPassword) {
+        setError('Passwords do not match');
+        setIsLoading(false);
+        return;
+      }
+
       // Call registration API
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -147,13 +191,25 @@ export default function RegisterPage() {
             </Alert>
           )}
 
+          {/* OAuth signup indicator */}
+          {isOAuthSignup && oauthProvider && (
+            <Alert>
+              <CheckCircle2 className="h-4 w-4 text-blue-600" />
+              <AlertDescription>
+                Completing signup with {oauthProvider === 'microsoft' ? 'Microsoft' : 'Google'}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Free tier info */}
-          <Alert>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <AlertDescription>
-              Free tier includes 6 essential cards to get you started!
-            </AlertDescription>
-          </Alert>
+          {!isOAuthSignup && (
+            <Alert>
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertDescription>
+                Free tier includes 6 essential cards to get you started!
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -165,6 +221,7 @@ export default function RegisterPage() {
                 type="text"
                 placeholder="John Doe"
                 disabled={isLoading}
+                defaultValue={oauthName}
                 autoComplete="name"
               />
               {fieldErrors.name && (
@@ -180,7 +237,8 @@ export default function RegisterPage() {
                 type="email"
                 placeholder="you@example.com"
                 required
-                disabled={isLoading}
+                disabled={isLoading || isOAuthSignup}
+                defaultValue={oauthEmail}
                 autoComplete="email"
               />
               {fieldErrors.email && (
@@ -188,37 +246,41 @@ export default function RegisterPage() {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                required
-                disabled={isLoading}
-                autoComplete="new-password"
-              />
-              {fieldErrors.password && (
-                <p className="text-sm text-red-600">{fieldErrors.password[0]}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Must be at least 8 characters with uppercase, lowercase, and number
-              </p>
-            </div>
+            {!isOAuthSignup && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    disabled={isLoading}
+                    autoComplete="new-password"
+                  />
+                  {fieldErrors.password && (
+                    <p className="text-sm text-red-600">{fieldErrors.password[0]}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Must be at least 8 characters with uppercase, lowercase, and number
+                  </p>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                required
-                disabled={isLoading}
-                autoComplete="new-password"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    required
+                    disabled={isLoading}
+                    autoComplete="new-password"
+                  />
+                </div>
+              </>
+            )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (

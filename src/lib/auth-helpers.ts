@@ -231,3 +231,97 @@ export function getEffectiveTier(user: any): TierName {
 
   return user.tier as TierName;
 }
+
+/**
+ * Create OAuth user (no password)
+ */
+export async function createOAuthUser(data: {
+  email: string;
+  name?: string;
+  image?: string;
+}): Promise<{ success: true; userId: number } | { success: false; error: string }> {
+  const pool = getAdminPool();
+
+  try {
+    // Check if user already exists
+    const existingUser = await pool.query(
+      'SELECT id FROM auth.users WHERE email = $1',
+      [data.email.toLowerCase()]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return { success: false, error: 'Email already registered' };
+    }
+
+    // Create user without password (OAuth only)
+    const result = await pool.query(
+      `INSERT INTO auth.users (email, name, image, tier, email_verified, password_hash)
+       VALUES ($1, $2, $3, 'free', NOW(), NULL)
+       RETURNING id`,
+      [data.email.toLowerCase(), data.name || null, data.image || null]
+    );
+
+    const userId = result.rows[0].id;
+
+    // Log registration in audit log
+    await pool.query(
+      `INSERT INTO auth.audit_log (user_id, action, details)
+       VALUES ($1, 'register', $2)`,
+      [userId, JSON.stringify({ method: 'oauth', tier: 'free' })]
+    );
+
+    return { success: true, userId };
+  } catch (error) {
+    console.error('[createOAuthUser] Error:', error);
+    return { success: false, error: 'Failed to create OAuth user account' };
+  }
+}
+
+/**
+ * Link OAuth account to user
+ */
+export async function linkOAuthAccount(data: {
+  userId: number;
+  provider: string;
+  providerAccountId: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  tokenType?: string;
+  scope?: string;
+  idToken?: string;
+}): Promise<boolean> {
+  const pool = getAdminPool();
+
+  try {
+    await pool.query(
+      `INSERT INTO auth.accounts (
+        user_id, type, provider, provider_account_id,
+        access_token, refresh_token, expires_at, token_type, scope, id_token
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      ON CONFLICT (provider, provider_account_id)
+      DO UPDATE SET
+        access_token = EXCLUDED.access_token,
+        refresh_token = EXCLUDED.refresh_token,
+        expires_at = EXCLUDED.expires_at,
+        updated_at = NOW()`,
+      [
+        data.userId,
+        'oauth',
+        data.provider,
+        data.providerAccountId,
+        data.accessToken || null,
+        data.refreshToken || null,
+        data.expiresAt || null,
+        data.tokenType || null,
+        data.scope || null,
+        data.idToken || null,
+      ]
+    );
+
+    return true;
+  } catch (error) {
+    console.error('[linkOAuthAccount] Error:', error);
+    return false;
+  }
+}

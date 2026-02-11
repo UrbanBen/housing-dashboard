@@ -14,6 +14,7 @@ import {
   verifyPassword,
   getUserById,
   getEffectiveTier,
+  linkOAuthAccount,
 } from '@/lib/auth-helpers';
 import { TierName } from '@/lib/tiers';
 
@@ -214,14 +215,45 @@ export const authOptions: AuthOptions = {
         return true;
       }
 
-      // For OAuth providers, we need to handle account linking
-      // This would require additional database logic to:
-      // 1. Check if user exists by email
-      // 2. Create new user if doesn't exist
-      // 3. Link OAuth account to existing user
+      // For OAuth providers (Microsoft, Google)
+      if (account && profile && user.email) {
+        try {
+          // Check if user already exists
+          const existingUser = await getUserByEmail(user.email);
 
-      // For now, allow OAuth sign-ins
-      // TODO: Implement proper OAuth account creation/linking
+          if (existingUser) {
+            // User exists - link OAuth account if not already linked
+            await linkOAuthAccount({
+              userId: existingUser.id,
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+              accessToken: account.access_token,
+              refreshToken: account.refresh_token,
+              expiresAt: account.expires_at,
+              tokenType: account.token_type,
+              scope: account.scope,
+              idToken: account.id_token,
+            });
+            return true;
+          }
+
+          // New OAuth user - redirect to registration page with prefilled data
+          const registerUrl = `/register?` +
+            `oauth=true&` +
+            `provider=${encodeURIComponent(account.provider)}&` +
+            `email=${encodeURIComponent(user.email)}&` +
+            `name=${encodeURIComponent(user.name || profile.name || '')}&` +
+            `image=${encodeURIComponent(user.image || profile.picture || '')}&` +
+            `providerId=${encodeURIComponent(account.providerAccountId)}`;
+
+          // Redirect to register page
+          return registerUrl;
+        } catch (error) {
+          console.error('[NextAuth] OAuth sign in error:', error);
+          return false;
+        }
+      }
+
       return true;
     },
   },
