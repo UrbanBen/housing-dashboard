@@ -72,44 +72,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen relative bg-black overflow-hidden">
-      {/* Actual dashboard content in background - blurred and darkened */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Dashboard Navigation */}
-        <nav className="border-b border-border bg-card/50 backdrop-blur opacity-60">
-          <div className="container mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <img
-                  src="/mosaic-logo.svg"
-                  alt="MOSAIC By Mecone Logo"
-                  className="h-10 w-40"
-                />
-                <div>
-                  <h2 className="text-lg font-semibold text-[#00FF41] drop-shadow-[0_0_10px_rgba(0,255,65,0.5)]">Housing Analytics</h2>
-                  <p className="text-sm text-muted-foreground">Analytic Insights and Intelligence</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </nav>
-
-        {/* Dashboard content preview - heavily blurred */}
-        <div className="p-8 space-y-6 blur-md opacity-40">
-          <div className="grid grid-cols-3 gap-4">
-            {/* Mock cards */}
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-64 bg-card border border-[#00FF41]/20 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-xl"></div>
-
-      {/* Login card - centered on top */}
-      <div className="relative z-20 min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-black">
         <Card className="w-full max-w-md border-2 border-[#00FF41] shadow-2xl shadow-[#00FF41]/30 bg-card animate-in fade-in zoom-in duration-300">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Sign in</CardTitle>
@@ -205,7 +168,6 @@ function LoginForm() {
         </CardFooter>
       </Card>
     </div>
-  </div>
   );
 }
 
