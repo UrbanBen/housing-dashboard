@@ -328,7 +328,7 @@ function calculateSummary(rows: any[], type: string): any {
     total_determined: totalDetermined,
     total_approved: totalApproved,
     total_withdrawn: totalWithdrawn,
-    approval_rate: parseFloat(approvalRate),
+    approval_rate: typeof approvalRate === 'number' ? approvalRate : parseFloat(approvalRate),
   };
 
   // Add type-specific metrics
