@@ -366,7 +366,7 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
   }, [setCards, clearDragState, activeCard]);
 
   // Handle card size change
-  const handleCardSizeChange = React.useCallback((cardId: string, size: 'small' | 'medium' | 'large') => {
+  const handleCardSizeChange = React.useCallback((cardId: string, size: 'small' | 'medium' | 'large' | 'xl') => {
     setCards(currentCards => {
       const newCards = currentCards.map(card =>
         card.id === cardId ? { ...card, size } : card
