@@ -375,7 +375,7 @@ function calculateSummary(rows: any[], type: string): any {
     total_refused: totalRefused,
     total_withdrawn: totalWithdrawn,
     total_new_dwellings: totalNewDwellings,
-    approval_rate: parseFloat(approvalRate),
+    approval_rate: typeof approvalRate === 'number' ? approvalRate : parseFloat(approvalRate),
     avg_days_to_decision: avgDaysToDecision ? Math.round(avgDaysToDecision) : null,
   };
 }
