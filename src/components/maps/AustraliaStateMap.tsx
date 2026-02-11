@@ -23,6 +23,43 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
   const [geoJSON, setGeoJSON] = useState<any>(null);
   const [svgPaths, setSvgPaths] = useState<Map<string, string>>(new Map());
   const [nswIslandPath, setNswIslandPath] = useState<string>('');
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // Detect theme changes
+  useEffect(() => {
+    const updateTheme = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+
+    updateTheme();
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Theme-specific colors
+  const colors = isDarkMode ? {
+    background: '#000000',
+    unselectedFill: '#090909',
+    unselectedStroke: '#22c55e',
+    selectedFill: '#22c55e',
+    selectedStroke: '#22c55e',
+    hoverFill: '#22c55e',
+    hoverStroke: '#22c55e',
+    textFill: '#22c55e'
+  } : {
+    background: '#FAFBF0',
+    unselectedFill: '#f5f5dc',
+    unselectedStroke: '#223222',
+    selectedFill: '#223222',
+    selectedStroke: '#223222',
+    hoverFill: '#8b9d83',
+    hoverStroke: '#223222',
+    textFill: '#223222'
+  };
 
   useEffect(() => {
     // Load GeoJSON from public folder (with cache busting)
@@ -143,7 +180,7 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
 
   if (!geoJSON || svgPaths.size === 0) {
     return (
-      <div className="w-full h-[387px] flex items-center justify-center border border-border/50 rounded-lg" style={{ backgroundColor: '#000000' }}>
+      <div className="w-full h-[387px] flex items-center justify-center border border-border/50 rounded-lg" style={{ backgroundColor: colors.background }}>
         <div className="text-xs text-muted-foreground">Loading map...</div>
       </div>
     );
@@ -154,58 +191,157 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
       <svg
         viewBox="110 5 45 43"
         className="w-full h-[387px] border border-border/50 rounded-lg"
-        style={{ backgroundColor: '#000000' }}
+        style={{ backgroundColor: colors.background }}
         preserveAspectRatio="xMidYMid meet"
+        onClick={() => onStateClick('Australia')}
       >
-        {/* Render unselected states first */}
+        {/* Render unselected states first, but NSW and ACT need special ordering */}
         {Array.from(svgPaths.entries())
-          .filter(([stateName]) => stateName !== selectedState)
+          .filter(([stateName]) =>
+            stateName !== selectedState &&
+            stateName !== 'Australian Capital Territory' && // Render ACT separately at the end
+            selectedState !== 'Australia' // If Australia selected, render all states as highlighted
+          )
           .map(([stateName, pathData]) => (
             <path
               key={stateName}
               d={pathData}
               style={{
-                fill: '#090909',
+                fill: colors.unselectedFill,
                 fillOpacity: 1,
-                stroke: '#22c55e',
+                stroke: colors.unselectedStroke,
                 strokeWidth: 0.15,
-                strokeOpacity: 0.6,
+                strokeOpacity: isDarkMode ? 0.6 : 0.8,
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                fillRule: 'evenodd' // This ensures holes work correctly
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.fill = '#22c55e';
-                e.currentTarget.style.fillOpacity = '0.2';
-                e.currentTarget.style.stroke = '#22c55e';
+                e.currentTarget.style.fill = colors.hoverFill;
+                e.currentTarget.style.fillOpacity = isDarkMode ? '0.2' : '0.3';
+                e.currentTarget.style.stroke = colors.hoverStroke;
                 e.currentTarget.style.strokeOpacity = '1';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.fill = '#090909';
+                e.currentTarget.style.fill = colors.unselectedFill;
                 e.currentTarget.style.fillOpacity = '1';
-                e.currentTarget.style.stroke = '#22c55e';
-                e.currentTarget.style.strokeOpacity = '0.6';
+                e.currentTarget.style.stroke = colors.unselectedStroke;
+                e.currentTarget.style.strokeOpacity = isDarkMode ? '0.6' : '0.8';
               }}
-              onClick={() => onStateClick(stateName)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onStateClick(stateName);
+              }}
             >
               <title>{stateName}</title>
             </path>
           ))}
 
-        {/* Render selected state last (on top) */}
-        {selectedState && svgPaths.has(selectedState) && (
+        {/* Render highlighted states when Australia is selected */}
+        {selectedState === 'Australia' && Array.from(svgPaths.entries())
+          .filter(([stateName]) => stateName !== 'Australian Capital Territory')
+          .map(([stateName, pathData]) => (
+            <path
+              key={`australia-${stateName}`}
+              d={pathData}
+              style={{
+                fill: colors.selectedFill,
+                fillOpacity: isDarkMode ? 0.2 : 0.25,
+                stroke: colors.selectedStroke,
+                strokeWidth: 0.2,
+                strokeOpacity: 1,
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                fillRule: 'evenodd'
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onStateClick(stateName);
+              }}
+            >
+              <title>{stateName}</title>
+            </path>
+          ))}
+
+        {/* Render ACT before selected state so it's always clickable */}
+        {svgPaths.has('Australian Capital Territory') && selectedState !== 'Australian Capital Territory' && selectedState !== 'Australia' && (
+          <path
+            key="Australian Capital Territory"
+            d={svgPaths.get('Australian Capital Territory')}
+            style={{
+              fill: colors.unselectedFill,
+              fillOpacity: 1,
+              stroke: colors.unselectedStroke,
+              strokeWidth: 0.15,
+              strokeOpacity: isDarkMode ? 0.6 : 0.8,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              fillRule: 'evenodd'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.fill = colors.hoverFill;
+              e.currentTarget.style.fillOpacity = isDarkMode ? '0.2' : '0.3';
+              e.currentTarget.style.stroke = colors.hoverStroke;
+              e.currentTarget.style.strokeOpacity = '1';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.fill = colors.unselectedFill;
+              e.currentTarget.style.fillOpacity = '1';
+              e.currentTarget.style.stroke = colors.unselectedStroke;
+              e.currentTarget.style.strokeOpacity = isDarkMode ? '0.6' : '0.8';
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onStateClick('Australian Capital Territory');
+            }}
+          >
+            <title>Australian Capital Territory</title>
+          </path>
+        )}
+
+        {/* Render ACT highlighted when Australia is selected */}
+        {svgPaths.has('Australian Capital Territory') && selectedState === 'Australia' && (
+          <path
+            key="australia-act"
+            d={svgPaths.get('Australian Capital Territory')}
+            style={{
+              fill: colors.selectedFill,
+              fillOpacity: isDarkMode ? 0.2 : 0.25,
+              stroke: colors.selectedStroke,
+              strokeWidth: 0.2,
+              strokeOpacity: 1,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              fillRule: 'evenodd'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onStateClick('Australian Capital Territory');
+            }}
+          >
+            <title>Australian Capital Territory</title>
+          </path>
+        )}
+
+        {/* Render selected state last (on top) - but not if Australia is selected */}
+        {selectedState && selectedState !== 'Australia' && svgPaths.has(selectedState) && (
           <path
             key={selectedState}
             d={svgPaths.get(selectedState)}
             style={{
-              fill: '#22c55e',
-              fillOpacity: 0.2,
-              stroke: '#22c55e',
+              fill: colors.selectedFill,
+              fillOpacity: isDarkMode ? 0.2 : 0.25,
+              stroke: colors.selectedStroke,
               strokeWidth: 0.2,
               strokeOpacity: 1,
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s',
+              fillRule: 'evenodd'
             }}
-            onClick={() => onStateClick(selectedState)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onStateClick(selectedState);
+            }}
           >
             <title>{selectedState}</title>
           </path>
@@ -218,7 +354,7 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
             y="46"
             textAnchor="middle"
             style={{
-              fill: '#22c55e',
+              fill: colors.textFill,
               fontSize: '1.5px',
               fontWeight: '600',
               pointerEvents: 'none'

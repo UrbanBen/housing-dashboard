@@ -38,12 +38,17 @@ const getLGAData = (lga: LGA | null) => {
   const regionMultiplier = regionMultipliers[lga.region] || 1;
   const finalMultiplier = baseMultiplier * regionMultiplier;
 
+  // Use deterministic values based on LGA name to avoid hydration errors
+  const nameHash = lga.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const approvalVariation = ((nameHash % 20) - 10); // -10 to +10
+  const rateVariation = ((nameHash % 15) - 7); // -7 to +7
+
   return {
     area: lga.area || 0,
     buildingApprovals: Math.round(2840 * finalMultiplier),
-    averageApprovalTime: Math.round(45 + (Math.random() - 0.5) * 20),
+    averageApprovalTime: Math.round(45 + approvalVariation),
     developmentApplications: Math.round(3200 * finalMultiplier),
-    approvalRate: Math.round(89 + (Math.random() - 0.5) * 15),
+    approvalRate: Math.round(89 + rateVariation),
     landReleases: Math.round(450 * finalMultiplier),
     constructionStarts: Math.round(2100 * finalMultiplier),
     completions: Math.round(1850 * finalMultiplier),
@@ -250,7 +255,7 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
 
   return (
     <>
-    <Card className="shadow-lg border border-border/50 h-fit cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all" onDoubleClick={handleDoubleClick}>
+    <Card className="bg-card/50 backdrop-blur-sm shadow-lg border border-border/50 h-fit cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all" onDoubleClick={handleDoubleClick}>
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
           <BarChart3 className="h-6 w-6 text-primary" />

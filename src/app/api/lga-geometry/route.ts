@@ -8,6 +8,19 @@ export async function GET(request: NextRequest) {
   const geometryColumn = searchParams.get('geometryColumn') || 'wkb_geometry';
   const lgaNameColumn = searchParams.get('lgaNameColumn') || 'lga_name24';
   const lgaName = searchParams.get('lgaName');
+  const simplifyTolerance = searchParams.get('simplifyTolerance') || '0.01'; // Default 0.01 degrees (~1km)
+
+  // List of Australian states/territories that need simplification
+  const statesAndTerritories = [
+    'New South Wales',
+    'Victoria',
+    'Queensland',
+    'South Australia',
+    'Western Australia',
+    'Tasmania',
+    'Northern Territory',
+    'Australian Capital Territory'
+  ];
 
   const requestId = Math.random().toString(36).substr(2, 9);
   console.log(`[${requestId}] LGA Geometry API Request:`, {
@@ -29,13 +42,22 @@ export async function GET(request: NextRequest) {
   try {
     const pool = getReadonlyPool();
 
+    // Determine if this is a state/territory that needs simplification
+    const isState = lgaName ? statesAndTerritories.includes(lgaName) : false;
+
     // Query to get the geometry data
     // Convert geometry to GeoJSON format for easier handling
+    // Use ST_Simplify to reduce coordinate count for large geometries (like states)
+    // Keep LGA boundaries at full detail
+    const geometryExpression = isState
+      ? `ST_Simplify(${geometryColumn}, $2)`
+      : geometryColumn;
+
     const query = `
       SELECT
         ${lgaNameColumn} as lga_name,
         COALESCE(lga_code24, '') as lga_code,
-        ST_AsGeoJSON(${geometryColumn}) as geometry_geojson,
+        ST_AsGeoJSON(${geometryExpression}) as geometry_geojson,
         ST_AsText(ST_Centroid(${geometryColumn})) as centroid,
         ST_Area(${geometryColumn}::geography) / 1000000 as area_km2,
         ST_XMin(ST_Envelope(${geometryColumn})) as bbox_west,
@@ -48,9 +70,15 @@ export async function GET(request: NextRequest) {
       LIMIT 1
     `;
 
-    console.log(`[${requestId}] Executing geometry query for LGA:`, lgaName);
+    console.log(`[${requestId}] Executing geometry query for:`, lgaName);
+    console.log(`[${requestId}] Is state/territory:`, isState);
+    if (isState) {
+      console.log(`[${requestId}] Simplification tolerance:`, simplifyTolerance);
+    }
 
-    const result = await pool.query(query, [lgaName]);
+    const result = isState
+      ? await pool.query(query, [lgaName, parseFloat(simplifyTolerance)])
+      : await pool.query(query, [lgaName]);
 
     if (result.rows.length > 0) {
       const row = result.rows[0];

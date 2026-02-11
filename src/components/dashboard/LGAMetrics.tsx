@@ -74,12 +74,21 @@ const generateLGAMetrics = (lga: LGA | null): LGAMetricsData => {
   // Calculate realistic metrics
   const buildingApprovals = Math.round(285 * finalMultiplier);
   const targetMultiplier = lga.housingTarget ? lga.housingTarget / 1000 : finalMultiplier * 10;
-  
+
+  // Use deterministic values based on LGA name to avoid hydration errors
+  const nameHash = lga.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const changeVariation = ((nameHash % 300) - 100) / 10; // -10.0 to +20.0
+  const trendValue = (nameHash % 10) > 3; // 70% up, 30% down
+  const rateVariation = (nameHash % 100) / 10; // 0 to 10
+  const processingVariation = nameHash % 25; // 0 to 25
+  const growthVariation = (nameHash % 25) / 10; // 0 to 2.5
+  const sizeVariation = (nameHash % 8) / 10; // 0 to 0.8
+
   return {
     buildingApprovals: {
       current: buildingApprovals,
-      change: Math.round((Math.random() * 30 - 10) * 10) / 10, // -10% to +20%
-      trend: Math.random() > 0.3 ? 'up' : 'down'
+      change: Math.round(changeVariation * 10) / 10,
+      trend: trendValue ? 'up' : 'down'
     },
     housingTarget: {
       target: lga.housingTarget || Math.round(1000 * targetMultiplier),
@@ -89,8 +98,8 @@ const generateLGAMetrics = (lga: LGA | null): LGAMetricsData => {
     developmentApplications: {
       submitted: Math.round(480 * finalMultiplier),
       approved: Math.round(430 * finalMultiplier),
-      approvalRate: Math.round((85 + Math.random() * 10) * 10) / 10,
-      avgProcessingDays: Math.round(35 + Math.random() * 25)
+      approvalRate: Math.round((85 + rateVariation) * 10) / 10,
+      avgProcessingDays: Math.round(35 + processingVariation)
     },
     constructionActivity: {
       starts: Math.round(240 * finalMultiplier),
@@ -99,8 +108,8 @@ const generateLGAMetrics = (lga: LGA | null): LGAMetricsData => {
     },
     demographics: {
       population: lga.population,
-      populationGrowth: Math.round((0.5 + Math.random() * 2.5) * 10) / 10,
-      householdsSize: Math.round((2.2 + Math.random() * 0.8) * 10) / 10
+      populationGrowth: Math.round((0.5 + growthVariation) * 10) / 10,
+      householdsSize: Math.round((2.2 + sizeVariation) * 10) / 10
     }
   };
 };
@@ -246,7 +255,7 @@ export function LGAMetrics({ selectedLGA }: LGAMetricsProps) {
 
   return (
     <>
-    <Card className="shadow-lg border border-border/50 cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all" onDoubleClick={handleDoubleClick}>
+    <Card className="bg-card/50 backdrop-blur-sm shadow-lg border border-border/50 cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all" onDoubleClick={handleDoubleClick}>
       <CardHeader className="pb-4">
         <CardTitle className="text-xl flex items-center gap-3">
           <Building2 className="h-6 w-6 text-primary" />

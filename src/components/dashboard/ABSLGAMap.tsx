@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Settings, Database, RefreshCw, AlertCircle } from "lucide-react";
 import { LGAMap } from '@/components/maps/LGAMap';
@@ -45,7 +45,7 @@ export function ABSLGAMap({
 }: ABSLGAMapProps) {
   const [showConfigForm, setShowConfigForm] = useState(false);
   const [currentConfig, setCurrentConfig] = useState<MapConfig | null>(null);
-  const [selectedLGA, setSelectedLGA] = useState(externalSelectedLGA);
+  const [selectedLGA, setSelectedLGA] = useState<LGA | null>(null);
   const [mapData, setMapData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +84,7 @@ export function ABSLGAMap({
   };
 
   // Fetch geometry data for selected LGA
-  const fetchLGAGeometry = async (lgaName: string) => {
+  const fetchLGAGeometry = async (lgaName: string, lgaData: LGA) => {
     if (!lgaName) return;
 
     setIsLoading(true);
@@ -106,15 +106,23 @@ export function ABSLGAMap({
       const result = await response.json();
 
       if (result.success) {
-        setMapData(result.data);
+        setMapData(result);
         setConnection(result.connection);
+
+        // Set selectedLGA with geometry attached AFTER fetch completes
+        setSelectedLGA({
+          ...lgaData,
+          geometry: result.data?.geometry || result.geometry
+        });
       } else {
         setError(result.error || 'Failed to fetch geometry data');
         setConnection(result.connection || null);
+        setSelectedLGA(lgaData); // Set without geometry on error
       }
     } catch (err) {
       console.error('Error fetching LGA geometry:', err);
       setError(err instanceof Error ? err.message : 'Network error');
+      setSelectedLGA(lgaData); // Set without geometry on error
     } finally {
       setIsLoading(false);
     }
@@ -131,15 +139,17 @@ export function ABSLGAMap({
 
         console.log('[ABSLGAMap] Received LGA selection:', { lgaName, lgaCode });
 
-        setSelectedLGA({
+        const lgaData = {
           id: lgaCode || '',
           name: lgaName,
           region: 'NSW',
           population: null
-        });
+        };
 
         if (config.filterIntegration.autoRefresh) {
-          fetchLGAGeometry(lgaName);
+          fetchLGAGeometry(lgaName, lgaData);
+        } else {
+          setSelectedLGA(lgaData);
         }
       }
     };
@@ -152,18 +162,10 @@ export function ABSLGAMap({
     };
   }, []);
 
-  // Update when external selectedLGA changes (from other sources)
+  // Update when external selectedLGA changes - always use it and fetch from database
   useEffect(() => {
-    const config = getStoredConfig();
-
-    // Only use external selection if filter integration is disabled or from a different source
-    if (!config.filterIntegration.enabled ||
-        config.filterIntegration.sourceCardType !== 'search-geography-card') {
-      setSelectedLGA(externalSelectedLGA);
-
-      if (externalSelectedLGA?.name && config.filterIntegration.autoRefresh) {
-        fetchLGAGeometry(externalSelectedLGA.name);
-      }
+    if (externalSelectedLGA?.name) {
+      fetchLGAGeometry(externalSelectedLGA.name, externalSelectedLGA);
     }
   }, [externalSelectedLGA]);
 
@@ -182,20 +184,20 @@ export function ABSLGAMap({
 
     // If auto-refresh is enabled and we have a selected LGA, fetch its geometry
     if (newConfig.filterIntegration.autoRefresh && selectedLGA?.name) {
-      fetchLGAGeometry(selectedLGA.name);
+      fetchLGAGeometry(selectedLGA.name, selectedLGA);
     }
   };
 
   const handleRefresh = () => {
     if (selectedLGA?.name) {
-      fetchLGAGeometry(selectedLGA.name);
+      fetchLGAGeometry(selectedLGA.name, selectedLGA);
     }
   };
 
   return (
     <>
     <Card
-      className="shadow-lg border border-border/50 cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all"
+      className="bg-card/50 backdrop-blur-sm shadow-lg border border-border/50 cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all"
       onDoubleClick={handleDoubleClick}
     >
       <CardHeader className="pb-4">
@@ -212,11 +214,6 @@ export function ABSLGAMap({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {selectedLGA && (
-              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                {selectedLGA.name}
-              </span>
-            )}
             <button
               onClick={handleRefresh}
               className="p-1 hover:bg-muted rounded-sm transition-colors"
@@ -244,7 +241,7 @@ export function ABSLGAMap({
             <LGAMap
               selectedLGA={selectedLGA ? {
                 ...selectedLGA,
-                geometry: mapData?.geometry || selectedLGA.geometry,
+                geometry: mapData?.data?.geometry || mapData?.geometry || selectedLGA.geometry,
               } : null}
               effectiveColumns={effectiveColumns}
               height="400px"

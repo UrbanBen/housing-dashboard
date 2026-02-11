@@ -46,7 +46,10 @@ async function getBuildingApprovalsData(lgaParam?: string | null) {
       WITH unpivoted AS (
         SELECT
           col.key as date_str,
-          COALESCE(col.value::text::integer, 0) as approvals
+          CASE
+            WHEN col.value::text = 'null' OR col.value IS NULL THEN 0
+            ELSE col.value::text::integer
+          END as approvals
         FROM housing_dashboard.building_approvals_nsw_lga,
         LATERAL jsonb_each(to_jsonb(building_approvals_nsw_lga) - 'lga_code' - 'lga_name') col
         WHERE col.key ~ '^[0-9]+/[0-9]+/[0-9]+$'
@@ -73,7 +76,10 @@ async function getBuildingApprovalsData(lgaParam?: string | null) {
       WITH unpivoted AS (
         SELECT
           col.key as date_str,
-          COALESCE(col.value::text::integer, 0) as approvals
+          CASE
+            WHEN col.value::text = 'null' OR col.value IS NULL THEN 0
+            ELSE col.value::text::integer
+          END as approvals
         FROM housing_dashboard.building_approvals_nsw_lga,
         LATERAL jsonb_each(to_jsonb(building_approvals_nsw_lga) - 'lga_code' - 'lga_name') col
         WHERE lga_name = $1

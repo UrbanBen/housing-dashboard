@@ -15,8 +15,21 @@ export async function POST(request: NextRequest) {
 
     const pool = getReadonlyPool();
 
+    // Normalize LGA name by removing common prefixes/suffixes
+    // "City of Sydney" -> "Sydney"
+    // "Woollahra Municipal Council" -> "Woollahra"
+    // "North Sydney Council" -> "North Sydney"
+    let normalizedName = lgaName
+      .replace(/^City of /i, '')
+      .replace(/ Municipal Council$/i, '')
+      .replace(/ Council$/i, '')
+      .replace(/ \(A\)$/i, '')  // Area
+      .replace(/ \(C\)$/i, '')  // City
+      .trim();
+
     // Query for dwelling type data with aggregation to handle potential duplicates
-    const query = `
+    // Try exact match first, then fallback to ILIKE if no results
+    let query = `
       SELECT
         dwtd_dwelling_type as dwelling_type,
         SUM(value) as value
@@ -26,7 +39,21 @@ export async function POST(request: NextRequest) {
       ORDER BY dwtd_dwelling_type
     `;
 
-    const result = await pool.query(query, [lgaName]);
+    let result = await pool.query(query, [normalizedName]);
+
+    // If exact match fails, try ILIKE
+    if (result.rows.length === 0) {
+      query = `
+        SELECT
+          dwtd_dwelling_type as dwelling_type,
+          SUM(value) as value
+        FROM ${schema}.${table}
+        WHERE ${lgaColumn} ILIKE $1
+        GROUP BY dwtd_dwelling_type
+        ORDER BY dwtd_dwelling_type
+      `;
+      result = await pool.query(query, [`%${normalizedName}%`]);
+    }
 
     if (result.rows.length === 0) {
       return NextResponse.json(

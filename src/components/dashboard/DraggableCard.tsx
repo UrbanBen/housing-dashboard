@@ -14,20 +14,43 @@ import { LGADetails } from './LGADetails';
 import { LGAInsights } from './LGAInsights';
 import { KeyMetrics } from './KeyMetrics';
 import { LGAMetrics } from './LGAMetrics';
-import { TrendChart, type TrendChartRef } from '@/components/charts/TrendChart';
 import { LGADwellingApprovalsChart, type LGADwellingApprovalsChartRef } from '@/components/charts/LGADwellingApprovalsChart';
 import { MarketOverview } from './MarketOverview';
 import { HousingSankeyChart } from '@/components/charts/HousingSankeyChart';
 import { TestCard } from './TestCard';
-import { TestSearchCard } from './TestSearchCard';
+import { SearchCard } from './SearchCard';
 import { ABSLGAMap } from './ABSLGAMap';
 import { AgeBySexCard } from './AgeBySexCard';
 import { DwellingTypeCard } from './DwellingTypeCard';
+import { CountryOfBirthCard } from './CountryOfBirthCard';
+import { AustralianBornCard } from './AustralianBornCard';
+import { IncomeCard } from './IncomeCard';
+import { CitizenshipCard } from './CitizenshipCard';
+import { CitizenshipTrendCard } from './CitizenshipTrendCard';
+import { DADailyCard } from './DADailyCard';
+import { DAWeeklyCard } from './DAWeeklyCard';
+import { DAMonthlyCard } from './DAMonthlyCard';
+import { DA13MonthCard } from './DA13MonthCard';
+import { DAYoYCard } from './DAYoYCard';
+import { DAHistoryCard } from './DAHistoryCard';
+import { OCDailyCard } from './OCDailyCard';
+import { OCWeeklyCard } from './OCWeeklyCard';
+import { OCMonthlyCard } from './OCMonthlyCard';
+import { OC13MonthCard } from './OC13MonthCard';
+import { OCYoYCard } from './OCYoYCard';
+import { OCHistoryCard } from './OCHistoryCard';
+import { BADailyCard } from './BADailyCard';
+import { BAWeeklyCard } from './BAWeeklyCard';
+import { BAMonthlyCard } from './BAMonthlyCard';
+import { BA13MonthCard } from './BA13MonthCard';
+import { BAYoYCard } from './BAYoYCard';
+import { BAHistoryCard } from './BAHistoryCard';
+import { FeedbackCard } from './FeedbackCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   TrendingUp, TrendingDown, Activity, Home, DollarSign, Building, GitBranch, MapPin,
-  Settings, Map, BarChart3, LineChart, PieChart, Users, Grid3X3, Layout, Calendar,
-  Clock, FileText, Percent, Hash
+  Settings, Map, BarChart3, LineChart, PieChart, Users, Layout, Calendar,
+  FileText
 } from "lucide-react";
 import { DataSourceInfo } from "@/components/ui/data-source-info";
 import { ABSDataService } from "@/lib/abs-data";
@@ -42,7 +65,7 @@ interface DraggableCardProps {
   effectiveColumns?: number;
   onDeleteCard?: (cardId: string) => void;
   isBeingDragged?: boolean;
-  onCardSizeChange?: (cardId: string, size: 'small' | 'medium' | 'large') => void;
+  onCardSizeChange?: (cardId: string, size: 'small' | 'medium' | 'large' | 'xl') => void;
   isLoggedIn?: boolean;
   disableHover?: boolean;
 }
@@ -88,7 +111,7 @@ export function DraggableCard({
   const renderCardContent = () => {
     // Helper to get card className with conditional hover effects
     const getCardClassName = (additionalClasses = '') => {
-      const baseClasses = 'shadow-lg border border-border/50 transition-all';
+      const baseClasses = 'bg-card/50 backdrop-blur-sm shadow-lg border border-border/50 transition-all';
       const hoverClasses = disableHover ? '' : 'hover:ring-2 hover:ring-primary/50 hover:shadow-xl';
       return `${baseClasses} ${hoverClasses} ${additionalClasses}`.trim();
     };
@@ -156,52 +179,6 @@ export function DraggableCard({
             </CardContent>
           </Card>
         );
-
-      case 'building-approvals-chart': {
-        // Data Source: Database mosaic_pro, Schema public, Table abs_building_approvals_lga
-        // Currently showing NSW state-wide totals (LGA filtering to be implemented)
-        const chartRef = useRef<TrendChartRef>(null);
-
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader
-              className="pb-4 cursor-pointer"
-              onDoubleClick={() => chartRef.current?.openConfig()}
-              title="Double-click to configure"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Building className="h-6 w-6 text-primary" />
-                  <div>
-                                          <CardTitle className="text-xl">
-                        Building Approvals
-                        {selectedLGA && (
-                          <span className="text-base font-normal text-muted-foreground ml-2">
-                            - {selectedLGA.name}
-                          </span>
-                        )}
-                      </CardTitle>
-
-                                          <CardDescription className="text-base mt-1">
-                        {selectedLGA
-                          ? `Monthly dwelling approvals in ${selectedLGA.name}`
-                          : 'Monthly dwelling approvals across NSW (Jul 2021 - Dec 2024)'
-                        }
-                      </CardDescription>
-
-                  </div>
-                </div>
-                                  <DataSourceInfo dataSource={ABSDataService.getDataSource()} />
-
-              </div>
-            </CardHeader>
-            <CardContent className="pt-2">
-                              <TrendChart ref={chartRef} selectedLGA={selectedLGA} />
-
-            </CardContent>
-          </Card>
-        );
-      }
 
       case 'lga-dwelling-approvals': {
         // Data Source: Database research&insights, Schema housing_dashboard, Table building_approvals_nsw_lga
@@ -686,58 +663,6 @@ export function DraggableCard({
           </Card>
         );
 
-      case 'development-stats':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <Building className="h-5 w-5" />
-                  Development Statistics
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-muted/20 rounded-lg">
-                      <p className="text-2xl font-bold">1,200</p>
-                      <p className="text-sm text-muted-foreground">Housing Target</p>
-                    </div>
-                    <div className="text-center p-4 bg-muted/20 rounded-lg">
-                      <p className="text-2xl font-bold">450</p>
-                      <p className="text-sm text-muted-foreground">Units Approved</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-center text-muted-foreground">Configure data source for construction data</p>
-                </div>
-
-            </CardContent>
-          </Card>
-        );
-
-      case 'data-table':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <Grid3X3 className="h-5 w-5" />
-                  Data Table
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <Grid3X3 className="h-12 w-12 mx-auto mb-2" />
-                    <p>Data Table Component</p>
-                    <p className="text-xs">Configure data source for tabular display</p>
-                  </div>
-                </div>
-
-            </CardContent>
-          </Card>
-        );
-
       case 'comparison-table':
         return (
           <Card className={getCardClassName()}>
@@ -784,34 +709,6 @@ export function DraggableCard({
           </Card>
         );
 
-      case 'progress-tracker':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Progress Tracker
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="space-y-4">
-                  <div className="bg-muted/20 rounded-lg p-4">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm">Housing Target Progress</span>
-                      <span className="text-sm font-bold">38%</span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div className="bg-primary h-2 rounded-full" style={{ width: '38%' }}></div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-center text-muted-foreground">Configure data source for goal tracking</p>
-                </div>
-
-            </CardContent>
-          </Card>
-        );
-
       case 'insights-panel':
         return (
           <Card className={getCardClassName()}>
@@ -837,46 +734,6 @@ export function DraggableCard({
           </Card>
         );
 
-      case 'percentage-display':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <Percent className="h-5 w-5" />
-                  Percentage Display
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="text-center p-6">
-                  <p className="text-6xl font-bold text-primary">85%</p>
-                  <p className="text-sm text-muted-foreground mt-2">Configure metric name and data source</p>
-                </div>
-
-            </CardContent>
-          </Card>
-        );
-
-      case 'counter-display':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <Hash className="h-5 w-5" />
-                  Counter Display
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="text-center p-6">
-                  <p className="text-6xl font-bold text-primary">1,247</p>
-                  <p className="text-sm text-muted-foreground mt-2">Configure counter name and data source</p>
-                </div>
-
-            </CardContent>
-          </Card>
-        );
-
       case 'test-card':
         return (
           <TestCard
@@ -886,9 +743,12 @@ export function DraggableCard({
           />
         );
 
+      case 'feedback':
+        return <FeedbackCard selectedLGA={selectedLGA} />;
+
       case 'search-geography-card':
         return (
-          <TestSearchCard
+          <SearchCard
             isAdminMode={isAdminMode}
             onAdminClick={() => {}}
             selectedLGA={selectedLGA}
@@ -913,6 +773,105 @@ export function DraggableCard({
             onAdminClick={() => {}}
           />
         );
+
+      case 'country-of-birth':
+        return (
+          <CountryOfBirthCard
+            selectedLGA={selectedLGA}
+            isAdminMode={isAdminMode}
+            onAdminClick={() => {}}
+          />
+        );
+
+      case 'australian-born':
+        return (
+          <AustralianBornCard
+            selectedLGA={selectedLGA}
+            isAdminMode={isAdminMode}
+            onAdminClick={() => {}}
+          />
+        );
+
+      case 'citizenship':
+        return (
+          <CitizenshipCard
+            selectedLGA={selectedLGA}
+            isAdminMode={isAdminMode}
+            onAdminClick={() => {}}
+          />
+        );
+
+      case 'citizenship-trend':
+        return (
+          <CitizenshipTrendCard
+            selectedLGA={selectedLGA}
+            isAdminMode={isAdminMode}
+            onAdminClick={() => {}}
+          />
+        );
+
+      case 'income':
+        return (
+          <IncomeCard
+            selectedLGA={selectedLGA}
+            isAdminMode={isAdminMode}
+            onAdminClick={() => {}}
+          />
+        );
+
+      case 'da-daily':
+        return <DADailyCard selectedLGA={selectedLGA} />;
+
+      case 'da-weekly':
+        return <DAWeeklyCard selectedLGA={selectedLGA} />;
+
+      case 'da-monthly':
+        return <DAMonthlyCard selectedLGA={selectedLGA} />;
+
+      case 'da-13-month':
+        return <DA13MonthCard selectedLGA={selectedLGA} />;
+
+      case 'da-yoy':
+        return <DAYoYCard selectedLGA={selectedLGA} />;
+
+      case 'da-history':
+        return <DAHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
+      case 'oc-daily':
+        return <OCDailyCard selectedLGA={selectedLGA} />;
+
+      case 'oc-weekly':
+        return <OCWeeklyCard selectedLGA={selectedLGA} />;
+
+      case 'oc-monthly':
+        return <OCMonthlyCard selectedLGA={selectedLGA} />;
+
+      case 'oc-13-month':
+        return <OC13MonthCard selectedLGA={selectedLGA} />;
+
+      case 'oc-yoy':
+        return <OCYoYCard selectedLGA={selectedLGA} />;
+
+      case 'oc-history':
+        return <OCHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
+      case 'ba-daily':
+        return <BADailyCard selectedLGA={selectedLGA} />;
+
+      case 'ba-weekly':
+        return <BAWeeklyCard selectedLGA={selectedLGA} />;
+
+      case 'ba-monthly':
+        return <BAMonthlyCard selectedLGA={selectedLGA} />;
+
+      case 'ba-13-month':
+        return <BA13MonthCard selectedLGA={selectedLGA} />;
+
+      case 'ba-yoy':
+        return <BAYoYCard selectedLGA={selectedLGA} />;
+
+      case 'ba-history':
+        return <BAHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
 
       default:
         return (
@@ -1017,8 +976,8 @@ export function DraggableCard({
         </div>
       )}
 
-      {/* Delete Button - Only in Edit Mode */}
-      {isEditMode && !isSortableDragging && (
+      {/* Delete Button - Only in Edit Mode (except for search cards) */}
+      {isEditMode && !isSortableDragging && card.type !== 'search-geography-card' && card.type !== 'lga-lookup' && (
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -1049,7 +1008,7 @@ export function DraggableCard({
       )}
 
       {/* Grid Span Controls - Only for specific cards in Edit Mode */}
-      {isEditMode && !isSortableDragging && onCardSizeChange && ['housing-pipeline', 'building-approvals-chart', 'market-overview', 'age-by-sex', 'dwelling-type'].includes(card.id) && (
+      {isEditMode && !isSortableDragging && onCardSizeChange && ['housing-pipeline', 'building-approvals-chart', 'market-overview', 'age-by-sex', 'dwelling-type', 'da-history', 'oc-history'].includes(card.type) && (
         <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10 flex gap-1 bg-background/90 backdrop-blur border border-border rounded-lg p-1 shadow-lg pointer-events-auto">
           <button
             onClick={(e) => {
@@ -1092,6 +1051,20 @@ export function DraggableCard({
             title="3 columns wide"
           >
             3
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onCardSizeChange(card.id, 'xl');
+            }}
+            className={`px-3 py-1.5 rounded text-sm font-medium transition-colors pointer-events-auto ${
+              card.size === 'xl'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+            }`}
+            title="4 columns wide"
+          >
+            4
           </button>
         </div>
       )}

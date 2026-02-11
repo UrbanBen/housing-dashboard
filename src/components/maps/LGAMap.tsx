@@ -18,6 +18,136 @@ interface BoundaryData {
   urbanity?: string; // Optional urbanity field from NSW Spatial Services
 }
 
+// Helper function to filter out eastern islands (like Lord Howe Island) from GeoJSON
+function filterEasternIslands(geometry: any, maxLongitude: number): any {
+  if (!geometry) return geometry;
+
+  // Handle MultiPolygon
+  if (geometry.type === 'MultiPolygon') {
+    const originalCount = geometry.coordinates.length;
+    const filteredCoordinates = geometry.coordinates.filter((polygon: number[][][]) => {
+      // Check if any coordinate in the polygon exceeds the max longitude
+      const firstRing = polygon[0];
+      if (!firstRing || firstRing.length === 0) return false;
+
+      // Calculate max longitude for this polygon
+      let maxLng = -Infinity;
+      for (const coord of firstRing) {
+        const [lng] = coord;
+        maxLng = Math.max(maxLng, lng);
+      }
+
+      // Exclude polygons that are too far east
+      const keep = maxLng <= maxLongitude;
+      if (!keep) {
+        console.log(`[LGAMap] Filtering out polygon with max longitude ${maxLng.toFixed(2)}° (exceeds ${maxLongitude}°)`);
+      }
+      return keep;
+    });
+
+    console.log(`[LGAMap] Filtered MultiPolygon: ${originalCount} → ${filteredCoordinates.length} polygons`);
+
+    return {
+      type: 'MultiPolygon',
+      coordinates: filteredCoordinates
+    };
+  }
+
+  // Handle Polygon
+  if (geometry.type === 'Polygon') {
+    const firstRing = geometry.coordinates[0];
+    if (!firstRing || firstRing.length === 0) return geometry;
+
+    // Check if polygon exceeds max longitude
+    let maxLng = -Infinity;
+    for (const coord of firstRing) {
+      const [lng] = coord;
+      maxLng = Math.max(maxLng, lng);
+    }
+
+    // Return null if too far east, otherwise return as-is
+    const keep = maxLng <= maxLongitude;
+    if (!keep) {
+      console.log(`[LGAMap] Filtering out Polygon with max longitude ${maxLng.toFixed(2)}° (exceeds ${maxLongitude}°)`);
+    }
+    return keep ? geometry : null;
+  }
+
+  // For other geometry types, return as-is
+  return geometry;
+}
+
+// Helper function to filter Australia to mainland only (exclude remote territories)
+function filterAustraliaMainland(geometry: any): any {
+  if (!geometry) return geometry;
+
+  // Australia mainland bounds (excludes remote territories)
+  const mainlandBounds = {
+    west: 112.0,    // Western Australia coast
+    east: 154.0,    // Queensland/NSW east coast
+    north: -9.0,    // Northern Territory
+    south: -44.0    // Tasmania
+  };
+
+  // Handle MultiPolygon
+  if (geometry.type === 'MultiPolygon') {
+    const filteredCoordinates = geometry.coordinates.filter((polygon: number[][][]) => {
+      const firstRing = polygon[0];
+      if (!firstRing || firstRing.length === 0) return false;
+
+      // Calculate polygon bounds
+      let minLng = Infinity, maxLng = -Infinity;
+      let minLat = Infinity, maxLat = -Infinity;
+
+      for (const coord of firstRing) {
+        const [lng, lat] = coord;
+        minLng = Math.min(minLng, lng);
+        maxLng = Math.max(maxLng, lng);
+        minLat = Math.min(minLat, lat);
+        maxLat = Math.max(maxLat, lat);
+      }
+
+      // Check if polygon is within mainland bounds
+      const withinLngBounds = minLng >= mainlandBounds.west && maxLng <= mainlandBounds.east;
+      const withinLatBounds = minLat >= mainlandBounds.south && maxLat <= mainlandBounds.north;
+
+      return withinLngBounds && withinLatBounds;
+    });
+
+    return {
+      type: 'MultiPolygon',
+      coordinates: filteredCoordinates
+    };
+  }
+
+  // Handle Polygon
+  if (geometry.type === 'Polygon') {
+    const firstRing = geometry.coordinates[0];
+    if (!firstRing || firstRing.length === 0) return geometry;
+
+    // Calculate polygon bounds
+    let minLng = Infinity, maxLng = -Infinity;
+    let minLat = Infinity, maxLat = -Infinity;
+
+    for (const coord of firstRing) {
+      const [lng, lat] = coord;
+      minLng = Math.min(minLng, lng);
+      maxLng = Math.max(maxLng, lng);
+      minLat = Math.min(minLat, lat);
+      maxLat = Math.max(maxLat, lat);
+    }
+
+    // Check if polygon is within mainland bounds
+    const withinLngBounds = minLng >= mainlandBounds.west && maxLng <= mainlandBounds.east;
+    const withinLatBounds = minLat >= mainlandBounds.south && maxLat <= mainlandBounds.north;
+
+    return (withinLngBounds && withinLatBounds) ? geometry : null;
+  }
+
+  // For other geometry types, return as-is
+  return geometry;
+}
+
 // Helper function to filter NSW polygons to exclude remote islands
 function filterMainlandPolygons(geometry: any, leaflet: any): any {
   if (!geometry || geometry.type !== 'MultiPolygon') {
@@ -74,6 +204,34 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [boundaryData, setBoundaryData] = useState<BoundaryData | null>(null);
   const [boundaryError, setBoundaryError] = useState<string | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const tileLayerRef = useRef<any>(null);
+
+  // Detect theme changes
+  useEffect(() => {
+    const updateTheme = () => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    };
+
+    updateTheme();
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Theme-specific colors matching AustraliaStateMap
+  const colors = isDarkMode ? {
+    stroke: '#22c55e',
+    fill: '#22c55e',
+    fillOpacity: 0.2
+  } : {
+    stroke: '#223222',
+    fill: '#223222',
+    fillOpacity: 0.25
+  };
 
   // Dynamic import of Leaflet
   useEffect(() => {
@@ -112,11 +270,18 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
           scrollWheelZoom: false,
           doubleClickZoom: false,
           dragging: true,
-          touchZoom: false
+          touchZoom: false,
+          zoomDelta: 0.5,        // Allow half-step zoom increments
+          zoomSnap: 0.5,         // Allow fractional zoom levels
+          wheelPxPerZoomLevel: 120  // Smoother scroll wheel zoom if enabled
         });
 
-        // Add dark mode base layer
-        leaflet.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        // Add base layer (will be updated by theme)
+        const tileUrl = isDarkMode
+          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+          : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+        tileLayerRef.current = leaflet.tileLayer(tileUrl, {
           attribution: '© OpenStreetMap contributors © CARTO',
           maxZoom: 19,
           subdomains: 'abcd'
@@ -141,7 +306,26 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         mapRef.current = null;
       }
     };
-  }, [leaflet]);
+  }, [leaflet, isDarkMode]);
+
+  // Update tile layer when theme changes
+  useEffect(() => {
+    if (!leaflet || !mapRef.current || !tileLayerRef.current) return;
+
+    // Remove old tile layer
+    tileLayerRef.current.remove();
+
+    // Add new tile layer with appropriate theme
+    const tileUrl = isDarkMode
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+    tileLayerRef.current = leaflet.tileLayer(tileUrl, {
+      attribution: '© OpenStreetMap contributors © CARTO',
+      maxZoom: 19,
+      subdomains: 'abcd'
+    }).addTo(mapRef.current);
+  }, [isDarkMode, leaflet]);
 
   // Fetch boundary data when LGA changes
   useEffect(() => {
@@ -191,10 +375,13 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
             }
           }
 
+          // Filter out eastern islands from database geometry
+          const filteredGeometry = filterEasternIslands(geometry, 154);
+
           setBoundaryData({
             name: selectedLGA.name,
             code: selectedLGA.id,
-            boundary: geometry,
+            boundary: filteredGeometry,
             center: center,
             bounds: bounds,
             urbanity: 'Database'
@@ -203,44 +390,56 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
           return;
         }
 
-        // Handle NSW state-wide view
-        if (selectedLGA.id === 'nsw-state') {
+        // Handle Australia country-wide view
+        if (selectedLGA.name === 'Australia' || selectedLGA.id === 'AUS') {
+          setBoundaryData({
+            name: 'Australia',
+            code: 'AUS',
+            boundary: null, // No geometry needed - just use predefined bounds
+            center: [-25.0, 133.0] as [number, number],
+            bounds: [[-42.0, 113.5], [-10.5, 153.5]] as [[number, number], [number, number]],
+            urbanity: 'Country'
+          });
+          return;
+        }
+
+        // Handle NSW state-wide view - load from database
+        if (selectedLGA.id === 'nsw-state' || selectedLGA.id === 'NSW' || selectedLGA.name === 'New South Wales') {
           try {
-            console.log('Fetching NSW boundary from ABS ASGS2021...');
-            
-            // Fetch NSW boundary from ABS using state_code_2021 = '1' for NSW
-            const absResponse = await fetch(
-              'https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/STE/MapServer/0/query?' +
-              'where=state_code_2021=%271%27&' +
-              'outFields=state_code_2021,state_name_2021,area_albers_sqkm&' +
-              'returnGeometry=true&' +
-              'f=geojson&' +
-              'outSR=4326'
+            console.log('Fetching NSW boundary from database...');
+
+            const dbResponse = await fetch(
+              `/api/lga-geometry?` +
+              `schema=housing_dashboard&` +
+              `table=search&` +
+              `geometryColumn=wkb_geometry&` +
+              `lgaNameColumn=lga_name24&` +
+              `lgaName=${encodeURIComponent('New South Wales')}`
             );
-            
-            if (absResponse.ok) {
-              const absData = await absResponse.json();
-              console.log('ABS NSW boundary response:', absData);
-              
-              if (absData.features && absData.features.length > 0) {
-                const nswFeature = absData.features[0];
-                console.log('NSW feature:', nswFeature);
-                
+
+            if (dbResponse.ok) {
+              const dbData = await dbResponse.json();
+              console.log('Database NSW boundary response:', dbData);
+
+              if (dbData.success && dbData.geometry) {
+                // Filter out Lord Howe Island and other far-east islands (longitude > 154°E)
+                const filteredGeometry = filterEasternIslands(dbData.geometry, 154);
+
                 setBoundaryData({
                   name: 'New South Wales',
                   code: 'NSW',
-                  boundary: nswFeature.geometry, // GeoJSON geometry from ABS shape field
-                  center: [-32.5, 147.0] as [number, number], // Mainland NSW center (excludes remote islands)
-                  bounds: [[-37.0, 141.0], [-28.5, 153.0]] as [[number, number], [number, number]], // Mainland NSW bounds only
-                  urbanity: 'S'
+                  boundary: filteredGeometry,
+                  center: dbData.centroid || [-32.5, 147.0] as [number, number],
+                  bounds: [[-37.0, 141.0], [-28.5, 153.0]] as [[number, number], [number, number]],
+                  urbanity: 'Database'
                 });
-                console.log('NSW boundary loaded successfully from ABS');
+                console.log('NSW boundary loaded successfully from database');
                 return;
               }
             }
-            
-            console.warn('ABS NSW boundary not available, using fallback bounds');
-            // Fallback if ABS fails
+
+            console.warn('Database NSW boundary not available, using fallback bounds');
+            // Fallback if database fails
             setBoundaryData({
               name: 'New South Wales',
               code: 'NSW',
@@ -250,10 +449,10 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
               urbanity: 'S'
             });
             return;
-            
+
           } catch (error) {
-            console.error('Error fetching NSW boundary from ABS:', error);
-            // Fallback if ABS fails
+            console.error('Error fetching NSW boundary from database:', error);
+            // Fallback if database fails
             setBoundaryData({
               name: 'New South Wales',
               code: 'NSW',
@@ -271,7 +470,12 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         let data = await response.json();
 
         if (response.ok && data.boundaries && data.boundaries.boundary) {
-          setBoundaryData(data.boundaries);
+          // Filter out eastern islands from all boundaries
+          const filteredBoundary = filterEasternIslands(data.boundaries.boundary, 154);
+          setBoundaryData({
+            ...data.boundaries,
+            boundary: filteredBoundary
+          });
           console.log('ArcGIS boundary data loaded successfully:', data.boundaries.name);
           return;
         }
@@ -282,7 +486,12 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         data = await response.json();
 
         if (response.ok && data.boundaries && data.boundaries.boundary) {
-          setBoundaryData(data.boundaries);
+          // Filter out eastern islands from all boundaries
+          const filteredBoundary = filterEasternIslands(data.boundaries.boundary, 154);
+          setBoundaryData({
+            ...data.boundaries,
+            boundary: filteredBoundary
+          });
           console.log('NSW Spatial boundary data loaded successfully:', data.boundaries.name);
           return;
         }
@@ -293,7 +502,16 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         data = await response.json();
 
         if (response.ok && data.boundaries) {
-          setBoundaryData(data.boundaries);
+          // Filter out eastern islands from all boundaries
+          if (data.boundaries.boundary) {
+            const filteredBoundary = filterEasternIslands(data.boundaries.boundary, 154);
+            setBoundaryData({
+              ...data.boundaries,
+              boundary: filteredBoundary
+            });
+          } else {
+            setBoundaryData(data.boundaries);
+          }
           console.log('Fallback boundary data loaded successfully:', data.boundaries.name);
           return;
         }
@@ -389,6 +607,16 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         } 
         // Handle specific LGA boundaries
         else if (boundaryData.boundary) {
+          // Debug log to see what Australia's boundaryData looks like
+          if (boundaryData.name && (boundaryData.name.toLowerCase().includes('australia') || boundaryData.code === 'AUS')) {
+            console.log('[LGAMap] AUSTRALIA DETECTED - boundaryData:', {
+              name: boundaryData.name,
+              code: boundaryData.code,
+              hasGeometry: !!boundaryData.boundary,
+              geometryType: boundaryData.boundary?.type
+            });
+          }
+
           // Handle NSW state boundary specially to exclude remote islands
           if (boundaryData.code === 'NSW') {
             // Filter NSW boundary to exclude remote islands (Lord Howe Island, etc.)
@@ -398,9 +626,9 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
             if (filteredBoundary) {
               leaflet.geoJSON(filteredBoundary, {
                 style: {
-                  color: '#22c55e',
-                  fillColor: '#22c55e',
-                  fillOpacity: 0.2,
+                  color: colors.stroke,
+                  fillColor: colors.fill,
+                  fillOpacity: colors.fillOpacity,
                   weight: 2
                 }
               }).addTo(mapRef.current);
@@ -409,13 +637,37 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
             // Use predefined mainland bounds instead of fitting to full boundary
             const bounds = leaflet.latLngBounds(boundaryData.bounds as [[number, number], [number, number]]);
             mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+          } else if (boundaryData.code === 'AUS' || boundaryData.name === 'Australia') {
+            // Handle Australia boundary - use predefined mainland bounds to exclude remote territories
+            const filteredBoundary = filterAustraliaMainland(boundaryData.boundary);
+
+            if (filteredBoundary) {
+              leaflet.geoJSON(filteredBoundary, {
+                style: {
+                  color: colors.stroke,
+                  fillColor: colors.fill,
+                  fillOpacity: colors.fillOpacity,
+                  weight: 2
+                }
+              }).addTo(mapRef.current);
+            }
+
+            // Use optimized predefined mainland bounds for good framing
+            // This ensures we focus on mainland Australia + Tasmania, excluding remote territories
+            const mainlandBounds: [[number, number], [number, number]] = [
+              [-42.0, 113.5],  // Southwest (Tasmania)
+              [-10.5, 153.5]   // Northeast (Queensland)
+            ];
+
+            const bounds = leaflet.latLngBounds(mainlandBounds);
+            mapRef.current.fitBounds(bounds, { padding: [8, 8] });
           } else {
             // Regular LGA boundaries - use normal processing
             const geoJsonLayer = leaflet.geoJSON(boundaryData.boundary, {
               style: {
-                color: '#22c55e',
-                fillColor: '#22c55e',
-                fillOpacity: 0.2,
+                color: colors.stroke,
+                fillColor: colors.fill,
+                fillOpacity: colors.fillOpacity,
                 weight: 2
               }
             }).addTo(mapRef.current);
@@ -466,7 +718,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         .bindPopup(`<strong>${selectedLGA.name}</strong><br/><em>Loading boundary data...</em>`)
         .addTo(mapRef.current);
     }
-  }, [leaflet, selectedLGA, boundaryData, boundaryError]);
+  }, [leaflet, selectedLGA, boundaryData, boundaryError, colors]);
 
   if (isLoading) {
     return (
@@ -506,11 +758,6 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
       {selectedLGA && boundaryError && (
         <div className="text-xs text-red-500 mt-2 text-center">
           Unable to load boundary data: {boundaryError}
-        </div>
-      )}
-      {selectedLGA && boundaryData && (
-        <div className="text-xs text-green-600 mt-2 text-center">
-          {boundaryData.urbanity === 'Database' ? `${boundaryData.name} - Azure PostgreSQL Database` : boundaryData.urbanity ? `${boundaryData.urbanity === 'U' ? 'Urban' : 'Rural'} LGA: ${boundaryData.name} - Official NSW Spatial Data` : `${boundaryData.name} - Official NSW Spatial Data`}
         </div>
       )}
     </>

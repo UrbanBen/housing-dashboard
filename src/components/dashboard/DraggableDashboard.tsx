@@ -27,6 +27,25 @@ export type CardType =
   | 'search-geography-card'
   | 'age-by-sex'
   | 'dwelling-type'
+  | 'country-of-birth'
+  | 'australian-born'
+  | 'citizenship'
+  | 'citizenship-trend'
+  | 'income'
+  // Development Applications Comprehensive Cards
+  | 'da-daily'
+  | 'da-weekly'
+  | 'da-monthly'
+  | 'da-13-month'
+  | 'da-yoy'
+  | 'da-history'
+  // Occupation Certificate Comprehensive Cards
+  | 'oc-daily'
+  | 'oc-weekly'
+  | 'oc-monthly'
+  | 'oc-13-month'
+  | 'oc-yoy'
+  | 'oc-history'
   // New template types from AdminToolbar
   | 'blank-card'
   | 'geography-search'
@@ -38,18 +57,12 @@ export type CardType =
   | 'line-chart'
   | 'pie-chart'
   | 'trend-chart'
-  | 'scatter-plot'
   | 'housing-affordability'
   | 'property-values'
   | 'population-metrics'
-  | 'development-stats'
-  | 'data-table'
   | 'comparison-table'
   | 'time-series'
-  | 'progress-tracker'
-  | 'insights-panel'
-  | 'percentage-display'
-  | 'counter-display';
+  | 'insights-panel';
 
 export interface DashboardCard {
   id: string;
@@ -83,7 +96,7 @@ interface DroppableDashboardGridProps {
   onLGAChange: (lga: LGA | null) => void;
   onDeleteCard: (cardId: string) => void;
   activeCard: DashboardCard | null;
-  onCardSizeChange: (cardId: string, size: 'small' | 'medium' | 'large') => void;
+  onCardSizeChange: (cardId: string, size: 'small' | 'medium' | 'large' | 'xl') => void;
   isLoggedIn?: boolean;
   disableHover?: boolean;
 }
@@ -162,11 +175,21 @@ function DroppableDashboardGrid({
 
 // Default card configuration
 const defaultCards: DashboardCard[] = [
+  // Search Section (Required - Cannot be deleted)
+  {
+    id: 'search-geography-card',
+    type: 'search-geography-card',
+    title: 'Search Geography',
+    size: 'small',
+    category: 'search',
+    gridArea: 'search-geography'
+  },
+
   // LGA Section
   {
     id: 'lga-lookup',
     type: 'lga-lookup',
-    title: 'Search Geography',
+    title: 'LGA Lookup',
     size: 'small',
     category: 'lga',
     gridArea: 'lga-lookup'
@@ -302,6 +325,14 @@ const defaultCards: DashboardCard[] = [
     size: 'small',
     category: 'charts',
     gridArea: 'dwelling-type'
+  },
+  {
+    id: 'country-of-birth',
+    type: 'country-of-birth',
+    title: 'Country of Birth',
+    size: 'small',
+    category: 'charts',
+    gridArea: 'country-of-birth'
   },
 ];
 

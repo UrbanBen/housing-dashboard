@@ -9,7 +9,7 @@ import { AustraliaStateMap } from '@/components/maps/AustraliaStateMap';
 
 import type { LGA } from '@/components/filters/LGALookup';
 
-interface TestSearchCardProps {
+interface SearchCardProps {
   isAdminMode?: boolean;
   onAdminClick?: () => void;
   selectedLGA?: LGA | null;
@@ -39,12 +39,12 @@ interface ConnectionInfo {
   table: string;
 }
 
-export function TestSearchCard({
+export function SearchCard({
   isAdminMode = false,
   onAdminClick,
   selectedLGA: parentSelectedLGA,
   onLGAChange
-}: TestSearchCardProps) {
+}: SearchCardProps) {
   const [selectedLGA, setSelectedLGA] = useState<string>('');
   const [selectedState, setSelectedState] = useState<string>('New South Wales');
   const [searchQuery, setSearchQuery] = useState('');
@@ -190,15 +190,62 @@ export function TestSearchCard({
     }
   };
 
+  // State abbreviation mapping
+  const stateAbbreviations: { [key: string]: string } = {
+    'nsw': 'New South Wales',
+    'vic': 'Victoria',
+    'qld': 'Queensland',
+    'sa': 'South Australia',
+    'wa': 'Western Australia',
+    'tas': 'Tasmania',
+    'nt': 'Northern Territory',
+    'act': 'Australian Capital Territory'
+  };
+
+  // All Australian states/territories
+  const allStates = [
+    { lga_name: 'Australia', lga_code: 'AUS' },
+    { lga_name: 'New South Wales', lga_code: 'NSW' },
+    { lga_name: 'Victoria', lga_code: 'VIC' },
+    { lga_name: 'Queensland', lga_code: 'QLD' },
+    { lga_name: 'South Australia', lga_code: 'SA' },
+    { lga_name: 'Western Australia', lga_code: 'WA' },
+    { lga_name: 'Tasmania', lga_code: 'TAS' },
+    { lga_name: 'Northern Territory', lga_code: 'NT' },
+    { lga_name: 'Australian Capital Territory', lga_code: 'ACT' }
+  ];
+
   // Filter LGAs based on search query
   const filteredLGAs = useMemo(() => {
-    let filtered = lgaOptions;
+    // Combine LGAs with all states
+    const combinedOptions = [...lgaOptions];
+
+    // Add states that aren't already in lgaOptions
+    allStates.forEach(state => {
+      if (!lgaOptions.some(lga => lga.lga_name === state.lga_name)) {
+        combinedOptions.push(state);
+      }
+    });
+
+    let filtered = combinedOptions;
 
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = lgaOptions.filter(lga =>
-        lga.lga_name.toLowerCase().includes(query)
-      );
+      const query = searchQuery.toLowerCase().trim();
+
+      // Check if query is a state abbreviation
+      const fullStateName = stateAbbreviations[query];
+
+      if (fullStateName) {
+        // Search for the full state name
+        filtered = combinedOptions.filter(lga =>
+          lga.lga_name.toLowerCase() === fullStateName.toLowerCase()
+        );
+      } else {
+        // Normal search
+        filtered = combinedOptions.filter(lga =>
+          lga.lga_name.toLowerCase().includes(query)
+        );
+      }
     }
 
     // Always sort alphabetically
@@ -209,6 +256,14 @@ export function TestSearchCard({
   useEffect(() => {
     fetchLGAs();
   }, []);
+
+  // Sync search query with parent's selected LGA
+  useEffect(() => {
+    if (parentSelectedLGA?.name) {
+      setSearchQuery(parentSelectedLGA.name);
+      setSelectedLGA(parentSelectedLGA.name);
+    }
+  }, [parentSelectedLGA]);
 
   // Handle LGA selection
   const handleSelectLGA = (lgaName: string) => {
@@ -282,15 +337,35 @@ export function TestSearchCard({
   // Handle state selection from map
   const handleStateClick = (stateName: string) => {
     setSelectedState(stateName);
-    setSelectedLGA(''); // Clear LGA selection
-    setSearchQuery(''); // Clear search
+    setSelectedLGA(stateName); // Set the state as the selected LGA
+    setSearchQuery(stateName); // Show state name in search box
     fetchLGAs(stateName); // Fetch LGAs for selected state
+    fetchDataForLGA(stateName); // Fetch data for the state itself
+
+    // Call parent's onLGAChange callback to update dashboard state
+    const stateOption = {
+      id: stateName,
+      name: stateName,
+      region: 'State/Territory',
+      population: null
+    };
+    console.log('[SearchCard] State clicked, calling onLGAChange with:', stateOption);
+    onLGAChange?.(stateOption);
+
+    // Also emit custom event for backward compatibility
+    const event = new CustomEvent('search-geography-lga-selected', {
+      detail: {
+        lgaName: stateName,
+        lgaCode: stateName
+      }
+    });
+    window.dispatchEvent(event);
   };
 
   return (
     <>
     <Card
-      className="shadow-lg border border-border/50 h-fit cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all"
+      className="bg-card/50 backdrop-blur-sm shadow-lg border border-border/50 h-fit cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all"
       onDoubleClick={handleDoubleClick}
     >
       <CardHeader className="pb-3">
@@ -299,7 +374,7 @@ export function TestSearchCard({
             <Database className="h-6 w-6 text-primary" />
             <div>
               <CardTitle className="text-xl">
-                Search Geography{selectedLGA ? ` - ${selectedLGA} LGA, ${selectedState}` : ''}
+                Search Geography{selectedLGA ? (selectedLGA === selectedState ? ` - ${selectedState}` : ` - ${selectedLGA} LGA, ${selectedState}`) : ''}
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 Search by State, Region or LGA

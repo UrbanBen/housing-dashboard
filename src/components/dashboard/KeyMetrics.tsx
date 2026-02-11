@@ -452,7 +452,7 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
   return (
     <>
     <Card
-      className="shadow-lg border border-border/50 cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all"
+      className="bg-card/50 backdrop-blur-sm shadow-lg border border-border/50 cursor-pointer hover:ring-2 hover:ring-primary/50 hover:shadow-lg transition-all"
       onDoubleClick={handleDoubleClick}
     >
       <CardHeader className="pb-4">

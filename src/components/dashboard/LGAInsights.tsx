@@ -20,7 +20,7 @@ interface LGAInsightsProps {
 
 export function LGAInsights({ selectedLGA, effectiveColumns }: LGAInsightsProps) {
   return (
-    <Card className="shadow-lg border border-border/50 h-full flex flex-col">
+    <Card className="bg-card/50 backdrop-blur-sm shadow-lg border border-border/50 h-full flex flex-col">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
           <MapPin className="h-6 w-6 text-primary" />

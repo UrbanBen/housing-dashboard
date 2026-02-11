@@ -8,9 +8,9 @@
   * {
     @apply border-border;
   }
-  
+
   :root {
-    /* Dark Analytics Theme */
+    /* Dark Analytics Theme (Default) */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 8%;
@@ -31,7 +31,7 @@
     --input: 240 4% 15%;
     --ring: 142 72% 29%;
     --radius: 0.5rem;
-    
+
     /* Custom Analytics Colors */
     --chart-1: 142 72% 29%;
     --chart-2: 160 84% 25%;
@@ -41,53 +41,144 @@
     --highlight: 120 100% 50%;
     --grid: 240 4% 12%;
   }
+
+  /* Light Mode Theme - Soft Warm Professional */
+  :root.light {
+    --background: 45 15% 96%;
+    --foreground: 240 10% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 20%;
+    --primary: 147 36% 23%; /* #254F38 - Dark Forest Green */
+    --primary-foreground: 0 0% 98%;
+    --secondary: 147 30% 35%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 45 10% 90%;
+    --muted-foreground: 45 10% 45%;
+    --accent: 147 25% 92%;
+    --accent-foreground: 147 36% 23%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 45 10% 80%;
+    --input: 45 10% 80%;
+    --ring: 147 36% 23%;
+    --radius: 0.5rem;
+
+    /* Custom Analytics Colors - Professional Green Palette */
+    --chart-1: 147 36% 23%; /* Primary dark forest green */
+    --chart-2: 147 30% 35%; /* Medium forest green */
+    --chart-3: 147 40% 45%; /* Balanced green */
+    --chart-4: 147 35% 55%; /* Light forest green */
+    --chart-5: 147 25% 65%; /* Soft green */
+    --highlight: 147 50% 40%; /* Professional accent green */
+    --grid: 45 10% 88%;
+  }
   
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
 /* Enhanced styles with better contrast and animations */
 body {
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Dark Mode Styles */
+:root:not(.light) body {
   background-color: hsl(240, 10%, 3.9%) !important;
   color: hsl(0, 0%, 98%) !important;
 }
 
-.bg-background {
+:root:not(.light) .bg-background {
   background-color: hsl(240, 10%, 3.9%) !important;
 }
 
-.bg-card {
+:root:not(.light) .bg-card {
   background-color: hsl(240, 10%, 8%) !important;
   transition: all 0.2s ease-in-out;
 }
 
-.bg-card:hover {
+:root:not(.light) .bg-card:hover {
   background-color: hsl(240, 10%, 10%) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.text-foreground {
+/* Light Mode Styles - Solid Cards with Shadows */
+html.light,
+html.light body {
+  background: linear-gradient(to bottom right, #FAFBF0 0%, #FAFBF0 50%, #00D37F 100%) !important;
+  background-attachment: fixed !important;
+  min-height: 100vh !important;
+  color: hsl(240, 10%, 20%) !important;
+}
+
+:root.light .bg-background {
+  background: transparent !important;
+}
+
+:root.light .bg-card {
+  background-color: hsl(0, 0%, 100%) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease-in-out;
+}
+
+:root.light .bg-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Remove backdrop blur in light mode */
+:root.light .backdrop-blur-sm,
+:root.light .bg-card\/50 {
+  backdrop-filter: none;
+  background-color: hsl(0, 0%, 100%) !important;
+}
+
+/* Text Colors - Theme Aware */
+:root:not(.light) .text-foreground {
   color: hsl(0, 0%, 98%) !important;
 }
 
-.text-muted-foreground {
+:root.light .text-foreground {
+  color: hsl(240, 10%, 20%) !important;
+}
+
+:root:not(.light) .text-muted-foreground {
   color: hsl(240, 5%, 64%) !important;
 }
 
-.text-primary {
+:root.light .text-muted-foreground {
+  color: hsl(45, 10%, 45%) !important;
+}
+
+:root:not(.light) .text-primary {
   color: hsl(142, 72%, 29%) !important;
 }
 
-.text-highlight {
+:root.light .text-primary {
+  color: hsl(147, 36%, 23%) !important; /* #254F38 */
+}
+
+:root:not(.light) .text-highlight {
   color: hsl(120, 100%, 50%) !important;
   text-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
 }
 
-.border-border {
+:root.light .text-highlight {
+  color: hsl(147, 50%, 40%) !important;
+  text-shadow: none;
+}
+
+:root:not(.light) .border-border {
   border-color: hsl(240, 4%, 15%) !important;
+}
+
+:root.light .border-border {
+  border-color: hsl(45, 10%, 80%) !important;
 }
 
 /* Enhanced button styles */
@@ -112,9 +203,9 @@ button:hover, [role="button"]:hover {
   animation: shimmer 1.5s infinite;
 }
 
-/* Enhanced fluorescent glow effect */
-.glow-text {
-  text-shadow: 
+/* Enhanced fluorescent glow effect - Dark Mode Only */
+:root:not(.light) .glow-text {
+  text-shadow:
     0 0 8px rgba(0, 255, 65, 1),
     0 0 16px rgba(0, 255, 65, 0.9),
     0 0 24px rgba(0, 255, 65, 0.7),
@@ -123,9 +214,14 @@ button:hover, [role="button"]:hover {
   animation: pulse-glow 2s ease-in-out infinite alternate;
 }
 
+:root.light .glow-text {
+  text-shadow: none;
+  font-weight: 600;
+}
+
 @keyframes pulse-glow {
   from {
-    text-shadow: 
+    text-shadow:
       0 0 8px rgba(0, 255, 65, 1),
       0 0 16px rgba(0, 255, 65, 0.9),
       0 0 24px rgba(0, 255, 65, 0.7),
@@ -133,7 +229,7 @@ button:hover, [role="button"]:hover {
       0 0 40px rgba(0, 255, 65, 0.3);
   }
   to {
-    text-shadow: 
+    text-shadow:
       0 0 12px rgba(0, 255, 65, 1),
       0 0 24px rgba(0, 255, 65, 1),
       0 0 36px rgba(0, 255, 65, 0.9),
@@ -142,9 +238,10 @@ button:hover, [role="button"]:hover {
   }
 }
 
-/* Leaflet map customizations for dark theme */
+/* Leaflet map customizations - Theme Aware */
 .leaflet-container {
   background-color: hsl(var(--muted)) !important;
+  transition: background-color 0.3s ease;
 }
 
 .leaflet-control-container .leaflet-control-attribution {
@@ -152,12 +249,14 @@ button:hover, [role="button"]:hover {
   color: hsl(var(--muted-foreground)) !important;
   border-radius: 4px !important;
   font-size: 10px !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .leaflet-control-zoom a {
   background-color: hsl(var(--card)) !important;
   border-color: hsl(var(--border)) !important;
   color: hsl(var(--foreground)) !important;
+  transition: all 0.3s ease;
 }
 
 .leaflet-control-zoom a:hover {
@@ -168,10 +267,17 @@ button:hover, [role="button"]:hover {
   background-color: hsl(var(--card)) !important;
   color: hsl(var(--foreground)) !important;
   border-radius: 8px !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .leaflet-popup-tip {
   background-color: hsl(var(--card)) !important;
+  transition: background-color 0.3s ease;
+}
+
+/* Light mode specific map adjustments */
+:root.light .leaflet-container {
+  box-shadow: inset 0 0 0 1px hsl(var(--border));
 }
 
 /* Custom scrollbar styling */
@@ -199,12 +305,29 @@ button:hover, [role="button"]:hover {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
   }
-  
+
   .grid {
     gap: 1rem !important;
   }
-  
+
   .text-4xl {
     font-size: 2rem !important;
   }
+}
+
+/* Pro Tier Glow Animation */
+@keyframes proGlowPulse {
+  0%, 100% {
+    color: #00FF41;
+    text-shadow: 0 0 10px rgba(0, 255, 65, 0.6), 0 0 20px rgba(0, 255, 65, 0.4);
+  }
+  50% {
+    color: #00FF41;
+    text-shadow: 0 0 20px rgba(0, 255, 65, 0.9), 0 0 30px rgba(0, 255, 65, 0.6);
+  }
+}
+
+.pro-tier-glow {
+  animation: proGlowPulse 2s ease-in-out infinite;
+  font-weight: 600;
 }
