@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import Anthropic from '@anthropic-ai/sdk';
 import nodemailer from 'nodemailer';
-import { executeQuery } from '@/lib/db-pool';
+import { executeQuery, getAdminPool } from '@/lib/db-pool';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -179,7 +179,9 @@ export async function POST(request: NextRequest) {
 
     // Store feedback in database
     console.log('💾 Storing feedback in database...');
+    const pool = getAdminPool();
     await executeQuery(
+      pool,
       `INSERT INTO housing_dashboard.user_feedback (
         user_email, user_name, user_id,
         feedback_text, category, priority, ai_summary,
