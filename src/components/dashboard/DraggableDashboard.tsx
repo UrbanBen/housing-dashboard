@@ -46,6 +46,15 @@ export type CardType =
   | 'oc-13-month'
   | 'oc-yoy'
   | 'oc-history'
+  // Building Approval Comprehensive Cards
+  | 'ba-daily'
+  | 'ba-weekly'
+  | 'ba-monthly'
+  | 'ba-13-month'
+  | 'ba-yoy'
+  | 'ba-history'
+  // User Interaction Cards
+  | 'feedback'
   // New template types from AdminToolbar
   | 'blank-card'
   | 'geography-search'
