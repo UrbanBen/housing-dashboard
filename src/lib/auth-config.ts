@@ -29,6 +29,25 @@ interface ExtendedUser extends NextAuthUser {
 }
 
 /**
+ * Check and log OAuth provider configuration on startup
+ */
+if (process.env.NODE_ENV === 'development') {
+  const oauthStatus = {
+    google: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+    microsoft: !!(process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET),
+  };
+
+  console.log('\n[OAuth Config]');
+  console.log('  Google:    ' + (oauthStatus.google ? 'Configured' : 'Not configured'));
+  console.log('  Microsoft: ' + (oauthStatus.microsoft ? 'Configured' : 'Not configured'));
+
+  if (!oauthStatus.google && !oauthStatus.microsoft) {
+    console.warn('\n[Warning] No OAuth providers configured. Only email/password login available.');
+    console.warn('See AUTH_SETUP_GUIDE.md for setup instructions.\n');
+  }
+}
+
+/**
  * NextAuth configuration
  */
 export const authOptions: AuthOptions = {

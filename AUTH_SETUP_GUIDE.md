@@ -267,6 +267,74 @@ Before going to production:
 
 ---
 
+## 🐛 Troubleshooting
+
+### Issue: Microsoft OAuth Button Doesn't Work
+
+**Symptom:** Clicking "Sign in with Microsoft" button reloads the login page instead of redirecting to Microsoft login.
+
+**Root Cause:** The Microsoft OAuth provider is conditionally registered in `src/lib/auth-config.ts` only when both `MICROSOFT_CLIENT_ID` and `MICROSOFT_CLIENT_SECRET` environment variables are present:
+
+```typescript
+// From auth-config.ts line 128-153
+...(process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET
+  ? [/* Microsoft provider config */]
+  : []),  // Empty array when credentials missing
+```
+
+**Current State in `.env.local`:**
+```bash
+MICROSOFT_CLIENT_ID=
+MICROSOFT_CLIENT_SECRET=
+```
+
+**Why It Fails:**
+1. Empty environment variables evaluate to `false` in the conditional check
+2. Microsoft provider never gets added to NextAuth's providers array
+3. When user clicks "Sign in with Microsoft", NextAuth has no 'microsoft' provider
+4. Request fails silently and redirects back to login page
+
+**Solution Options:**
+
+**Option A: Configure Microsoft OAuth (Recommended for Production)**
+1. Follow the Microsoft OAuth Setup steps above
+2. Add valid credentials to `.env.local`
+3. Restart development server
+
+**Option B: Hide Button When Not Configured (Development Friendly)**
+The UI has been updated to only show OAuth buttons when credentials are properly configured. If you see the Microsoft button, it means the credentials are set up and should work.
+
+**Option C: Use Google OAuth Instead**
+If you prefer Google authentication, follow the Google OAuth Setup steps above instead.
+
+### Issue: OAuth Callback Redirects to Wrong URL
+
+**Symptom:** After successful OAuth login with provider, redirect goes to wrong page.
+
+**Solution:** Ensure `NEXTAUTH_URL` in `.env.local` matches your development environment:
+```bash
+NEXTAUTH_URL=http://localhost:3000
+```
+
+For production, update to your production domain with HTTPS.
+
+### Issue: "Configuration" Error on Sign In
+
+**Symptom:** NextAuth shows a generic configuration error.
+
+**Common Causes:**
+1. Missing or invalid `NEXTAUTH_SECRET`
+2. Database connection issues
+3. Mismatched redirect URIs in OAuth provider settings
+
+**Debug Steps:**
+1. Check server console for detailed error messages
+2. Verify database connection with: `psql -h mecone-data-lake.postgres.database.azure.com -U mosaic_readonly -d "research&insights"`
+3. Ensure `NEXTAUTH_SECRET` is set in `.env.local`
+4. Check OAuth provider redirect URIs match exactly (including trailing slashes)
+
+---
+
 ## 🎉 Ready to Continue?
 
 Run the migration and let me know if you want me to continue building the remaining components!
