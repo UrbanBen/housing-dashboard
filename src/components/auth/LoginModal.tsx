@@ -7,9 +7,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { signIn, getProviders } from 'next-auth/react';
-import type { ClientSafeProvider, LiteralUnion } from 'next-auth/react';
-import type { BuiltInProviderType } from 'next-auth/providers';
+import { signIn } from 'next-auth/react';
+import type { OAuthProviderConfig } from '@/lib/oauth-providers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,15 +26,20 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const [providers, setProviders] = useState<Record<LiteralUnion<BuiltInProviderType, string>, ClientSafeProvider> | null>(null);
+  const [oauthConfig, setOAuthConfig] = useState<OAuthProviderConfig>({ google: false, microsoft: false });
 
-  // Fetch available OAuth providers on mount
+  // Fetch OAuth configuration on mount
   useEffect(() => {
-    const fetchProviders = async () => {
-      const availableProviders = await getProviders();
-      setProviders(availableProviders);
+    const fetchOAuthConfig = async () => {
+      try {
+        const response = await fetch('/api/auth/oauth-config');
+        const config = await response.json();
+        setOAuthConfig(config);
+      } catch (error) {
+        console.error('[LoginModal] Error fetching OAuth config:', error);
+      }
     };
-    fetchProviders();
+    fetchOAuthConfig();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -166,7 +170,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             </form>
 
             {/* OAuth Sign In Buttons - Only show if configured */}
-            {providers?.microsoft && (
+            {oauthConfig.microsoft && (
               <Button
                 type="button"
                 variant="outline"
@@ -185,7 +189,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               </Button>
             )}
 
-            {providers?.google && (
+            {oauthConfig.google && (
               <Button
                 type="button"
                 variant="outline"

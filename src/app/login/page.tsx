@@ -7,9 +7,8 @@
  */
 
 import { useState, useEffect, Suspense } from 'react';
-import { signIn, getProviders } from 'next-auth/react';
-import type { ClientSafeProvider, LiteralUnion } from 'next-auth/react';
-import type { BuiltInProviderType } from 'next-auth/providers';
+import { signIn } from 'next-auth/react';
+import type { OAuthProviderConfig } from '@/lib/oauth-providers';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -24,18 +23,23 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [providers, setProviders] = useState<Record<LiteralUnion<BuiltInProviderType, string>, ClientSafeProvider> | null>(null);
+  const [oauthConfig, setOAuthConfig] = useState<OAuthProviderConfig>({ google: false, microsoft: false });
 
   // Get error from URL if redirected from failed auth
   const urlError = searchParams.get('error');
 
-  // Fetch available OAuth providers on mount
+  // Fetch OAuth configuration on mount
   useEffect(() => {
-    const fetchProviders = async () => {
-      const availableProviders = await getProviders();
-      setProviders(availableProviders);
+    const fetchOAuthConfig = async () => {
+      try {
+        const response = await fetch('/api/auth/oauth-config');
+        const config = await response.json();
+        setOAuthConfig(config);
+      } catch (error) {
+        console.error('[Login] Error fetching OAuth config:', error);
+      }
     };
-    fetchProviders();
+    fetchOAuthConfig();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -149,7 +153,7 @@ function LoginForm() {
           </form>
 
           {/* OAuth Sign In Buttons - Only show if configured */}
-          {providers?.microsoft && (
+          {oauthConfig.microsoft && (
             <Button
               type="button"
               variant="outline"
@@ -168,7 +172,7 @@ function LoginForm() {
             </Button>
           )}
 
-          {providers?.google && (
+          {oauthConfig.google && (
             <Button
               type="button"
               variant="outline"
