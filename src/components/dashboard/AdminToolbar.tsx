@@ -324,6 +324,13 @@ const cardTemplates: CardTemplate[] = [
     icon: History,
     description: 'All available BA data'
   },
+  {
+    id: 'cdc-history',
+    title: 'CDC Complete History',
+    category: 'charts',
+    icon: History,
+    description: 'All available CDC data'
+  },
 
   // KPI & Metrics
   {
@@ -570,6 +577,9 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
   const isBAYoY = template.id === 'ba-yoy';
   const isBAHistory = template.id === 'ba-history';
 
+  // CDC cards - all styled in teal (#14b8a6)
+  const isCDCHistory = template.id === 'cdc-history';
+
   // Census data cards - all styled in yellow (#eab308)
   const isCensusCard = isAgeBySex || isDwellingType || isCountryOfBirth ||
                        isAustralianBorn || isCitizenship || isCitizenshipTrend || isIncome;
@@ -579,6 +589,9 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
 
   // BA cards grouped
   const isBACard = isBADaily || isBAWeekly || isBAMonthly || isBA13Month || isBAYoY || isBAHistory;
+
+  // CDC cards grouped
+  const isCDCCard = isCDCHistory;
 
   const styles = isSearchGeography ? {
     bg: 'bg-zinc-900',
@@ -605,6 +618,11 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
     border: 'border-[#6366f1]/50',
     text: 'text-[#6366f1]',
     hover: 'hover:border-[#6366f1] hover:shadow-[0_0_15px_rgba(99,102,241,0.5)]'
+  } : isCDCCard ? {
+    bg: 'bg-zinc-900',
+    border: 'border-[#14b8a6]/50',
+    text: 'text-[#14b8a6]',
+    hover: 'hover:border-[#14b8a6] hover:shadow-[0_0_15px_rgba(20,184,166,0.5)]'
   } : categoryStyles[template.category];
 
   return (

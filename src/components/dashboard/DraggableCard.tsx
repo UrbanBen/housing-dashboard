@@ -45,6 +45,7 @@ import { BAMonthlyCard } from './BAMonthlyCard';
 import { BA13MonthCard } from './BA13MonthCard';
 import { BAYoYCard } from './BAYoYCard';
 import { BAHistoryCard } from './BAHistoryCard';
+import { CDCHistoryCard } from './CDCHistoryCard';
 import { FeedbackCard } from './FeedbackCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -873,6 +874,9 @@ export function DraggableCard({
       case 'ba-history':
         return <BAHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
 
+      case 'cdc-history':
+        return <CDCHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
       default:
         return (
           <Card className={getCardClassName()}>
@@ -1008,7 +1012,7 @@ export function DraggableCard({
       )}
 
       {/* Grid Span Controls - Only for specific cards in Edit Mode */}
-      {isEditMode && !isSortableDragging && onCardSizeChange && ['housing-pipeline', 'building-approvals-chart', 'market-overview', 'age-by-sex', 'dwelling-type', 'da-history', 'oc-history'].includes(card.type) && (
+      {isEditMode && !isSortableDragging && onCardSizeChange && ['housing-pipeline', 'building-approvals-chart', 'market-overview', 'age-by-sex', 'dwelling-type', 'da-history', 'oc-history', 'ba-history', 'cdc-history'].includes(card.type) && (
         <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10 flex gap-1 bg-background/90 backdrop-blur border border-border rounded-lg p-1 shadow-lg pointer-events-auto">
           <button
             onClick={(e) => {
