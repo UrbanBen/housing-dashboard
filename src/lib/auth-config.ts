@@ -262,7 +262,7 @@ export const authOptions: AuthOptions = {
             `provider=${encodeURIComponent(account.provider)}&` +
             `email=${encodeURIComponent(user.email)}&` +
             `name=${encodeURIComponent(user.name || profile.name || '')}&` +
-            `image=${encodeURIComponent(user.image || profile.picture || '')}&` +
+            `image=${encodeURIComponent(user.image || (profile as any).picture || '')}&` +
             `providerId=${encodeURIComponent(account.providerAccountId)}`;
 
           // Redirect to register page
