@@ -53,6 +53,8 @@ export type CardType =
   | 'ba-13-month'
   | 'ba-yoy'
   | 'ba-history'
+  // CDC Comprehensive Cards
+  | 'cdc-history'
   // User Interaction Cards
   | 'feedback'
   // New template types from AdminToolbar
