@@ -85,7 +85,7 @@ function buildHistoryQuery(lgaCode?: string, lgaName?: string): string {
       lga_name,
       total_dwellings,
       'Complying Development' as development_type
-    FROM housing_dashboard.cdc_histoic
+    FROM housing_dashboard.cdc_historic
     ${periodFilter}
     ORDER BY period_start ASC
   `;
