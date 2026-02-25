@@ -70,7 +70,7 @@ function initReadonlyPool(): Pool {
     console.log('[DB Pool] Initializing READONLY pool...');
 
     // Try environment variable first (production/Vercel), then fall back to file (local dev)
-    let password = process.env.DATABASE_PASSWORD;
+    let password: string | null | undefined = process.env.DATABASE_PASSWORD;
 
     if (!password) {
       password = readPasswordFromFile('/users/ben/permissions/.env.readonly');
@@ -110,7 +110,7 @@ function initAdminPool(): Pool {
     console.log('[DB Pool] Initializing ADMIN pool...');
 
     // Try environment variable first (production/Vercel), then fall back to file (local dev)
-    let password = process.env.DATABASE_ADMIN_PASSWORD;
+    let password: string | null | undefined = process.env.DATABASE_ADMIN_PASSWORD;
 
     if (!password) {
       password = readPasswordFromFile('/users/ben/permissions/.env.admin');
