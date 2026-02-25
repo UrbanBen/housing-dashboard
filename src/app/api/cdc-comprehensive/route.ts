@@ -79,10 +79,15 @@ function buildHistoryQuery(lgaCode?: string, lgaName?: string): string {
   const whereClauseWithAnd = whereClause ? `WHERE ${whereClause}` : '';
 
   return `
-    SELECT *
+    SELECT
+      period_start,
+      lga_code,
+      lga_name,
+      total_dwellings,
+      development_type
     FROM housing_dashboard.cdc_historic
     ${whereClauseWithAnd}
-    LIMIT 5
+    ORDER BY period_start ASC
   `;
 }
 
@@ -94,7 +99,7 @@ function buildWhereClause(lgaCode?: string, lgaName?: string): string {
   if (lgaCode) {
     return `lga_code = $1`;
   } else if (lgaName) {
-    return `lga_name = $1`;
+    return `lga_name ILIKE $1`;
   }
   return '';
 }
