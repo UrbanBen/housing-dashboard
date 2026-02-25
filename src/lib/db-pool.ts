@@ -69,7 +69,12 @@ function initReadonlyPool(): Pool {
   if (!readonlyPool) {
     console.log('[DB Pool] Initializing READONLY pool...');
 
-    const password = readPasswordFromFile('/users/ben/permissions/.env.readonly');
+    // Try environment variable first (production/Vercel), then fall back to file (local dev)
+    let password = process.env.DATABASE_PASSWORD;
+
+    if (!password) {
+      password = readPasswordFromFile('/users/ben/permissions/.env.readonly');
+    }
 
     if (!password) {
       throw new Error('Failed to read readonly database password');
@@ -104,7 +109,12 @@ function initAdminPool(): Pool {
   if (!adminPool) {
     console.log('[DB Pool] Initializing ADMIN pool...');
 
-    const password = readPasswordFromFile('/users/ben/permissions/.env.admin');
+    // Try environment variable first (production/Vercel), then fall back to file (local dev)
+    let password = process.env.DATABASE_ADMIN_PASSWORD;
+
+    if (!password) {
+      password = readPasswordFromFile('/users/ben/permissions/.env.admin');
+    }
 
     if (!password) {
       throw new Error('Failed to read admin database password');
