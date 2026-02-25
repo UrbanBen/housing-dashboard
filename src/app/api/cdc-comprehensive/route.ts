@@ -76,17 +76,19 @@ export async function POST(request: NextRequest) {
 
 function buildHistoryQuery(lgaCode?: string, lgaName?: string): string {
   const whereClause = buildWhereClause(lgaCode, lgaName);
-  const whereClauseWithAnd = whereClause ? `WHERE ${whereClause}` : '';
+  const periodFilter = whereClause
+    ? `WHERE ${whereClause} AND period_type = 'monthly'`
+    : `WHERE period_type = 'monthly'`;
 
   return `
     SELECT
       period_start,
       lga_code,
       lga_name,
-      total_dwellings,
-      development_type
-    FROM housing_dashboard.cdc_historic
-    ${whereClauseWithAnd}
+      total_units_proposed as total_dwellings,
+      'Construction Certificate' as development_type
+    FROM housing_dashboard.cc_aggregated
+    ${periodFilter}
     ORDER BY period_start ASC
   `;
 }
