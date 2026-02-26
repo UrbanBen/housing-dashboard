@@ -39,19 +39,20 @@ export default function RegisterPage() {
     setFieldErrors({});
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const name = formData.get('name') as string;
 
     try {
       if (isOAuthSignup && oauthProvider && oauthProviderId) {
+        // For OAuth signup, use URL parameters (disabled fields aren't in FormData)
+        const name = (formData.get('name') as string) || oauthName;
+        const email = oauthEmail; // Email field is disabled, use URL parameter
+
         // Debug logging
-        console.log('[OAuth Signup] Form data:', {
+        console.log('[OAuth Signup] OAuth data:', {
           email,
           name,
           oauthProvider,
           oauthProviderId,
-          oauthEmail,
-          oauthName,
+          fromURL: { oauthEmail, oauthName },
         });
 
         // Validate required fields for OAuth signup
@@ -100,6 +101,8 @@ export default function RegisterPage() {
       }
 
       // Regular email/password signup
+      const email = formData.get('email') as string;
+      const name = formData.get('name') as string;
       const password = formData.get('password') as string;
       const confirmPassword = formData.get('confirmPassword') as string;
 
