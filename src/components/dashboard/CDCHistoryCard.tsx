@@ -200,7 +200,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
               </div>
 
               <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-lg p-3 text-center hover:bg-cyan-500/10 transition-all">
-                <div className="whitespace-nowrap flex items-center justify-center gap-1">
+                <div className="whitespace-nowrap flex items-baseline justify-center gap-1">
                   {(dateRange?.timeframe || '0 months').split(' ').map((part, idx) => {
                     const isNumber = !isNaN(Number(part));
                     return (
