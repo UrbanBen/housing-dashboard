@@ -313,7 +313,9 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
                     stroke="#14b8a6"
                     fill="hsl(var(--muted))"
                     fillOpacity={0.3}
+                    travellerWidth={10}
                     onChange={(range: any) => {
+                      console.log('[CDC History] Brush changed:', range);
                       if (range && range.startIndex !== undefined && range.endIndex !== undefined) {
                         setBrushRange({ startIndex: range.startIndex, endIndex: range.endIndex });
                       }
