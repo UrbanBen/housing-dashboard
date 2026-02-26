@@ -116,13 +116,24 @@ function calculateSummary(rows: any[]): any {
     return {
       total_records: 0,
       total_dwellings: 0,
+      monthly_average: 0,
+      annual_average: 0,
     };
   }
 
   const totalDwellings = rows.reduce((sum, row) => sum + (parseInt(row.total_dwellings) || 0), 0);
 
+  // Calculate monthly average
+  const monthlyAverage = rows.length > 0 ? totalDwellings / rows.length : 0;
+
+  // Calculate annual average by getting unique years
+  const years = new Set(rows.map(row => new Date(row.period_start).getFullYear()));
+  const annualAverage = years.size > 0 ? totalDwellings / years.size : 0;
+
   return {
     total_records: rows.length,
     total_dwellings: totalDwellings,
+    monthly_average: Math.round(monthlyAverage * 10) / 10, // Round to 1 decimal
+    annual_average: Math.round(annualAverage * 10) / 10,   // Round to 1 decimal
   };
 }

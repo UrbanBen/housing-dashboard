@@ -81,7 +81,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
       case 'small':
         return {
           height: 250,
-          summaryGrid: 'grid grid-cols-1 gap-2 mb-4',
+          summaryGrid: 'grid grid-cols-2 gap-2 mb-4',
           fontSize: 'text-base',
           showBrush: false,
           xAxisInterval: 'preserveStartEnd' as const
@@ -89,7 +89,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
       case 'medium':
         return {
           height: 300,
-          summaryGrid: 'grid grid-cols-2 gap-2 mb-5',
+          summaryGrid: 'grid grid-cols-4 gap-2 mb-5',
           fontSize: 'text-xl',
           showBrush: true,
           xAxisInterval: 'preserveStartEnd' as const
@@ -97,7 +97,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
       case 'large':
         return {
           height: 350,
-          summaryGrid: 'grid grid-cols-2 gap-3 mb-6',
+          summaryGrid: 'grid grid-cols-4 gap-3 mb-6',
           fontSize: 'text-2xl',
           showBrush: true,
           xAxisInterval: 'preserveStartEnd' as const
@@ -105,7 +105,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
       case 'xl':
         return {
           height: 400,
-          summaryGrid: 'grid grid-cols-2 gap-4 mb-6',
+          summaryGrid: 'grid grid-cols-4 gap-4 mb-6',
           fontSize: 'text-3xl',
           showBrush: true,
           xAxisInterval: 'preserveStartEnd' as const
@@ -113,7 +113,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
       default:
         return {
           height: 350,
-          summaryGrid: 'grid grid-cols-2 gap-3 mb-6',
+          summaryGrid: 'grid grid-cols-4 gap-3 mb-6',
           fontSize: 'text-2xl',
           showBrush: true,
           xAxisInterval: 'preserveStartEnd' as const
@@ -184,6 +184,20 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
                   {dateRange?.years || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Years of Data</div>
+              </div>
+
+              <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-3 text-center hover:bg-emerald-500/10 transition-all">
+                <div className={`${chartConfig.fontSize} font-bold text-emerald-600 dark:text-emerald-400`}>
+                  {summary?.monthly_average?.toLocaleString() || 0}
+                </div>
+                <div className="text-xs text-muted-foreground">Monthly Average CDC Dwellings Approved</div>
+              </div>
+
+              <div className="bg-sky-500/5 border border-sky-500/10 rounded-lg p-3 text-center hover:bg-sky-500/10 transition-all">
+                <div className={`${chartConfig.fontSize} font-bold text-sky-600 dark:text-sky-400`}>
+                  {summary?.annual_average?.toLocaleString() || 0}
+                </div>
+                <div className="text-xs text-muted-foreground">Annual Average CDC Dwellings Approved</div>
               </div>
             </div>
 
