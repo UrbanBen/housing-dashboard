@@ -83,7 +83,7 @@ function buildHistoryQuery(lgaCode?: string, lgaName?: string): string {
       month as period_start,
       lga_code,
       lga_name,
-      monthly_new_dwellings as total_dwellings,
+      COALESCE(monthly_new_dwellings, 0) as total_dwellings,
       total_cdcs,
       'Complying Development' as development_type
     FROM housing_dashboard.cdc_historic
