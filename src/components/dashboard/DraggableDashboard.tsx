@@ -58,7 +58,6 @@ export type CardType =
   // User Interaction Cards
   | 'feedback'
   // New template types from AdminToolbar
-  | 'blank-card'
   | 'geography-search'
   | 'advanced-search'
   | 'interactive-map'

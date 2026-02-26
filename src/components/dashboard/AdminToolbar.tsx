@@ -51,15 +51,6 @@ interface CardTemplate {
 
 // Available card templates and elements
 const cardTemplates: CardTemplate[] = [
-  // Blank Card
-  {
-    id: 'blank-card',
-    title: 'Blank Card',
-    category: 'blank',
-    icon: Plus,
-    description: 'Empty card to configure from scratch'
-  },
-
   // Search Cards
   {
     id: 'search-geography-card',

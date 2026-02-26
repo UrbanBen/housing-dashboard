@@ -284,25 +284,6 @@ export function DraggableCard({
         );
 
       // New template types from AdminToolbar
-      case 'blank-card':
-        return (
-          <Card className={getCardClassName('min-h-[200px]')}>
-            <CardHeader>
-                              <CardTitle>Blank Card</CardTitle>
-
-                              <CardDescription>Click to configure data source and content</CardDescription>
-
-            </CardHeader>
-            <CardContent className="flex items-center justify-center h-32">
-                              <div className="text-center text-muted-foreground">
-                  <Settings className="h-8 w-8 mx-auto mb-2" />
-                  <p>Configure this card</p>
-                </div>
-              
-            </CardContent>
-          </Card>
-        );
-
       case 'geography-search':
         return (
                       <LGALookup
