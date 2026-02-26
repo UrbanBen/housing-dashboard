@@ -80,14 +80,15 @@ function buildHistoryQuery(lgaCode?: string, lgaName?: string): string {
 
   return `
     SELECT
-      period_start,
+      month as period_start,
       lga_code,
       lga_name,
-      total_dwellings,
+      monthly_new_dwellings as total_dwellings,
+      total_cdcs,
       'Complying Development' as development_type
     FROM housing_dashboard.cdc_historic
     ${periodFilter}
-    ORDER BY period_start ASC
+    ORDER BY month ASC
   `;
 }
 
