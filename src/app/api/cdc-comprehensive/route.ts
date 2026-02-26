@@ -126,9 +126,8 @@ function calculateSummary(rows: any[]): any {
   // Calculate monthly average
   const monthlyAverage = rows.length > 0 ? totalDwellings / rows.length : 0;
 
-  // Calculate annual average by getting unique years
-  const years = new Set(rows.map(row => new Date(row.period_start).getFullYear()));
-  const annualAverage = years.size > 0 ? totalDwellings / years.size : 0;
+  // Calculate annual average: monthly average × 12 months
+  const annualAverage = monthlyAverage * 12;
 
   return {
     total_records: rows.length,
