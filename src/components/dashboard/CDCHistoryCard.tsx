@@ -66,10 +66,30 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
     if (data.length === 0) return null;
     const earliest = new Date(data[0].period_start);
     const latest = new Date(data[data.length - 1].period_start);
+
+    // Calculate total months difference
+    const totalMonths = (latest.getFullYear() - earliest.getFullYear()) * 12
+                       + (latest.getMonth() - earliest.getMonth());
+
+    const years = Math.floor(totalMonths / 12);
+    const months = totalMonths % 12;
+
+    // Format timeframe string
+    let timeframe = '';
+    if (years > 0) {
+      timeframe += `${years} year${years !== 1 ? 's' : ''}`;
+    }
+    if (months > 0) {
+      if (timeframe) timeframe += ' & ';
+      timeframe += `${months} month${months !== 1 ? 's' : ''}`;
+    }
+    if (!timeframe) timeframe = '0 months';
+
     return {
       from: earliest.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' }),
       to: latest.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' }),
-      years: latest.getFullYear() - earliest.getFullYear() + 1
+      years: latest.getFullYear() - earliest.getFullYear() + 1,
+      timeframe: timeframe
     };
   };
 
@@ -180,10 +200,10 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
               </div>
 
               <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-lg p-3 text-center hover:bg-cyan-500/10 transition-all">
-                <div className={`${chartConfig.fontSize} font-bold text-cyan-600 dark:text-cyan-400`}>
-                  {dateRange?.years || 0}
+                <div className="text-base font-bold text-cyan-600 dark:text-cyan-400 whitespace-nowrap">
+                  {dateRange?.timeframe || '0 months'}
                 </div>
-                <div className="text-xs text-muted-foreground">Years of Data</div>
+                <div className="text-xs text-muted-foreground">Time Frame</div>
               </div>
 
               <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-3 text-center hover:bg-emerald-500/10 transition-all">
