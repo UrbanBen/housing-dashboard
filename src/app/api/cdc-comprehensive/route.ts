@@ -107,7 +107,7 @@ function buildWhereClause(lgaCode?: string, lgaName?: string): string {
 
 function buildParams(lgaCode?: string, lgaName?: string): any[] {
   if (lgaCode) return [lgaCode];
-  if (lgaName) return [lgaName];
+  if (lgaName) return [`%${lgaName}%`];
   return [];
 }
 
