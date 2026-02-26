@@ -44,9 +44,25 @@ export default function RegisterPage() {
 
     try {
       if (isOAuthSignup && oauthProvider && oauthProviderId) {
+        // Debug logging
+        console.log('[OAuth Signup] Form data:', {
+          email,
+          name,
+          oauthProvider,
+          oauthProviderId,
+          oauthEmail,
+          oauthName,
+        });
+
         // Validate required fields for OAuth signup
-        if (!email || !name || !oauthProvider || !oauthProviderId) {
-          setError('Missing required information for OAuth signup');
+        const missingFields: string[] = [];
+        if (!email) missingFields.push('email');
+        if (!name) missingFields.push('name');
+        if (!oauthProvider) missingFields.push('provider');
+        if (!oauthProviderId) missingFields.push('provider ID');
+
+        if (missingFields.length > 0) {
+          setError(`Missing required information: ${missingFields.join(', ')}`);
           setIsLoading(false);
           return;
         }

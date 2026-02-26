@@ -237,6 +237,16 @@ export const authOptions: AuthOptions = {
       // For OAuth providers (Microsoft, Google)
       if (account && profile && user.email) {
         try {
+          // Debug logging for OAuth data
+          console.log('[NextAuth] OAuth sign in data:', {
+            provider: account.provider,
+            email: user.email,
+            userName: user.name,
+            profileName: (profile as any).name,
+            providerAccountId: account.providerAccountId,
+            hasImage: !!(user.image || (profile as any).picture),
+          });
+
           // Check if user already exists
           const existingUser = await getUserByEmail(user.email);
 
@@ -257,13 +267,25 @@ export const authOptions: AuthOptions = {
           }
 
           // New OAuth user - redirect to registration page with prefilled data
+          const name = user.name || (profile as any).name || '';
+          const image = user.image || (profile as any).picture || '';
+          const providerId = account.providerAccountId || '';
+
+          console.log('[NextAuth] Redirecting to register with:', {
+            provider: account.provider,
+            email: user.email,
+            name,
+            image,
+            providerId,
+          });
+
           const registerUrl = `/register?` +
             `oauth=true&` +
             `provider=${encodeURIComponent(account.provider)}&` +
             `email=${encodeURIComponent(user.email)}&` +
-            `name=${encodeURIComponent(user.name || profile.name || '')}&` +
-            `image=${encodeURIComponent(user.image || (profile as any).picture || '')}&` +
-            `providerId=${encodeURIComponent(account.providerAccountId)}`;
+            `name=${encodeURIComponent(name)}&` +
+            `image=${encodeURIComponent(image)}&` +
+            `providerId=${encodeURIComponent(providerId)}`;
 
           // Redirect to register page
           return registerUrl;
