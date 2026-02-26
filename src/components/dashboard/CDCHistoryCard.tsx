@@ -21,11 +21,13 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<any>(null);
+  const [brushRange, setBrushRange] = useState<{ startIndex: number; endIndex: number } | null>(null);
 
   useEffect(() => {
     if (!selectedLGA) {
       setData([]);
       setSummary(null);
+      setBrushRange(null);
       return;
     }
 
@@ -48,6 +50,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
         if (result.success) {
           setData(result.data);
           setSummary(result.summary);
+          setBrushRange(null); // Reset brush when new data loads
         } else {
           setError(result.error || 'Failed to fetch data');
         }
@@ -61,11 +64,42 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
     fetchData();
   }, [selectedLGA]);
 
+  // Get active data based on brush selection
+  const getActiveData = () => {
+    if (!brushRange || data.length === 0) return data;
+    return data.slice(brushRange.startIndex, brushRange.endIndex + 1);
+  };
+
+  const activeData = getActiveData();
+
+  // Calculate summary from data subset
+  const calculateSummaryFromData = (dataSubset: HistoryData[]) => {
+    if (dataSubset.length === 0) {
+      return {
+        total_dwellings: 0,
+        monthly_average: 0,
+        annual_average: 0,
+      };
+    }
+
+    const totalDwellings = dataSubset.reduce((sum, item) => sum + (item.total_dwellings || 0), 0);
+    const monthlyAverage = totalDwellings / dataSubset.length;
+    const annualAverage = monthlyAverage * 12;
+
+    return {
+      total_dwellings: totalDwellings,
+      monthly_average: Math.round(monthlyAverage * 10) / 10,
+      annual_average: Math.round(annualAverage * 10) / 10,
+    };
+  };
+
+  const activeSummary = brushRange ? calculateSummaryFromData(activeData) : summary;
+
   // Calculate date range
   const getDateRange = () => {
-    if (data.length === 0) return null;
-    const earliest = new Date(data[0].period_start);
-    const latest = new Date(data[data.length - 1].period_start);
+    if (activeData.length === 0) return null;
+    const earliest = new Date(activeData[0].period_start);
+    const latest = new Date(activeData[activeData.length - 1].period_start);
 
     // Calculate total months difference
     const totalMonths = (latest.getFullYear() - earliest.getFullYear()) * 12
@@ -194,7 +228,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
             <div className={chartConfig.summaryGrid}>
               <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg p-3 text-center hover:bg-teal-500/10 transition-all">
                 <div className={`${chartConfig.fontSize} font-bold text-teal-600 dark:text-teal-400`}>
-                  {summary?.total_dwellings?.toLocaleString() || 0}
+                  {activeSummary?.total_dwellings?.toLocaleString() || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Total Approved Dwellings</div>
               </div>
@@ -221,14 +255,14 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
 
               <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg p-3 text-center hover:bg-teal-500/10 transition-all">
                 <div className={`${chartConfig.fontSize} font-bold text-teal-600 dark:text-teal-400`}>
-                  {summary?.monthly_average?.toLocaleString() || 0}
+                  {activeSummary?.monthly_average?.toLocaleString() || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Monthly Average CDC Dwellings Approved</div>
               </div>
 
               <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg p-3 text-center hover:bg-teal-500/10 transition-all">
                 <div className={`${chartConfig.fontSize} font-bold text-teal-600 dark:text-teal-400`}>
-                  {summary?.annual_average?.toLocaleString() || 0}
+                  {activeSummary?.annual_average?.toLocaleString() || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Annual Average CDC Dwellings Approved</div>
               </div>
@@ -279,6 +313,11 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
                     stroke="#14b8a6"
                     fill="hsl(var(--muted))"
                     fillOpacity={0.3}
+                    onChange={(range: any) => {
+                      if (range && range.startIndex !== undefined && range.endIndex !== undefined) {
+                        setBrushRange({ startIndex: range.startIndex, endIndex: range.endIndex });
+                      }
+                    }}
                   />
                 )}
               </AreaChart>
