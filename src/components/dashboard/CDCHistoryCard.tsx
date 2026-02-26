@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileCheck } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from 'recharts';
 import type { LGA } from '@/components/filters/LGALookup';
 
 interface CDCHistoryCardProps {
@@ -160,7 +160,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
           <div className="flex items-center gap-3">
             <FileCheck className="h-6 w-6 text-teal-500" />
             <div>
-              <CardTitle className="text-xl">Complying Development History</CardTitle>
+              <CardTitle className="text-xl text-teal-600 dark:text-teal-400">Complying Development History</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 All available data • {selectedLGA?.name || 'Select LGA'}
               </p>
@@ -199,7 +199,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
                 <div className="text-xs text-muted-foreground">Total Approved Dwellings</div>
               </div>
 
-              <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-lg p-3 text-center hover:bg-cyan-500/10 transition-all">
+              <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg p-3 text-center hover:bg-teal-500/10 transition-all">
                 <div className="whitespace-nowrap flex items-baseline justify-center gap-1">
                   {(dateRange?.timeframe || '0 months').split(' ').map((part, idx) => {
                     const isNumber = !isNaN(Number(part));
@@ -207,7 +207,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
                       <span
                         key={idx}
                         className={isNumber
-                          ? `${chartConfig.fontSize} font-bold text-cyan-600 dark:text-cyan-400`
+                          ? `${chartConfig.fontSize} font-bold text-teal-600 dark:text-teal-400`
                           : 'text-sm text-muted-foreground'
                         }
                       >
@@ -219,15 +219,15 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
                 <div className="text-xs text-muted-foreground">Time Frame</div>
               </div>
 
-              <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-3 text-center hover:bg-emerald-500/10 transition-all">
-                <div className={`${chartConfig.fontSize} font-bold text-emerald-600 dark:text-emerald-400`}>
+              <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg p-3 text-center hover:bg-teal-500/10 transition-all">
+                <div className={`${chartConfig.fontSize} font-bold text-teal-600 dark:text-teal-400`}>
                   {summary?.monthly_average?.toLocaleString() || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Monthly Average CDC Dwellings Approved</div>
               </div>
 
-              <div className="bg-sky-500/5 border border-sky-500/10 rounded-lg p-3 text-center hover:bg-sky-500/10 transition-all">
-                <div className={`${chartConfig.fontSize} font-bold text-sky-600 dark:text-sky-400`}>
+              <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg p-3 text-center hover:bg-teal-500/10 transition-all">
+                <div className={`${chartConfig.fontSize} font-bold text-teal-600 dark:text-teal-400`}>
                   {summary?.annual_average?.toLocaleString() || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Annual Average CDC Dwellings Approved</div>
@@ -236,7 +236,13 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
 
             {/* Interactive Timeline Chart with Brush */}
             <ResponsiveContainer width="100%" height={chartConfig.height}>
-              <LineChart data={chartData}>
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorDwellings" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#14b8a6" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis
                   dataKey="date"
@@ -258,13 +264,13 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
                   }}
                 />
                 <Legend />
-                <Line
+                <Area
                   type="monotone"
                   dataKey="Dwellings"
                   stroke="#14b8a6"
                   strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4 }}
+                  fill="url(#colorDwellings)"
+                  name="Dwellings"
                 />
                 {chartConfig.showBrush && (
                   <Brush
@@ -275,7 +281,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
                     fillOpacity={0.3}
                   />
                 )}
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
 
             {dateRange && (
