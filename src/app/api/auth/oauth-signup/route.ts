@@ -36,11 +36,22 @@ export async function POST(request: NextRequest) {
     const validationResult = oauthSignupSchema.safeParse(body);
 
     if (!validationResult.success) {
+      const errors = validationResult.error.flatten().fieldErrors;
+      const firstError = Object.entries(errors)[0];
+      const errorMessage = firstError
+        ? `${firstError[0]}: ${firstError[1]?.[0]}`
+        : 'Validation failed';
+
+      console.error('[OAuth Signup] Validation failed:', {
+        body,
+        errors,
+      });
+
       return NextResponse.json(
         {
           success: false,
-          error: 'Validation failed',
-          details: validationResult.error.flatten().fieldErrors,
+          error: errorMessage,
+          details: errors,
         },
         { status: 400 }
       );

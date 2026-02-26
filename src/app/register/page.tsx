@@ -26,7 +26,7 @@ export default function RegisterPage() {
 
   // Check if this is an OAuth signup
   const isOAuthSignup = searchParams.get('oauth') === 'true';
-  const oauthProvider = searchParams.get('provider');
+  const oauthProvider = searchParams.get('provider') || '';
   const oauthEmail = searchParams.get('email') || '';
   const oauthName = searchParams.get('name') || '';
   const oauthImage = searchParams.get('image') || '';
@@ -44,6 +44,13 @@ export default function RegisterPage() {
 
     try {
       if (isOAuthSignup && oauthProvider && oauthProviderId) {
+        // Validate required fields for OAuth signup
+        if (!email || !name || !oauthProvider || !oauthProviderId) {
+          setError('Missing required information for OAuth signup');
+          setIsLoading(false);
+          return;
+        }
+
         // OAuth signup - create user without password
         const response = await fetch('/api/auth/oauth-signup', {
           method: 'POST',
@@ -51,9 +58,9 @@ export default function RegisterPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            email,
-            name,
-            image: oauthImage,
+            email: email.trim(),
+            name: name.trim(),
+            image: oauthImage || undefined, // Convert empty string to undefined
             provider: oauthProvider,
             providerAccountId: oauthProviderId,
           }),
@@ -183,6 +190,7 @@ export default function RegisterPage() {
                 name="name"
                 type="text"
                 placeholder="John Doe"
+                required
                 disabled={isLoading}
                 defaultValue={oauthName}
                 autoComplete="name"
