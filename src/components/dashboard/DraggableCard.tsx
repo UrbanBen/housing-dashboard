@@ -118,15 +118,6 @@ export function DraggableCard({
     };
 
     switch (card.type) {
-      case 'lga-lookup':
-        return (
-                      <LGALookup
-              selectedLGA={selectedLGA}
-              onLGAChange={onLGAChange}
-            />
-          
-        );
-
       case 'lga-details':
         return (
                       <LGADetails selectedLGA={selectedLGA} />
@@ -152,33 +143,6 @@ export function DraggableCard({
         return (
                       <LGAMetrics selectedLGA={selectedLGA} />
           
-        );
-
-      case 'housing-pipeline':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <GitBranch className="h-6 w-6 text-primary" />
-                  <div>
-                                          <CardTitle className="text-xl">Housing Development Pipeline</CardTitle>
-
-                                          <CardDescription className="text-base mt-1">
-                        End-to-end flow from land release through to building completion
-                      </CardDescription>
-
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-2">
-                              <div className="h-96">
-                  <HousingSankeyChart />
-                </div>
-
-            </CardContent>
-          </Card>
         );
 
       case 'lga-dwelling-approvals': {
@@ -240,73 +204,6 @@ export function DraggableCard({
             <CardContent className="pt-2">
                               <MarketOverview />
 
-            </CardContent>
-          </Card>
-        );
-
-      case 'kpi-cards':
-        return (
-          <Card className={getCardClassName('bg-card/50 backdrop-blur-sm')}>
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-3">
-                <BarChart3 className="h-6 w-6 text-primary" />
-                <CardTitle>Market KPIs</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                {/* Median Home Price */}
-                <div className="bg-primary/5 border border-primary/10 rounded-lg p-4 hover:bg-primary/10 transition-all">
-                  <div className="flex items-center gap-2 mb-2">
-                    <DollarSign className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-medium text-muted-foreground">Median Home Price</span>
-                  </div>
-                  <div className="text-3xl font-bold text-foreground mb-1">$485,200</div>
-                  <div className="text-xs flex items-center text-primary">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    +2.4% from last month
-                  </div>
-                </div>
-
-                {/* Market Velocity */}
-                <div className="bg-chart-2/5 border border-chart-2/10 rounded-lg p-4 hover:bg-chart-2/10 transition-all">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Activity className="h-5 w-5 text-chart-2" />
-                    <span className="text-sm font-medium text-muted-foreground">Market Velocity</span>
-                  </div>
-                  <div className="text-3xl font-bold text-foreground mb-1">18 days</div>
-                  <div className="text-xs flex items-center text-chart-2">
-                    <TrendingDown className="h-4 w-4 mr-1" />
-                    -3 days from last month
-                  </div>
-                </div>
-
-                {/* Housing Inventory */}
-                <div className="bg-chart-3/5 border border-chart-3/10 rounded-lg p-4 hover:bg-chart-3/10 transition-all">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Home className="h-5 w-5 text-chart-3" />
-                    <span className="text-sm font-medium text-muted-foreground">Housing Inventory</span>
-                  </div>
-                  <div className="text-3xl font-bold text-foreground mb-1">2,847</div>
-                  <div className="text-xs flex items-center text-chart-3">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    +8.2% from last month
-                  </div>
-                </div>
-
-                {/* Price-to-Income Ratio */}
-                <div className="bg-highlight/5 border border-highlight/10 rounded-lg p-4 hover:bg-highlight/10 transition-all">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-5 w-5 text-highlight" />
-                    <span className="text-sm font-medium text-muted-foreground">Price-to-Income Ratio</span>
-                  </div>
-                  <div className="text-3xl font-bold text-foreground mb-1">4.2x</div>
-                  <div className="text-xs flex items-center text-highlight">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    +0.3 from last quarter
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         );
@@ -375,53 +272,6 @@ export function DraggableCard({
           </Card>
         );
 
-      case 'data-freshness':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="text-xl text-foreground flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-chart-4" />
-                  Data Freshness
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted-foreground">Price Data</span>
-                    <span className="text-sm bg-primary/15 text-primary px-3 py-1.5 rounded-full font-semibold">
-                      Real-time
-                    </span>
-                  </div>
-                
-                                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted-foreground">Inventory</span>
-                    <span className="text-sm bg-chart-2/15 text-chart-2 px-3 py-1.5 rounded-full font-semibold">
-                      Daily
-                    </span>
-                  </div>
-                
-                                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted-foreground">Market Stats</span>
-                    <span className="text-sm bg-chart-3/15 text-chart-3 px-3 py-1.5 rounded-full font-semibold">
-                      Weekly
-                    </span>
-                  </div>
-                
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 'abs-geography-search':
-        return (
-                      <LGALookup
-              selectedLGA={selectedLGA || null}
-              onLGAChange={onLGAChange || (() => {})}
-            />
-          
-        );
-
       case 'abs-lga-map':
         return (
           <ABSLGAMap
@@ -462,125 +312,10 @@ export function DraggableCard({
           
         );
 
-      case 'interactive-map':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <Map className="h-5 w-5" />
-                  Interactive Map
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="h-64 bg-muted/20 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <Map className="h-12 w-12 mx-auto mb-2" />
-                    <p>Interactive Map Component</p>
-                    <p className="text-xs">Configure data source to display boundaries</p>
-                  </div>
-                </div>
-
-            </CardContent>
-          </Card>
-        );
-
       case 'location-details':
         return (
                       <LGADetails selectedLGA={selectedLGA} />
 
-        );
-
-      case 'bar-chart':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
-                  Bar Chart
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <BarChart3 className="h-12 w-12 mx-auto mb-2" />
-                    <p>Bar Chart Visualization</p>
-                    <p className="text-xs">Configure data source and display options</p>
-                  </div>
-                </div>
-
-            </CardContent>
-          </Card>
-        );
-
-      case 'line-chart':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <LineChart className="h-5 w-5" />
-                  Line Chart
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <LineChart className="h-12 w-12 mx-auto mb-2" />
-                    <p>Line Chart Visualization</p>
-                    <p className="text-xs">Configure data source for time series</p>
-                  </div>
-                </div>
-
-            </CardContent>
-          </Card>
-        );
-
-      case 'pie-chart':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5" />
-                  Pie Chart
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <PieChart className="h-12 w-12 mx-auto mb-2" />
-                    <p>Pie Chart Visualization</p>
-                    <p className="text-xs">Configure data source for proportional breakdown</p>
-                  </div>
-                </div>
-
-            </CardContent>
-          </Card>
-        );
-
-      case 'trend-chart':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Trend Analysis
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <TrendingUp className="h-12 w-12 mx-auto mb-2" />
-                    <p>Advanced Trend Analysis</p>
-                    <p className="text-xs">Configure data source with forecasting</p>
-                  </div>
-                </div>
-
-            </CardContent>
-          </Card>
         );
 
       case 'housing-affordability':
@@ -662,86 +397,6 @@ export function DraggableCard({
 
             </CardContent>
           </Card>
-        );
-
-      case 'comparison-table':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <Layout className="h-5 w-5" />
-                  Comparison Table
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <Layout className="h-12 w-12 mx-auto mb-2" />
-                    <p>Area Comparison Component</p>
-                    <p className="text-xs">Configure data source for side-by-side comparisons</p>
-                  </div>
-                </div>
-
-            </CardContent>
-          </Card>
-        );
-
-      case 'time-series':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Time Series
-                </CardTitle>
-
-            </CardHeader>
-            <CardContent>
-                              <div className="h-48 bg-muted/20 rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <Calendar className="h-12 w-12 mx-auto mb-2" />
-                    <p>Historical Data Visualization</p>
-                    <p className="text-xs">Configure data source for time-based analysis</p>
-                  </div>
-                </div>
-
-            </CardContent>
-          </Card>
-        );
-
-      case 'insights-panel':
-        return (
-          <Card className={getCardClassName()}>
-            <CardHeader>
-                              <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Insights Panel
-                </CardTitle>
-              
-            </CardHeader>
-            <CardContent>
-                              <div className="space-y-3">
-                  <div className="p-3 bg-muted/20 rounded-lg">
-                    <p className="text-sm">🏠 Housing demand is outpacing supply by 15%</p>
-                  </div>
-                  <div className="p-3 bg-muted/20 rounded-lg">
-                    <p className="text-sm">📈 Property values increased 8.2% this quarter</p>
-                  </div>
-                  <p className="text-xs text-center text-muted-foreground">Configure data source for AI-generated insights</p>
-                </div>
-              
-            </CardContent>
-          </Card>
-        );
-
-      case 'test-card':
-        return (
-          <TestCard
-            isAdminMode={isAdminMode}
-            onAdminClick={() => {}}
-            title="Test"
-          />
         );
 
       case 'feedback':

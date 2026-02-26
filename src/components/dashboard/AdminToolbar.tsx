@@ -85,63 +85,14 @@ const cardTemplates: CardTemplate[] = [
 
   // Map Cards
   {
-    id: 'interactive-map',
-    title: 'Map Card',
-    category: 'map',
-    icon: Map,
-    description: 'Interactive map with boundaries'
-  },
-  {
     id: 'location-details',
     title: 'Location Details',
     category: 'map',
     icon: MapPin,
     description: 'Detailed area information'
   },
-  {
-    id: 'heat-map',
-    title: 'Heat Map',
-    category: 'map',
-    icon: Activity,
-    description: 'Data density visualization'
-  },
 
   // Chart Cards
-  {
-    id: 'bar-chart',
-    title: 'Bar Chart',
-    category: 'charts',
-    icon: BarChart3,
-    description: 'Vertical or horizontal bars'
-  },
-  {
-    id: 'line-chart',
-    title: 'Line Chart',
-    category: 'charts',
-    icon: LineChart,
-    description: 'Trend analysis over time'
-  },
-  {
-    id: 'pie-chart',
-    title: 'Pie Chart',
-    category: 'charts',
-    icon: PieChart,
-    description: 'Proportional breakdown'
-  },
-  {
-    id: 'trend-chart',
-    title: 'Trend Analysis',
-    category: 'charts',
-    icon: TrendingUp,
-    description: 'Advanced trends with forecasting'
-  },
-  {
-    id: 'time-series',
-    title: 'Time Series',
-    category: 'charts',
-    icon: Calendar,
-    description: 'Historical data over periods'
-  },
   {
     id: 'lga-dwelling-approvals',
     title: 'Building Approvals by LGA',
@@ -364,29 +315,6 @@ const cardTemplates: CardTemplate[] = [
 
   // Data Tables
   {
-    id: 'comparison-table',
-    title: 'Comparison',
-    category: 'data',
-    icon: Layout,
-    description: 'Side-by-side compare'
-  },
-  {
-    id: 'insights-panel',
-    title: 'Insights',
-    category: 'data',
-    icon: FileText,
-    description: 'AI insights'
-  },
-
-  // Database Test
-  {
-    id: 'test-card',
-    title: 'DB Test',
-    category: 'data',
-    icon: Database,
-    description: 'Connection test'
-  },
-  {
     id: 'feedback',
     title: 'User Feedback',
     category: 'data',
@@ -395,13 +323,6 @@ const cardTemplates: CardTemplate[] = [
   },
 
   // Core LGA Cards (previously not in library)
-  {
-    id: 'lga-lookup',
-    title: 'LGA Lookup',
-    category: 'search',
-    icon: Search,
-    description: 'Core LGA search and selection'
-  },
   {
     id: 'lga-details',
     title: 'LGA Details',
@@ -425,13 +346,6 @@ const cardTemplates: CardTemplate[] = [
   },
 
   // Housing & Development Cards (previously not in library)
-  {
-    id: 'housing-pipeline',
-    title: 'Housing Pipeline',
-    category: 'charts',
-    icon: Building,
-    description: 'Housing development pipeline overview'
-  },
   {
     id: 'building-approvals-chart',
     title: 'Building Approvals Chart',
@@ -462,29 +376,8 @@ const cardTemplates: CardTemplate[] = [
   },
 
   // System & Utility Cards (previously not in library)
-  {
-    id: 'data-freshness',
-    title: 'Data Freshness',
-    category: 'kpi',
-    icon: Clock,
-    description: 'Data update status indicator'
-  },
-  {
-    id: 'kpi-cards',
-    title: 'KPI Cards',
-    category: 'kpi',
-    icon: Activity,
-    description: 'Multiple KPI dashboard display'
-  },
 
   // ABS-Specific Cards (previously not in library)
-  {
-    id: 'abs-geography-search',
-    title: 'ABS Geography Search',
-    category: 'search',
-    icon: Search,
-    description: 'ABS statistical geography search'
-  },
   {
     id: 'abs-lga-map',
     title: 'ABS LGA Map',
