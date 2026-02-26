@@ -200,8 +200,21 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
               </div>
 
               <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-lg p-3 text-center hover:bg-cyan-500/10 transition-all">
-                <div className="text-base font-bold text-cyan-600 dark:text-cyan-400 whitespace-nowrap">
-                  {dateRange?.timeframe || '0 months'}
+                <div className="whitespace-nowrap flex items-center justify-center gap-1">
+                  {(dateRange?.timeframe || '0 months').split(' ').map((part, idx) => {
+                    const isNumber = !isNaN(Number(part));
+                    return (
+                      <span
+                        key={idx}
+                        className={isNumber
+                          ? `${chartConfig.fontSize} font-bold text-cyan-600 dark:text-cyan-400`
+                          : 'text-sm text-muted-foreground'
+                        }
+                      >
+                        {part}
+                      </span>
+                    );
+                  })}
                 </div>
                 <div className="text-xs text-muted-foreground">Time Frame</div>
               </div>
