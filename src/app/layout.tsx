@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "leaflet/dist/leaflet.css";
 import { SessionProvider } from "@/components/auth/SessionProvider";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -67,7 +68,9 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <SessionProvider>{children}</SessionProvider>
+        <QueryProvider>
+          <SessionProvider>{children}</SessionProvider>
+        </QueryProvider>
       </body>
     </html>
   );

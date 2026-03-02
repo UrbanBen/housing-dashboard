@@ -91,6 +91,22 @@ export function ABSLGAMap({
     setError(null);
 
     try {
+      // Check cache first
+      const { getGeometryFromCache, saveGeometryToCache } = await import('@/lib/geometry-cache');
+      const cached = getGeometryFromCache(lgaName);
+
+      if (cached) {
+        setMapData(cached);
+        setConnection(cached.connection);
+        setSelectedLGA({
+          ...lgaData,
+          geometry: cached.data?.geometry || cached.geometry
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Not in cache, fetch from API
       const config = getStoredConfig();
 
       const params = new URLSearchParams({
@@ -108,6 +124,9 @@ export function ABSLGAMap({
       if (result.success) {
         setMapData(result);
         setConnection(result.connection);
+
+        // Save to cache
+        saveGeometryToCache(lgaName, result);
 
         // Set selectedLGA with geometry attached AFTER fetch completes
         setSelectedLGA({
