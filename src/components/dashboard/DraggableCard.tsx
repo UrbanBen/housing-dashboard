@@ -47,6 +47,10 @@ import { BAYoYCard } from './BAYoYCard';
 import { BAHistoryCard } from './BAHistoryCard';
 import { CDCHistoryCard } from './CDCHistoryCard';
 import { FeedbackCard } from './FeedbackCard';
+import { MedianRentOverviewCard } from './MedianRentOverviewCard';
+import { RentByBedroomCard } from './RentByBedroomCard';
+import { RentTrendsCard } from './RentTrendsCard';
+import { RentQuartileCard } from './RentQuartileCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   TrendingUp, TrendingDown, Activity, Home, DollarSign, Building, GitBranch, MapPin,
@@ -512,6 +516,19 @@ export function DraggableCard({
 
       case 'cdc-history':
         return <CDCHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
+      // Median Rent Cards
+      case 'median-rent-overview':
+        return <MedianRentOverviewCard selectedLGA={selectedLGA} />;
+
+      case 'rent-by-bedroom':
+        return <RentByBedroomCard selectedLGA={selectedLGA} />;
+
+      case 'rent-trends':
+        return <RentTrendsCard selectedLGA={selectedLGA} />;
+
+      case 'rent-quartile':
+        return <RentQuartileCard selectedLGA={selectedLGA} />;
 
       default:
         return (

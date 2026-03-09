@@ -177,7 +177,7 @@ const cardTemplates: CardTemplate[] = [
   },
   {
     id: 'da-history',
-    title: 'DA Complete History',
+    title: 'Development Application History',
     category: 'charts',
     icon: History,
     description: 'All available DA data'
@@ -272,6 +272,36 @@ const cardTemplates: CardTemplate[] = [
     category: 'charts',
     icon: History,
     description: 'All available CDC data'
+  },
+
+  // Median Rent Cards (Fashion Red Theme)
+  {
+    id: 'median-rent-overview',
+    title: 'Median Rent Overview',
+    category: 'kpi',
+    icon: DollarSign,
+    description: 'Current quarter rent by dwelling type'
+  },
+  {
+    id: 'rent-by-bedroom',
+    title: 'Rent by Bedroom Count',
+    category: 'charts',
+    icon: BarChart3,
+    description: 'Weekly rent breakdown by bedrooms'
+  },
+  {
+    id: 'rent-trends',
+    title: 'Rent Trends Over Time',
+    category: 'charts',
+    icon: TrendingUp,
+    description: 'Historical rental trends'
+  },
+  {
+    id: 'rent-quartile',
+    title: 'Rent Distribution',
+    category: 'charts',
+    icon: BarChart3,
+    description: 'Rent quartile ranges by bedroom'
   },
 
   // KPI & Metrics

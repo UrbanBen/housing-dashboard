@@ -5,9 +5,9 @@ import Anthropic from '@anthropic-ai/sdk';
 import nodemailer from 'nodemailer';
 import { executeQuery, getAdminPool } from '@/lib/db-pool';
 
-const anthropic = new Anthropic({
+const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
-});
+}) : null;
 
 // Email transporter configuration
 const transporter = nodemailer.createTransport({
@@ -27,6 +27,16 @@ interface FeedbackAnalysis {
 }
 
 async function analyzeFeedbackWithClaude(feedbackText: string): Promise<FeedbackAnalysis> {
+  // Skip Claude analysis if API key not configured
+  if (!anthropic) {
+    console.log('[Feedback] Anthropic API key not configured, using default analysis');
+    return {
+      category: 'General Feedback',
+      priority: 'Medium',
+      summary: feedbackText.substring(0, 100)
+    };
+  }
+
   try {
     const message = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
@@ -204,10 +214,18 @@ export async function POST(request: NextRequest) {
     );
     console.log('✓ Feedback stored');
 
-    // Send immediate email
-    console.log('📧 Sending email notification...');
-    await sendFeedbackEmail(feedback, analysis, userInfo, contextInfo);
-    console.log('✓ Email sent');
+    // Send immediate email (optional - skip if SMTP not configured)
+    if (process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+      console.log('📧 Sending email notification...');
+      try {
+        await sendFeedbackEmail(feedback, analysis, userInfo, contextInfo);
+        console.log('✓ Email sent');
+      } catch (emailError) {
+        console.error('⚠️ Email failed (continuing anyway):', emailError instanceof Error ? emailError.message : emailError);
+      }
+    } else {
+      console.log('⚠️ SMTP not configured, skipping email notification');
+    }
 
     return NextResponse.json({
       success: true,

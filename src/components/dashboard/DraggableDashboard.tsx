@@ -57,6 +57,11 @@ export type CardType =
   | 'cdc-history'
   // User Interaction Cards
   | 'feedback'
+  // Median Rent Cards
+  | 'median-rent-overview'
+  | 'rent-by-bedroom'
+  | 'rent-trends'
+  | 'rent-quartile'
   // New template types from AdminToolbar
   | 'geography-search'
   | 'advanced-search'

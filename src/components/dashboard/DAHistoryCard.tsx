@@ -148,9 +148,9 @@ export function DAHistoryCard({ selectedLGA, cardWidth = 'large' }: DAHistoryCar
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <History className="h-6 w-6 text-indigo-500" />
+            <History className="h-6 w-6 text-violet-500" />
             <div>
-              <CardTitle className="text-xl">Complete DA History</CardTitle>
+              <CardTitle className="text-xl text-violet-500">Development Application History</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 All available data • {selectedLGA?.name || 'Select LGA'}
               </p>
@@ -182,8 +182,8 @@ export function DAHistoryCard({ selectedLGA, cardWidth = 'large' }: DAHistoryCar
           <>
             {/* Summary Stats */}
             <div className={chartConfig.summaryGrid}>
-              <div className="bg-indigo-500/5 border border-indigo-500/10 rounded-lg p-3 text-center hover:bg-indigo-500/10 transition-all">
-                <div className={`${chartConfig.fontSize} font-bold text-indigo-600 dark:text-indigo-400`}>
+              <div className="bg-violet-500/5 border border-violet-500/10 rounded-lg p-3 text-center hover:bg-violet-500/10 transition-all">
+                <div className={`${chartConfig.fontSize} font-bold text-violet-600 dark:text-violet-400`}>
                   {summary?.total_determined?.toLocaleString() || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">All-Time Total</div>
@@ -226,7 +226,7 @@ export function DAHistoryCard({ selectedLGA, cardWidth = 'large' }: DAHistoryCar
                 <Line
                   type="monotone"
                   dataKey="Total"
-                  stroke="#6366f1"
+                  stroke="#8b5cf6"
                   strokeWidth={2}
                   dot={false}
                   activeDot={{ r: 4 }}
@@ -242,7 +242,7 @@ export function DAHistoryCard({ selectedLGA, cardWidth = 'large' }: DAHistoryCar
                   <Brush
                     dataKey="date"
                     height={30}
-                    stroke="#6366f1"
+                    stroke="#8b5cf6"
                     fill="hsl(var(--muted))"
                     fillOpacity={0.3}
                   />
