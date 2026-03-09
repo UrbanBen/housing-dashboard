@@ -10,7 +10,10 @@ interface FeedbackCardProps {
 }
 
 export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
-  const [feedback, setFeedback] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
@@ -18,8 +21,17 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!feedback.trim()) {
-      setErrorMessage('Please enter your feedback');
+    // Validation
+    if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
+      setErrorMessage('Please fill in all fields');
+      setSubmitStatus('error');
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMessage('Please enter a valid email address');
       setSubmitStatus('error');
       return;
     }
@@ -29,15 +41,16 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
     setErrorMessage('');
 
     try {
-      const response = await fetch('/api/feedback', {
+      const response = await fetch('/api/send-feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          feedback: feedback.trim(),
-          selectedLGA: selectedLGA?.name || null,
-          pageUrl: window.location.href,
+          name: name.trim(),
+          email: email.trim(),
+          subject: subject.trim(),
+          message: `${message.trim()}\n\n--- Context ---\nCurrent LGA: ${selectedLGA?.name || 'None selected'}`,
           userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString()
+          url: window.location.href
         })
       });
 
@@ -48,7 +61,10 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
       }
 
       setSubmitStatus('success');
-      setFeedback('');
+      setName('');
+      setEmail('');
+      setSubject('');
+      setMessage('');
 
       // Reset success message after 5 seconds
       setTimeout(() => {
@@ -79,13 +95,67 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="name" className="text-xs font-medium text-muted-foreground block mb-1.5">
+                Your Name *
+              </label>
+              <input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="John Doe"
+                className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                disabled={isSubmitting}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="text-xs font-medium text-muted-foreground block mb-1.5">
+                Your Email *
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="john@example.com"
+                className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                disabled={isSubmitting}
+                required
+              />
+            </div>
+          </div>
+
           <div>
+            <label htmlFor="subject" className="text-xs font-medium text-muted-foreground block mb-1.5">
+              Subject *
+            </label>
+            <input
+              id="subject"
+              type="text"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Brief description of your feedback"
+              className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={isSubmitting}
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="message" className="text-xs font-medium text-muted-foreground block mb-1.5">
+              Message *
+            </label>
             <textarea
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              placeholder="What's on your mind? Tell us about bugs, feature requests, or anything else..."
+              id="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Tell us about bugs, feature requests, or anything else..."
               className="w-full h-32 px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
               disabled={isSubmitting}
+              required
             />
             <p className="text-xs text-muted-foreground mt-2">
               {selectedLGA && (
@@ -102,7 +172,7 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
                   Thank you for your feedback!
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Your feedback has been categorized, prioritized, and sent to the team.
+                  Your message has been sent successfully. We'll get back to you soon!
                 </p>
               </div>
             </div>
@@ -124,13 +194,13 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
 
           <button
             type="submit"
-            disabled={isSubmitting || !feedback.trim()}
+            disabled={isSubmitting || !name.trim() || !email.trim() || !subject.trim() || !message.trim()}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isSubmitting ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Submitting...
+                Sending...
               </>
             ) : (
               <>
@@ -141,7 +211,7 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
           </button>
 
           <div className="text-xs text-muted-foreground text-center pt-2 border-t border-border/50">
-            Feedback is analyzed by AI and sent to bgellie@mecone.com.au
+            Feedback will be sent to researchandinsights@mecone.com.au
           </div>
         </form>
       </CardContent>
