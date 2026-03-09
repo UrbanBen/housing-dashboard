@@ -160,13 +160,13 @@ export function RentQuartileCard({ selectedLGA }: RentQuartileCardProps) {
                     {/* Labels */}
                     <div className="absolute inset-0 flex items-center justify-between px-3">
                       <span className="text-xs font-semibold text-red-600 dark:text-red-400">
-                        ${item.first_quartile_rent?.toFixed(0) || '—'}
+                        ${typeof item.first_quartile_rent === 'number' ? item.first_quartile_rent.toFixed(0) : '—'}
                       </span>
                       <span className="text-sm font-bold text-red-600 dark:text-red-400">
-                        ${item.median_rent?.toFixed(0) || '—'}
+                        ${typeof item.median_rent === 'number' ? item.median_rent.toFixed(0) : '—'}
                       </span>
                       <span className="text-xs font-semibold text-red-600 dark:text-red-400">
-                        ${item.third_quartile_rent?.toFixed(0) || '—'}
+                        ${typeof item.third_quartile_rent === 'number' ? item.third_quartile_rent.toFixed(0) : '—'}
                       </span>
                     </div>
                   </div>

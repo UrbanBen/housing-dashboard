@@ -145,7 +145,7 @@ export function RentByBedroomCard({ selectedLGA }: RentByBedroomCardProps) {
                   className="text-center p-3 bg-red-500/5 border border-red-500/10 rounded-lg"
                 >
                   <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-                    ${item.median_rent?.toFixed(0) || 'N/A'}
+                    ${typeof item.median_rent === 'number' ? item.median_rent.toFixed(0) : 'N/A'}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {item.num_bedrooms} bedroom{item.num_bedrooms !== '1' ? 's' : ''}

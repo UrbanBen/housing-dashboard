@@ -60,8 +60,10 @@ export function MedianRentOverviewCard({ selectedLGA }: MedianRentOverviewCardPr
 
   const formatChange = (value: number | null) => {
     if (value === null || value === undefined) return 'N/A';
-    const sign = value >= 0 ? '+' : '';
-    return `${sign}${value.toFixed(1)}%`;
+    const numValue = typeof value === 'number' ? value : parseFloat(String(value));
+    if (isNaN(numValue)) return 'N/A';
+    const sign = numValue >= 0 ? '+' : '';
+    return `${sign}${numValue.toFixed(1)}%`;
   };
 
   const getDwellingIcon = (type: string) => {
@@ -127,7 +129,7 @@ export function MedianRentOverviewCard({ selectedLGA }: MedianRentOverviewCardPr
                   </div>
 
                   <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">
-                    ${item.median_rent?.toFixed(0) || 'N/A'}
+                    ${typeof item.median_rent === 'number' ? item.median_rent.toFixed(0) : 'N/A'}
                     <span className="text-sm font-normal text-muted-foreground ml-1">/week</span>
                   </div>
 
