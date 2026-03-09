@@ -103,12 +103,12 @@ export function MedianRentOverviewCard({ selectedLGA }: MedianRentOverviewCardPr
 
         {!loading && !error && data.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data.map((item) => {
+            {data.map((item, index) => {
               const isIncrease = (item.quarterly_change_median_pct || 0) >= 0;
 
               return (
                 <div
-                  key={item.dwelling_type}
+                  key={`${item.dwelling_type}-${index}`}
                   className="bg-red-500/5 border border-red-500/10 rounded-lg p-4 hover:bg-red-500/10 transition-all"
                 >
                   <div className="flex items-center justify-between mb-2">

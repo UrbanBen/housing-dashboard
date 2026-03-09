@@ -52,7 +52,8 @@ export function IncomeCard({ selectedLGA, isAdminMode = false, onAdminClick }: I
             setData(null);
             return;
           }
-          throw new Error(result.error || 'Failed to fetch income data');
+          setError(result.error || 'Failed to fetch income data');
+          return;
         }
 
         setData(result.data);

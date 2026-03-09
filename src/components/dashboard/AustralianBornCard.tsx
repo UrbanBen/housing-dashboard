@@ -53,7 +53,8 @@ export function AustralianBornCard({ selectedLGA, isAdminMode = false, onAdminCl
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || 'Failed to fetch data');
+          setError(result.error || 'No data found for this LGA');
+          return;
         }
 
         if (result.summary) {

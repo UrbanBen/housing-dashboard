@@ -121,14 +121,14 @@ export function RentQuartileCard({ selectedLGA }: RentQuartileCardProps) {
 
         {!loading && !error && filteredData.length > 0 && (
           <div className="space-y-6">
-            {filteredData.map((item) => {
+            {filteredData.map((item, index) => {
               const range = (item.third_quartile_rent || 0) - (item.first_quartile_rent || 0);
               const medianPosition = item.median_rent && item.first_quartile_rent
                 ? ((item.median_rent - item.first_quartile_rent) / range) * 100
                 : 50;
 
               return (
-                <div key={item.num_bedrooms} className="space-y-2">
+                <div key={`quartile-${item.num_bedrooms}-${index}`} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">
                       {item.num_bedrooms} Bedroom{item.num_bedrooms !== '1' ? 's' : ''}

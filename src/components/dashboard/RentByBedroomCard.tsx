@@ -139,9 +139,9 @@ export function RentByBedroomCard({ selectedLGA }: RentByBedroomCardProps) {
             </ResponsiveContainer>
 
             <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-              {data.map((item) => (
+              {data.map((item, index) => (
                 <div
-                  key={item.num_bedrooms}
+                  key={`bedroom-${item.num_bedrooms}-${index}`}
                   className="text-center p-3 bg-red-500/5 border border-red-500/10 rounded-lg"
                 >
                   <div className="text-2xl font-bold text-red-600 dark:text-red-400">

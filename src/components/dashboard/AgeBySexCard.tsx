@@ -74,7 +74,9 @@ export function AgeBySexCard({ selectedLGA, isAdminMode = false, onAdminClick }:
             setIsLoading(false);
             return;
           }
-          throw new Error(result.error || 'Failed to fetch age by sex data');
+          setError(result.error || 'Failed to fetch age by sex data');
+          setIsLoading(false);
+          return;
         }
 
         if (result.data && Array.isArray(result.data)) {

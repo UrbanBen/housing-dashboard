@@ -67,7 +67,8 @@ export function CountryOfBirthCard({ selectedLGA, isAdminMode = false, onAdminCl
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || 'Failed to fetch country of birth data');
+          setError(result.error || 'Failed to fetch country of birth data');
+          return;
         }
 
         if (result.data && Array.isArray(result.data)) {
