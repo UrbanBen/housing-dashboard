@@ -129,7 +129,10 @@ export function RentByBedroomCard({ selectedLGA }: RentByBedroomCardProps) {
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
                   }}
-                  formatter={(value: number) => `$${value.toFixed(0)}`}
+                  formatter={(value: any) => {
+                    const numValue = typeof value === 'number' ? value : parseFloat(String(value));
+                    return isNaN(numValue) ? 'N/A' : `$${numValue.toFixed(0)}`;
+                  }}
                 />
                 <Legend />
                 <Bar dataKey="25th Percentile" fill="#fca5a5" />
