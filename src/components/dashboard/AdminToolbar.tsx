@@ -494,6 +494,12 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
   // CDC cards - all styled in teal (#14b8a6)
   const isCDCHistory = template.id === 'cdc-history';
 
+  // Median Rent cards - all styled in fashion red (#dc2626)
+  const isMedianRentOverview = template.id === 'median-rent-overview';
+  const isRentByBedroom = template.id === 'rent-by-bedroom';
+  const isRentTrends = template.id === 'rent-trends';
+  const isRentQuartile = template.id === 'rent-quartile';
+
   // Census data cards - all styled in yellow (#eab308)
   const isCensusCard = isAgeBySex || isDwellingType || isCountryOfBirth ||
                        isAustralianBorn || isCitizenship || isCitizenshipTrend || isIncome;
@@ -506,6 +512,9 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
 
   // CDC cards grouped
   const isCDCCard = isCDCHistory;
+
+  // Median Rent cards grouped
+  const isMedianRentCard = isMedianRentOverview || isRentByBedroom || isRentTrends || isRentQuartile;
 
   const styles = isSearchGeography ? {
     bg: 'bg-zinc-900',
@@ -522,6 +531,11 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
     border: 'border-[#eab308]/50',
     text: 'text-[#eab308]',
     hover: 'hover:border-[#eab308] hover:shadow-[0_0_15px_rgba(234,179,8,0.5)]'
+  } : isMedianRentCard ? {
+    bg: 'bg-zinc-900',
+    border: 'border-[#dc2626]/50',
+    text: 'text-[#dc2626]',
+    hover: 'hover:border-[#dc2626] hover:shadow-[0_0_15px_rgba(220,38,38,0.5)]'
   } : isOCCard ? {
     bg: 'bg-zinc-900',
     border: 'border-[#ef4444]/50',
