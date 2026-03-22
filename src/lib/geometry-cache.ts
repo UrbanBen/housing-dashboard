@@ -47,13 +47,13 @@ export function getGeometryFromCache(lgaName: string): any | null {
 export function saveGeometryToCache(lgaName: string, data: any): void {
   if (typeof window === 'undefined') return;
 
-  try {
-    const cacheKey = CACHE_KEY_PREFIX + lgaName;
-    const entry: CacheEntry = {
-      data,
-      timestamp: Date.now(),
-    };
+  const cacheKey = CACHE_KEY_PREFIX + lgaName;
+  const entry: CacheEntry = {
+    data,
+    timestamp: Date.now(),
+  };
 
+  try {
     localStorage.setItem(cacheKey, JSON.stringify(entry));
     console.log(`[Geometry Cache] Saved for ${lgaName}`);
   } catch (error) {
