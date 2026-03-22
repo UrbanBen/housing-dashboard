@@ -27,12 +27,9 @@ import { AustralianBornCard } from './AustralianBornCard';
 import { IncomeCard } from './IncomeCard';
 import { CitizenshipCard } from './CitizenshipCard';
 import { CitizenshipTrendCard } from './CitizenshipTrendCard';
-import { DADailyCard } from './DADailyCard';
-import { DAWeeklyCard } from './DAWeeklyCard';
-import { DAMonthlyCard } from './DAMonthlyCard';
-import { DA13MonthCard } from './DA13MonthCard';
-import { DAYoYCard } from './DAYoYCard';
-import { DAHistoryCard } from './DAHistoryCard';
+import DAHistoryCard from './DAHistoryCard';
+import DALatestMonthCard from './DALatestMonthCard';
+import DADevelopmentTypePieCard from './DADevelopmentTypePieCard';
 import { OCDailyCard } from './OCDailyCard';
 import { OCWeeklyCard } from './OCWeeklyCard';
 import { OCMonthlyCard } from './OCMonthlyCard';
@@ -46,6 +43,11 @@ import { BA13MonthCard } from './BA13MonthCard';
 import { BAYoYCard } from './BAYoYCard';
 import { BAHistoryCard } from './BAHistoryCard';
 import { CDCHistoryCard } from './CDCHistoryCard';
+import CDCLatestMonthCard from './CDCLatestMonthCard';
+import CDCBuildingCodePieCard from './CDCBuildingCodePieCard';
+import CCHistoryCard from './CCHistoryCard';
+import CCLatestMonthCard from './CCLatestMonthCard';
+import CCBuildingCodePieCard from './CCBuildingCodePieCard';
 import { FeedbackCard } from './FeedbackCard';
 import { MedianRentOverviewCard } from './MedianRentOverviewCard';
 import { RentByBedroomCard } from './RentByBedroomCard';
@@ -460,24 +462,6 @@ export function DraggableCard({
           />
         );
 
-      case 'da-daily':
-        return <DADailyCard selectedLGA={selectedLGA} />;
-
-      case 'da-weekly':
-        return <DAWeeklyCard selectedLGA={selectedLGA} />;
-
-      case 'da-monthly':
-        return <DAMonthlyCard selectedLGA={selectedLGA} />;
-
-      case 'da-13-month':
-        return <DA13MonthCard selectedLGA={selectedLGA} />;
-
-      case 'da-yoy':
-        return <DAYoYCard selectedLGA={selectedLGA} />;
-
-      case 'da-history':
-        return <DAHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
-
       case 'oc-daily':
         return <OCDailyCard selectedLGA={selectedLGA} />;
 
@@ -516,6 +500,32 @@ export function DraggableCard({
 
       case 'cdc-history':
         return <CDCHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
+      case 'cdc-latest-month':
+        return <CDCLatestMonthCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
+      case 'cdc-building-code-pie':
+        return <CDCBuildingCodePieCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
+      // DA Cards
+      case 'da-history':
+        return <DAHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
+      case 'da-latest-month':
+        return <DALatestMonthCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
+      case 'da-development-type-pie':
+        return <DADevelopmentTypePieCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
+      // CC Cards
+      case 'cc-history':
+        return <CCHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
+      case 'cc-latest-month':
+        return <CCLatestMonthCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+
+      case 'cc-building-code-pie':
+        return <CCBuildingCodePieCard selectedLGA={selectedLGA} cardWidth={card.size} />;
 
       // Median Rent Cards
       case 'median-rent-overview':
@@ -665,7 +675,7 @@ export function DraggableCard({
       )}
 
       {/* Grid Span Controls - Only for specific cards in Edit Mode */}
-      {isEditMode && !isSortableDragging && onCardSizeChange && ['housing-pipeline', 'building-approvals-chart', 'market-overview', 'age-by-sex', 'dwelling-type', 'da-history', 'oc-history', 'ba-history', 'cdc-history'].includes(card.type) && (
+      {isEditMode && !isSortableDragging && onCardSizeChange && ['housing-pipeline', 'building-approvals-chart', 'market-overview', 'age-by-sex', 'dwelling-type', 'da-history', 'oc-history', 'ba-history', 'cdc-history', 'cc-history'].includes(card.type) && (
         <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10 flex gap-1 bg-background/90 backdrop-blur border border-border rounded-lg p-1 shadow-lg pointer-events-auto">
           <button
             onClick={(e) => {

@@ -1,6 +1,6 @@
-# Housing Insights Dashboard
+# Urban Analytics
 
-Professional housing market analytics platform providing comprehensive trend analysis and forecasting for public transparency and data-driven insights.
+Professional urban planning analytics platform providing comprehensive trend analysis and forecasting for public transparency and data-driven insights.
 
 ![Dashboard Preview](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-blue?style=flat-square&logo=typescript)

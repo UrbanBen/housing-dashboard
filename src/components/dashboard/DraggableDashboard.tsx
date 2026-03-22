@@ -33,12 +33,9 @@ export type CardType =
   | 'citizenship-trend'
   | 'income'
   // Development Applications Comprehensive Cards
-  | 'da-daily'
-  | 'da-weekly'
-  | 'da-monthly'
-  | 'da-13-month'
-  | 'da-yoy'
   | 'da-history'
+  | 'da-latest-month'
+  | 'da-development-type-pie'
   // Occupation Certificate Comprehensive Cards
   | 'oc-daily'
   | 'oc-weekly'
@@ -55,6 +52,12 @@ export type CardType =
   | 'ba-history'
   // CDC Comprehensive Cards
   | 'cdc-history'
+  | 'cdc-latest-month'
+  | 'cdc-building-code-pie'
+  // Construction Certificate Comprehensive Cards
+  | 'cc-history'
+  | 'cc-latest-month'
+  | 'cc-building-code-pie'
   // User Interaction Cards
   | 'feedback'
   // Median Rent Cards

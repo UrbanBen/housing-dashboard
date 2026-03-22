@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Send, CheckCircle, AlertCircle } from "lucide-react";
 import type { LGA } from '@/components/filters/LGALookup';
@@ -10,8 +11,7 @@ interface FeedbackCardProps {
 }
 
 export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const { data: session } = useSession();
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -22,16 +22,14 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
     e.preventDefault();
 
     // Validation
-    if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
+    if (!subject.trim() || !message.trim()) {
       setErrorMessage('Please fill in all fields');
       setSubmitStatus('error');
       return;
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setErrorMessage('Please enter a valid email address');
+    if (!session?.user) {
+      setErrorMessage('You must be logged in to submit feedback');
       setSubmitStatus('error');
       return;
     }
@@ -45,8 +43,6 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim(),
           subject: subject.trim(),
           message: `${message.trim()}\n\n--- Context ---\nCurrent LGA: ${selectedLGA?.name || 'None selected'}`,
           userAgent: navigator.userAgent,
@@ -61,8 +57,6 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
       }
 
       setSubmitStatus('success');
-      setName('');
-      setEmail('');
       setSubject('');
       setMessage('');
 
@@ -95,38 +89,13 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="name" className="text-xs font-medium text-muted-foreground block mb-1.5">
-                Your Name *
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
-                className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                disabled={isSubmitting}
-                required
-              />
+          {session?.user && (
+            <div className="p-3 bg-muted/50 border border-border/50 rounded-lg">
+              <p className="text-xs text-muted-foreground">
+                Submitting as: <span className="font-medium text-foreground">{session.user.name || session.user.email}</span>
+              </p>
             </div>
-            <div>
-              <label htmlFor="email" className="text-xs font-medium text-muted-foreground block mb-1.5">
-                Your Email *
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="john@example.com"
-                className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-          </div>
+          )}
 
           <div>
             <label htmlFor="subject" className="text-xs font-medium text-muted-foreground block mb-1.5">
@@ -194,7 +163,7 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
 
           <button
             type="submit"
-            disabled={isSubmitting || !name.trim() || !email.trim() || !subject.trim() || !message.trim()}
+            disabled={isSubmitting || !subject.trim() || !message.trim() || !session?.user}
             className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isSubmitting ? (

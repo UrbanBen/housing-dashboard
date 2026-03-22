@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
   <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
 
   <p style="font-size: 12px; color: #999;">
-    This is an automated message from the Housing Insights Dashboard feedback system.
+    This is an automated message from the Urban Analytics feedback system.
   </p>
 </body>
 </html>

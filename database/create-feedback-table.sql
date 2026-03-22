@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS housing_dashboard.user_feedback (
   user_id VARCHAR(255),
 
   -- Feedback Content
+  subject TEXT,
   feedback_text TEXT NOT NULL,
 
   -- AI Analysis (from Claude)

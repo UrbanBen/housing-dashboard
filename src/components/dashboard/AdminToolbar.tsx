@@ -273,6 +273,66 @@ const cardTemplates: CardTemplate[] = [
     icon: History,
     description: 'All available CDC data'
   },
+  {
+    id: 'cdc-latest-month',
+    title: 'CDC Latest Month',
+    category: 'kpi',
+    icon: Calendar,
+    description: 'Current month with MoM/YoY trends'
+  },
+  {
+    id: 'cdc-building-code-pie',
+    title: 'CDC by Building Code',
+    category: 'charts',
+    icon: PieChart,
+    description: 'Breakdown by building class'
+  },
+
+  // DA Cards (Blue Theme)
+  {
+    id: 'da-history',
+    title: 'DA Complete History',
+    category: 'charts',
+    icon: History,
+    description: 'All available DA data'
+  },
+  {
+    id: 'da-latest-month',
+    title: 'DA Latest Month',
+    category: 'kpi',
+    icon: Calendar,
+    description: 'Current month with MoM/YoY trends'
+  },
+  {
+    id: 'da-development-type-pie',
+    title: 'DA by Development Type',
+    category: 'charts',
+    icon: PieChart,
+    description: 'Breakdown by development type'
+  },
+
+  // CC Cards (Purple Theme)
+  {
+    id: 'cc-history',
+    title: 'CC Complete History',
+    category: 'charts',
+    icon: History,
+    description: 'All available CC data'
+  },
+  {
+    id: 'cc-latest-month',
+    title: 'CC Latest Month',
+    category: 'kpi',
+    icon: Calendar,
+    description: 'Current month with MoM/YoY trends'
+  },
+  {
+    id: 'cc-building-code-pie',
+    title: 'CC by Building Code',
+    category: 'charts',
+    icon: PieChart,
+    description: 'Breakdown by building class'
+  },
 
   // Median Rent Cards (Fashion Red Theme)
   {
@@ -493,6 +553,18 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
 
   // CDC cards - all styled in teal (#14b8a6)
   const isCDCHistory = template.id === 'cdc-history';
+  const isCDCLatestMonth = template.id === 'cdc-latest-month';
+  const isCDCBuildingCodePie = template.id === 'cdc-building-code-pie';
+
+  // DA cards - all styled in blue (#3b82f6)
+  const isDAHistory = template.id === 'da-history';
+  const isDALatestMonth = template.id === 'da-latest-month';
+  const isDADevelopmentTypePie = template.id === 'da-development-type-pie';
+
+  // CC cards - all styled in purple (#a855f7)
+  const isCCHistory = template.id === 'cc-history';
+  const isCCLatestMonth = template.id === 'cc-latest-month';
+  const isCCBuildingCodePie = template.id === 'cc-building-code-pie';
 
   // Median Rent cards - all styled in fashion red (#dc2626)
   const isMedianRentOverview = template.id === 'median-rent-overview';
@@ -511,7 +583,13 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
   const isBACard = isBADaily || isBAWeekly || isBAMonthly || isBA13Month || isBAYoY || isBAHistory;
 
   // CDC cards grouped
-  const isCDCCard = isCDCHistory;
+  const isCDCCard = isCDCHistory || isCDCLatestMonth || isCDCBuildingCodePie;
+
+  // DA cards grouped
+  const isDACard = isDAHistory || isDALatestMonth || isDADevelopmentTypePie;
+
+  // CC cards grouped
+  const isCCCard = isCCHistory || isCCLatestMonth || isCCBuildingCodePie;
 
   // Median Rent cards grouped
   const isMedianRentCard = isMedianRentOverview || isRentByBedroom || isRentTrends || isRentQuartile;
@@ -551,6 +629,16 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
     border: 'border-[#14b8a6]/50',
     text: 'text-[#14b8a6]',
     hover: 'hover:border-[#14b8a6] hover:shadow-[0_0_15px_rgba(20,184,166,0.5)]'
+  } : isDACard ? {
+    bg: 'bg-zinc-900',
+    border: 'border-[#3b82f6]/50',
+    text: 'text-[#3b82f6]',
+    hover: 'hover:border-[#3b82f6] hover:shadow-[0_0_15px_rgba(59,130,246,0.5)]'
+  } : isCCCard ? {
+    bg: 'bg-zinc-900',
+    border: 'border-[#a855f7]/50',
+    text: 'text-[#a855f7]',
+    hover: 'hover:border-[#a855f7] hover:shadow-[0_0_15px_rgba(168,85,247,0.5)]'
   } : categoryStyles[template.category];
 
   return (

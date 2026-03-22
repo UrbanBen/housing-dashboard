@@ -1,63 +1,76 @@
-const { Client } = require('pg');
-const nodemailer = require('nodemailer');
-const Anthropic = require('@anthropic-ai/sdk').default;
-const fs = require('fs');
+/**
+ * Monthly Feedback Summary Script with AI Analysis
+ *
+ * Analyzes all feedback from the past month using Claude AI and sends
+ * a concise one-page email summary.
+ *
+ * Run: node scripts/send-monthly-feedback-summary.js
+ *
+ * Recommended cron schedule: First day of month at 9 AM
+ * 0 9 1 * * cd /path/to/project && node scripts/send-monthly-feedback-summary.js
+ */
 
-// Load environment variables
 require('dotenv').config({ path: '.env.local' });
+const { Client } = require('@microsoft/microsoft-graph-client');
+const { ClientSecretCredential } = require('@azure/identity');
+const { executeQuery } = require('../src/lib/db-pool');
+const Anthropic = require('@anthropic-ai/sdk').default;
+require('isomorphic-fetch');
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-// Email transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+// Graph API setup
+function getGraphClient() {
+  const tenantId = process.env.MICROSOFT_TENANT_ID || 'common';
+  const clientId = process.env.MICROSOFT_CLIENT_ID;
+  const clientSecret = process.env.MICROSOFT_CLIENT_SECRET;
+  const fromEmail = process.env.SMTP_FROM || 'researchandinsights@mecone.com.au';
+
+  if (!clientId || !clientSecret) {
+    throw new Error('Microsoft OAuth credentials not configured');
+  }
+
+  const credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+
+  return {
+    client: Client.initWithMiddleware({
+      authProvider: {
+        getAccessToken: async () => {
+          const tokenResponse = await credential.getToken('https://graph.microsoft.com/.default');
+          return tokenResponse.token;
+        }
+      }
+    }),
+    fromEmail
+  };
+}
 
 async function getLastMonthFeedback() {
-  const client = new Client({
-    host: 'mecone-data-lake.postgres.database.azure.com',
-    port: 5432,
-    database: 'research&insights',
-    user: 'mosaic_readonly',
-    password: process.env.DB_READONLY_PASSWORD || fs.readFileSync('/users/ben/permissions/.env.readonly', 'utf8').trim(),
-    ssl: { rejectUnauthorized: false }
-  });
+  console.log('✓ Querying database for last month\'s feedback...');
 
-  try {
-    await client.connect();
-    console.log('✓ Connected to database');
+  const result = await executeQuery(`
+    SELECT
+      id,
+      user_email,
+      user_name,
+      subject,
+      feedback_text,
+      category,
+      priority,
+      ai_summary,
+      page_url,
+      created_at,
+      status
+    FROM housing_dashboard.user_feedback
+    WHERE created_at >= DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+      AND created_at < DATE_TRUNC('month', NOW())
+      AND (included_in_monthly_summary IS FALSE OR included_in_monthly_summary IS NULL)
+    ORDER BY created_at DESC
+  `);
 
-    const result = await client.query(`
-      SELECT
-        id,
-        user_email,
-        user_name,
-        feedback_text,
-        category,
-        priority,
-        ai_summary,
-        selected_lga,
-        created_at,
-        status
-      FROM housing_dashboard.user_feedback
-      WHERE created_at >= DATE_TRUNC('month', NOW() - INTERVAL '1 month')
-        AND created_at < DATE_TRUNC('month', NOW())
-        AND (included_in_monthly_summary IS FALSE OR included_in_monthly_summary IS NULL)
-      ORDER BY priority DESC, created_at DESC
-    `);
-
-    return result.rows;
-  } finally {
-    await client.end();
-  }
+  return result.rows;
 }
 
 async function generateMonthlySummary(feedbackItems) {
@@ -72,8 +85,9 @@ async function generateMonthlySummary(feedbackItems) {
 
   try {
     const feedbackSummary = feedbackItems.map((item, idx) => `
-${idx + 1}. [${item.priority}] ${item.category}
-   Summary: ${item.ai_summary}
+${idx + 1}. ${item.subject || 'No Subject'}
+   ${item.priority ? `[${item.priority}]` : ''} ${item.category || 'Uncategorized'}
+   ${item.ai_summary ? `Summary: ${item.ai_summary}` : ''}
    User: ${item.user_name || 'Anonymous'} (${item.user_email || 'N/A'})
    Date: ${new Date(item.created_at).toLocaleDateString('en-AU')}
    Full text: ${item.feedback_text.substring(0, 200)}${item.feedback_text.length > 200 ? '...' : ''}
@@ -237,13 +251,14 @@ async function sendMonthlySummaryEmail(feedbackItems, aiSummary) {
             }; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">${item.priority}</span>
             <span style="background: #e0e7ff; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${item.category}</span>
           </div>
-          <p style="margin: 10px 0;"><strong>Summary:</strong> ${item.ai_summary}</p>
+          ${item.subject ? `<p style="margin: 10px 0;"><strong>Subject:</strong> ${item.subject}</p>` : ''}
+          ${item.ai_summary ? `<p style="margin: 10px 0;"><strong>Summary:</strong> ${item.ai_summary}</p>` : ''}
           <p style="margin: 10px 0; white-space: pre-wrap; background: white; padding: 10px; border-radius: 4px;">${item.feedback_text}</p>
           <div style="display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; margin-top: 10px;">
             <span><strong>User:</strong> ${item.user_name || 'Anonymous'} (${item.user_email || 'N/A'})</span>
             <span><strong>Date:</strong> ${new Date(item.created_at).toLocaleDateString('en-AU')}</span>
           </div>
-          ${item.selected_lga ? `<div style="font-size: 12px; color: #6b7280; margin-top: 5px;"><strong>LGA:</strong> ${item.selected_lga}</div>` : ''}
+          ${item.page_url ? `<div style="font-size: 12px; color: #6b7280; margin-top: 5px;"><strong>Page:</strong> ${item.page_url}</div>` : ''}
         </div>
       `).join('')}
     </div>
@@ -257,38 +272,46 @@ async function sendMonthlySummaryEmail(feedbackItems, aiSummary) {
 </html>
 `;
 
-  await transporter.sendMail({
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
-    to: 'bgellie@mecone.com.au',
+  // Send email via Microsoft Graph API
+  const { client, fromEmail } = getGraphClient();
+
+  const emailMessage = {
     subject: emailSubject,
-    html: emailBody,
+    body: {
+      contentType: 'HTML',
+      content: emailBody
+    },
+    toRecipients: [
+      {
+        emailAddress: {
+          address: fromEmail
+        }
+      }
+    ],
+    from: {
+      emailAddress: {
+        address: fromEmail
+      }
+    }
+  };
+
+  await client.api(`/users/${fromEmail}/sendMail`).post({
+    message: emailMessage,
+    saveToSentItems: true
   });
 }
 
 async function markFeedbackAsSummarized(feedbackIds) {
-  const client = new Client({
-    host: 'mecone-data-lake.postgres.database.azure.com',
-    port: 5432,
-    database: 'research&insights',
-    user: 'db_admin',
-    password: process.env.DB_ADMIN_PASSWORD || fs.readFileSync('/users/ben/permissions/.env.admin', 'utf8').trim(),
-    ssl: { rejectUnauthorized: false }
-  });
+  const { executeAdminQuery } = require('../src/lib/db-pool');
 
-  try {
-    await client.connect();
+  await executeAdminQuery(`
+    UPDATE housing_dashboard.user_feedback
+    SET included_in_monthly_summary = TRUE,
+        monthly_summary_date = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+    WHERE id = ANY($1::int[])
+  `, [feedbackIds]);
 
-    await client.query(`
-      UPDATE housing_dashboard.user_feedback
-      SET included_in_monthly_summary = TRUE,
-          monthly_summary_date = DATE_TRUNC('month', NOW() - INTERVAL '1 month')
-      WHERE id = ANY($1::int[])
-    `, [feedbackIds]);
-
-    console.log(`✓ Marked ${feedbackIds.length} feedback items as summarized`);
-  } finally {
-    await client.end();
-  }
+  console.log(`✓ Marked ${feedbackIds.length} feedback items as summarized`);
 }
 
 async function sendMonthlySummary() {

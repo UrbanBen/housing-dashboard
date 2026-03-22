@@ -24,8 +24,8 @@ const dinFontStyle = `
 `;
 
 export const metadata: Metadata = {
-  title: "Spatio Dash",
-  description: "Professional spatial analytics and insights platform",
+  title: "Urban Analytics",
+  description: "Professional urban planning analytics and insights platform",
   icons: {
     icon: '/favicon.svg',
   },

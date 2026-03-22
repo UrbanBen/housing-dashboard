@@ -4,16 +4,14 @@ import { getReadonlyPool } from '@/lib/db-pool';
 /**
  * Comprehensive Development Applications API
  *
- * Unified endpoint serving all 6 DA card types:
- * 1. Daily Activity (last 30 days)
- * 2. Weekly Trends (last 12 weeks)
- * 3. Monthly Summary (last 12 months)
- * 4. 13-Month Overview
- * 5. Year-over-Year Comparison (12 months vs previous 12)
- * 6. Complete History (all time, monthly rollup)
+ * Unified endpoint serving DA card types:
+ * - 'history': Complete historical timeline (monthly rollup)
+ * - 'latest-month': Most recent month with MoM and YoY comparisons
+ * - 'pie-chart': Breakdown by development type
+ * - Legacy types: 'daily', 'weekly', 'monthly', '13-month', 'yoy-comparison'
  *
  * Query Parameters:
- * - type: 'daily' | 'weekly' | 'monthly' | '13-month' | 'yoy-comparison' | 'history'
+ * - type: 'history' | 'latest-month' | 'pie-chart' | legacy types
  * - lgaCode: LGA code (optional, for filtering)
  * - lgaName: LGA name (optional, for filtering)
  */
@@ -64,6 +62,16 @@ export async function POST(request: NextRequest) {
 
       case 'history':
         query = buildHistoryQuery(lgaCode, lgaName);
+        params = buildParams(lgaCode, lgaName);
+        break;
+
+      case 'latest-month':
+        query = buildLatestMonthQuery(lgaCode, lgaName);
+        params = buildParams(lgaCode, lgaName);
+        break;
+
+      case 'pie-chart':
+        query = buildPieChartQuery(lgaCode, lgaName);
         params = buildParams(lgaCode, lgaName);
         break;
 
@@ -321,6 +329,97 @@ function buildHistoryQuery(lgaCode?: string, lgaName?: string): string {
     WHERE period_type = 'monthly'
       ${whereClause}
     ORDER BY period_start ASC, lga_name
+  `;
+}
+
+function buildLatestMonthQuery(lgaCode?: string, lgaName?: string): string {
+  const whereClause = buildWhereClause(lgaCode, lgaName);
+
+  return `
+    WITH latest AS (
+      SELECT
+        lga_code,
+        lga_name,
+        period_start,
+        period_end,
+        calendar_month,
+        calendar_year,
+        total_determined,
+        determined_approved,
+        determined_refused,
+        determined_withdrawn,
+        total_new_dwellings,
+        avg_estimated_cost,
+        avg_days_to_determination,
+        modification_percentage
+      FROM housing_dashboard.da_aggregated
+      WHERE period_type = 'monthly'
+        ${whereClause}
+      ORDER BY period_start DESC
+      LIMIT 1
+    ),
+    previous_month AS (
+      SELECT
+        total_determined as prev_month_determined,
+        determined_approved as prev_month_approved,
+        determined_refused as prev_month_refused,
+        total_new_dwellings as prev_month_dwellings
+      FROM housing_dashboard.da_aggregated
+      WHERE period_type = 'monthly'
+        AND period_start = (SELECT period_start FROM latest) - INTERVAL '1 month'
+        ${whereClause}
+    ),
+    previous_year AS (
+      SELECT
+        total_determined as prev_year_determined,
+        determined_approved as prev_year_approved,
+        determined_refused as prev_year_refused,
+        total_new_dwellings as prev_year_dwellings
+      FROM housing_dashboard.da_aggregated
+      WHERE period_type = 'monthly'
+        AND period_start = (SELECT period_start FROM latest) - INTERVAL '1 year'
+        ${whereClause}
+    )
+    SELECT
+      l.*,
+      pm.prev_month_determined,
+      pm.prev_month_approved,
+      pm.prev_month_refused,
+      pm.prev_month_dwellings,
+      py.prev_year_determined,
+      py.prev_year_approved,
+      py.prev_year_refused,
+      py.prev_year_dwellings,
+      CASE
+        WHEN pm.prev_month_determined > 0
+        THEN ROUND(((l.total_determined - pm.prev_month_determined)::DECIMAL / pm.prev_month_determined * 100)::NUMERIC, 1)
+        ELSE NULL
+      END as mom_change_pct,
+      CASE
+        WHEN py.prev_year_determined > 0
+        THEN ROUND(((l.total_determined - py.prev_year_determined)::DECIMAL / py.prev_year_determined * 100)::NUMERIC, 1)
+        ELSE NULL
+      END as yoy_change_pct
+    FROM latest l
+    LEFT JOIN previous_month pm ON TRUE
+    LEFT JOIN previous_year py ON TRUE
+  `;
+}
+
+function buildPieChartQuery(lgaCode?: string, lgaName?: string): string {
+  const whereClause = buildWhereClause(lgaCode, lgaName);
+
+  return `
+    SELECT
+      development_type,
+      COUNT(*) as count,
+      SUM(CASE WHEN determination_type = 'Approved' THEN 1 ELSE 0 END) as approved,
+      SUM(CASE WHEN determination_type = 'Refused' THEN 1 ELSE 0 END) as refused
+    FROM housing_dashboard.da_records_raw
+    WHERE 1=1
+      ${whereClause.replace('lga_name ILIKE', 'lga_name ILIKE')}
+    GROUP BY development_type
+    ORDER BY count DESC
   `;
 }
 

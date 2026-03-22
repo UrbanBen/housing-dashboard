@@ -6,9 +6,11 @@ import { getReadonlyPool } from '@/lib/db-pool';
  *
  * Unified endpoint serving CDC card types:
  * - history: Complete historical data (monthly rollup)
+ * - latest-month: Most recent month with MoM and YoY comparisons
+ * - pie-chart: Breakdown by building code class
  *
  * Query Parameters:
- * - type: 'history'
+ * - type: 'history' | 'latest-month' | 'pie-chart'
  * - lgaCode: LGA code (optional, for filtering)
  * - lgaName: LGA name (optional, for filtering)
  */
@@ -34,6 +36,16 @@ export async function POST(request: NextRequest) {
     switch (type) {
       case 'history':
         query = buildHistoryQuery(lgaCode, lgaName);
+        params = buildParams(lgaCode, lgaName);
+        break;
+
+      case 'latest-month':
+        query = buildLatestMonthQuery(lgaCode, lgaName);
+        params = buildParams(lgaCode, lgaName);
+        break;
+
+      case 'pie-chart':
+        query = buildPieChartQuery(lgaCode, lgaName);
         params = buildParams(lgaCode, lgaName);
         break;
 
@@ -89,6 +101,103 @@ function buildHistoryQuery(lgaCode?: string, lgaName?: string): string {
     FROM housing_dashboard.cdc_historic
     ${periodFilter}
     ORDER BY month ASC
+  `;
+}
+
+function buildLatestMonthQuery(lgaCode?: string, lgaName?: string): string {
+  const whereClause = buildWhereClause(lgaCode, lgaName);
+  const whereFilter = whereClause ? `AND ${whereClause}` : '';
+
+  return `
+    WITH latest AS (
+      SELECT
+        month as period_start,
+        lga_code,
+        lga_name,
+        COALESCE(monthly_new_dwellings, 0) as total_dwellings,
+        total_cdcs,
+        total_private_certifier,
+        total_council_certifier,
+        total_cost,
+        avg_cost
+      FROM housing_dashboard.cdc_historic
+      WHERE 1=1 ${whereFilter}
+      ORDER BY month DESC
+      LIMIT 1
+    ),
+    previous_month AS (
+      SELECT
+        COALESCE(monthly_new_dwellings, 0) as prev_month_dwellings,
+        total_cdcs as prev_month_cdcs
+      FROM housing_dashboard.cdc_historic
+      WHERE month = (SELECT period_start FROM latest) - INTERVAL '1 month'
+        ${whereFilter}
+    ),
+    previous_year AS (
+      SELECT
+        COALESCE(monthly_new_dwellings, 0) as prev_year_dwellings,
+        total_cdcs as prev_year_cdcs
+      FROM housing_dashboard.cdc_historic
+      WHERE month = (SELECT period_start FROM latest) - INTERVAL '1 year'
+        ${whereFilter}
+    )
+    SELECT
+      l.*,
+      pm.prev_month_dwellings,
+      pm.prev_month_cdcs,
+      py.prev_year_dwellings,
+      py.prev_year_cdcs,
+      CASE
+        WHEN pm.prev_month_dwellings > 0
+        THEN ROUND(((l.total_dwellings - pm.prev_month_dwellings)::DECIMAL / pm.prev_month_dwellings * 100)::NUMERIC, 1)
+        ELSE NULL
+      END as mom_change_pct,
+      CASE
+        WHEN py.prev_year_dwellings > 0
+        THEN ROUND(((l.total_dwellings - py.prev_year_dwellings)::DECIMAL / py.prev_year_dwellings * 100)::NUMERIC, 1)
+        ELSE NULL
+      END as yoy_change_pct
+    FROM latest l
+    LEFT JOIN previous_month pm ON TRUE
+    LEFT JOIN previous_year py ON TRUE
+  `;
+}
+
+function buildPieChartQuery(lgaCode?: string, lgaName?: string): string {
+  const whereClause = buildWhereClause(lgaCode, lgaName);
+  const whereFilter = whereClause ? `WHERE ${whereClause}` : '';
+
+  return `
+    SELECT
+      'Class 1 - Houses' as building_class,
+      SUM(COALESCE(building_code_class_1_houses, 0)) as total_count
+    FROM housing_dashboard.cdc_historic
+    ${whereFilter}
+    UNION ALL
+    SELECT
+      'Class 2 - Apartments' as building_class,
+      SUM(COALESCE(building_code_class_2_apartments, 0)) as total_count
+    FROM housing_dashboard.cdc_historic
+    ${whereFilter}
+    UNION ALL
+    SELECT
+      'Class 3 - Residential Care' as building_class,
+      SUM(COALESCE(building_code_class_3_residential_care, 0)) as total_count
+    FROM housing_dashboard.cdc_historic
+    ${whereFilter}
+    UNION ALL
+    SELECT
+      'Class 4 - Dwelling in Building' as building_class,
+      SUM(COALESCE(building_code_class_4_dwelling_in_building, 0)) as total_count
+    FROM housing_dashboard.cdc_historic
+    ${whereFilter}
+    UNION ALL
+    SELECT
+      'Class 10 - Non-Habitable' as building_class,
+      SUM(COALESCE(building_code_class_10_non_habitable, 0)) as total_count
+    FROM housing_dashboard.cdc_historic
+    ${whereFilter}
+    ORDER BY total_count DESC
   `;
 }
 
