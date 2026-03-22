@@ -105,7 +105,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             />
             <div className="text-center">
               <h2 className="text-xl font-semibold text-[#00FF41] drop-shadow-[0_0_10px_rgba(0,255,65,0.5)]">Housing Analytics</h2>
-              <p className="text-sm text-muted-foreground">Analytic Insights and Intelligence</p>
+              <p className="text-sm text-muted-foreground">Urban insights and housing-pipeline intelligence</p>
             </div>
           </div>
 

@@ -499,7 +499,7 @@ export default function DashboardPage() {
                     : 'none'
                 }}
               />
-              <p className="text-sm text-muted-foreground ml-2">Analytic Insights and Intelligence</p>
+              <p className="text-sm text-muted-foreground ml-2">Urban insights and housing-pipeline intelligence</p>
             </div>
             <div className="flex items-center gap-4">
               {/* User Profile and Tier Display */}

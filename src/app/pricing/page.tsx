@@ -66,7 +66,7 @@ export default function PricingPage() {
               />
               <div>
                 <h2 className="text-lg font-semibold text-[#00FF41] drop-shadow-[0_0_10px_rgba(0,255,65,0.5)] glow-text">Housing Analytics</h2>
-                <p className="text-sm text-muted-foreground">Analytic Insights and Intelligence</p>
+                <p className="text-sm text-muted-foreground">Urban insights and housing-pipeline intelligence</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
