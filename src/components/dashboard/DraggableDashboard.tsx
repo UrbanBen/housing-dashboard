@@ -37,18 +37,8 @@ export type CardType =
   | 'da-latest-month'
   | 'da-development-type-pie'
   // Occupation Certificate Comprehensive Cards
-  | 'oc-daily'
-  | 'oc-weekly'
-  | 'oc-monthly'
-  | 'oc-13-month'
-  | 'oc-yoy'
   | 'oc-history'
   // Building Approval Comprehensive Cards
-  | 'ba-daily'
-  | 'ba-weekly'
-  | 'ba-monthly'
-  | 'ba-13-month'
-  | 'ba-yoy'
   | 'ba-history'
   // CDC Comprehensive Cards
   | 'cdc-history'

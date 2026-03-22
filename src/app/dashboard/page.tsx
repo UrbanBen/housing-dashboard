@@ -147,46 +147,6 @@ const defaultCards: DashboardCard[] = [
 
   // Development Applications Comprehensive Cards
   {
-    id: 'da-daily',
-    type: 'da-daily',
-    title: 'DA Daily Activity',
-    size: 'small',
-    category: 'charts',
-    gridArea: 'da-daily'
-  },
-  {
-    id: 'da-weekly',
-    type: 'da-weekly',
-    title: 'DA Weekly Trends',
-    size: 'small',
-    category: 'charts',
-    gridArea: 'da-weekly'
-  },
-  {
-    id: 'da-monthly',
-    type: 'da-monthly',
-    title: 'DA Monthly Summary',
-    size: 'small',
-    category: 'charts',
-    gridArea: 'da-monthly'
-  },
-  {
-    id: 'da-13-month',
-    type: 'da-13-month',
-    title: 'DA 13-Month Overview',
-    size: 'small',
-    category: 'charts',
-    gridArea: 'da-13-month'
-  },
-  {
-    id: 'da-yoy',
-    type: 'da-yoy',
-    title: 'DA Year-over-Year',
-    size: 'small',
-    category: 'charts',
-    gridArea: 'da-yoy'
-  },
-  {
     id: 'da-history',
     type: 'da-history',
     title: 'DA Complete History',

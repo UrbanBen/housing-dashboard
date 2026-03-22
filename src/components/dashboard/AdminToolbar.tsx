@@ -141,81 +141,11 @@ const cardTemplates: CardTemplate[] = [
     description: 'Average household/personal income and weekly rent with rankings'
   },
   {
-    id: 'da-daily',
-    title: 'DA Daily Activity',
-    category: 'charts',
-    icon: Calendar,
-    description: 'Last 30 days of DA determinations'
-  },
-  {
-    id: 'da-weekly',
-    title: 'DA Weekly Trends',
-    category: 'charts',
-    icon: BarChart3,
-    description: 'Last 12 weeks DA trends'
-  },
-  {
-    id: 'da-monthly',
-    title: 'DA Monthly Summary',
-    category: 'charts',
-    icon: TrendingUp,
-    description: 'Last 12 months DA summary'
-  },
-  {
-    id: 'da-13-month',
-    title: 'DA 13-Month Overview',
-    category: 'charts',
-    icon: Activity,
-    description: '13-month DA trend analysis'
-  },
-  {
-    id: 'da-yoy',
-    title: 'DA Year-over-Year',
-    category: 'charts',
-    icon: GitCompare,
-    description: 'Last 12 vs previous 12 months'
-  },
-  {
     id: 'da-history',
     title: 'Development Application History',
     category: 'charts',
     icon: History,
     description: 'All available DA data'
-  },
-  {
-    id: 'oc-daily',
-    title: 'OC Daily Activity',
-    category: 'charts',
-    icon: Calendar,
-    description: 'Last 30 days of OC determinations'
-  },
-  {
-    id: 'oc-weekly',
-    title: 'OC Weekly Trends',
-    category: 'charts',
-    icon: BarChart3,
-    description: 'Last 12 weeks OC trends'
-  },
-  {
-    id: 'oc-monthly',
-    title: 'OC Monthly Summary',
-    category: 'charts',
-    icon: TrendingUp,
-    description: 'Last 12 months OC summary'
-  },
-  {
-    id: 'oc-13-month',
-    title: 'OC 13-Month Overview',
-    category: 'charts',
-    icon: Activity,
-    description: '13-month OC trend analysis'
-  },
-  {
-    id: 'oc-yoy',
-    title: 'OC Year-over-Year',
-    category: 'charts',
-    icon: GitCompare,
-    description: 'Last 12 vs previous 12 months'
   },
   {
     id: 'oc-history',

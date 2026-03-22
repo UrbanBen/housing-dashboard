@@ -30,17 +30,7 @@ import { CitizenshipTrendCard } from './CitizenshipTrendCard';
 import DAHistoryCard from './DAHistoryCard';
 import DALatestMonthCard from './DALatestMonthCard';
 import DADevelopmentTypePieCard from './DADevelopmentTypePieCard';
-import { OCDailyCard } from './OCDailyCard';
-import { OCWeeklyCard } from './OCWeeklyCard';
-import { OCMonthlyCard } from './OCMonthlyCard';
-import { OC13MonthCard } from './OC13MonthCard';
-import { OCYoYCard } from './OCYoYCard';
 import { OCHistoryCard } from './OCHistoryCard';
-import { BADailyCard } from './BADailyCard';
-import { BAWeeklyCard } from './BAWeeklyCard';
-import { BAMonthlyCard } from './BAMonthlyCard';
-import { BA13MonthCard } from './BA13MonthCard';
-import { BAYoYCard } from './BAYoYCard';
 import { BAHistoryCard } from './BAHistoryCard';
 import { CDCHistoryCard } from './CDCHistoryCard';
 import CDCLatestMonthCard from './CDCLatestMonthCard';
@@ -462,38 +452,8 @@ export function DraggableCard({
           />
         );
 
-      case 'oc-daily':
-        return <OCDailyCard selectedLGA={selectedLGA} />;
-
-      case 'oc-weekly':
-        return <OCWeeklyCard selectedLGA={selectedLGA} />;
-
-      case 'oc-monthly':
-        return <OCMonthlyCard selectedLGA={selectedLGA} />;
-
-      case 'oc-13-month':
-        return <OC13MonthCard selectedLGA={selectedLGA} />;
-
-      case 'oc-yoy':
-        return <OCYoYCard selectedLGA={selectedLGA} />;
-
       case 'oc-history':
         return <OCHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
-
-      case 'ba-daily':
-        return <BADailyCard selectedLGA={selectedLGA} />;
-
-      case 'ba-weekly':
-        return <BAWeeklyCard selectedLGA={selectedLGA} />;
-
-      case 'ba-monthly':
-        return <BAMonthlyCard selectedLGA={selectedLGA} />;
-
-      case 'ba-13-month':
-        return <BA13MonthCard selectedLGA={selectedLGA} />;
-
-      case 'ba-yoy':
-        return <BAYoYCard selectedLGA={selectedLGA} />;
 
       case 'ba-history':
         return <BAHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
