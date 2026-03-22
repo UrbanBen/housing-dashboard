@@ -323,6 +323,38 @@ const cardTemplates: CardTemplate[] = [
     icon: Users,
     description: 'Demographics'
   },
+  {
+    id: 'population-trends',
+    title: 'Population Trends',
+    category: 'analysis',
+    icon: TrendingUp,
+    description: 'Census data & projections',
+    color: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'
+  },
+  {
+    id: 'building-approvals-trend',
+    title: 'Building Approvals Trend',
+    category: 'analysis',
+    icon: Building,
+    description: 'Approval pipeline over time',
+    color: 'bg-blue-500/10 border-blue-500/20 text-blue-600'
+  },
+  {
+    id: 'regional-market-share',
+    title: 'Regional Market Share',
+    category: 'analysis',
+    icon: PieChart,
+    description: 'Growth distribution by LGA',
+    color: 'bg-purple-500/10 border-purple-500/20 text-purple-600'
+  },
+  {
+    id: 'lga-comparison',
+    title: 'LGA Comparison',
+    category: 'analysis',
+    icon: GitBranch,
+    description: 'Benchmark against peers',
+    color: 'bg-orange-500/10 border-orange-500/20 text-orange-600'
+  },
 
   // Data Tables
   {

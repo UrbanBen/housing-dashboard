@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, Users, BarChart3, Home, Building2, Square } from "lucide-react";
+import { Clock, Users, BarChart3, Home, Building2, Square, TrendingUp } from "lucide-react";
 import type { LGA } from '@/components/filters/LGALookup';
 import { LGADetailsConfigForm, type LGADetailsConfig } from './LGADetailsConfigForm';
 import { DataItemConfigForm, type DataItemDetailedConfig } from './DataItemConfigForm';
@@ -63,6 +63,8 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
   const [currentDataItem, setCurrentDataItem] = useState<{ key: string; title: string; config: DataItemDetailedConfig | null } | null>(null);
   const [areaData, setAreaData] = useState<number | null>(null);
   const [isLoadingArea, setIsLoadingArea] = useState(false);
+  const [censusData, setCensusData] = useState<any>(null);
+  const [isLoadingCensus, setIsLoadingCensus] = useState(false);
 
   // Get stored configuration
   const getStoredConfig = (): LGADetailsConfig => {
@@ -86,6 +88,11 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
           enabled: true,
           title: 'Area',
           subtitle: 'Administrative Area'
+        },
+        populationDensity: {
+          enabled: true,
+          title: 'Population Density',
+          subtitle: 'People per km²'
         },
         avgProcessingDays: {
           enabled: true,
@@ -218,6 +225,38 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
     fetchAreaData();
   }, [selectedLGA]);
 
+  // Fetch census data from card_details table
+  useEffect(() => {
+    const fetchCensusData = async () => {
+      if (!selectedLGA) {
+        setCensusData(null);
+        return;
+      }
+
+      setIsLoadingCensus(true);
+
+      try {
+        const lgaName = selectedLGA.id === 'nsw-state' ? 'NSW' : selectedLGA.name;
+        const response = await fetch(`/api/census-data?lgaName=${encodeURIComponent(lgaName)}`);
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setCensusData(result.data);
+        } else {
+          console.warn('Census data not found:', result.error);
+          setCensusData(null);
+        }
+      } catch (error) {
+        console.error('Error fetching census data:', error);
+        setCensusData(null);
+      } finally {
+        setIsLoadingCensus(false);
+      }
+    };
+
+    fetchCensusData();
+  }, [selectedLGA]);
+
   const data = getLGAData(selectedLGA);
   const config = getStoredConfig();
 
@@ -227,6 +266,11 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
       icon: Square,
       value: isLoadingArea ? 'Loading...' : `${Math.round(areaData || 0).toLocaleString()} km²`,
       subtitle: 'Administrative Area'
+    },
+    populationDensity: {
+      icon: Users,
+      value: isLoadingCensus ? 'Loading...' : censusData?.population_density ? `${censusData.population_density.toLocaleString()} per km²` : 'N/A',
+      subtitle: 'Population Density (2026)'
     },
     avgProcessingDays: {
       icon: Clock,
@@ -302,10 +346,46 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
           })}
         </div>
 
+        {/* Census Population Time Series */}
+        {censusData && (
+          <div className="bg-secondary/20 border border-secondary/30 rounded-lg p-4 mt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="h-5 w-5 text-secondary" />
+              <span className="text-sm font-semibold">Population Growth (Census Data)</span>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground mb-1">2011</div>
+                <div className="text-lg font-bold">{censusData.population_2011?.toLocaleString() || 'N/A'}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground mb-1">2016</div>
+                <div className="text-lg font-bold">{censusData.population_2016?.toLocaleString() || 'N/A'}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground mb-1">2021</div>
+                <div className="text-lg font-bold">{censusData.population_2021?.toLocaleString() || 'N/A'}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground mb-1">2026*</div>
+                <div className="text-lg font-bold text-primary">{censusData.population_2026_proj?.toLocaleString() || 'N/A'}</div>
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-secondary/20 flex justify-between items-center">
+              <div className="text-xs text-muted-foreground">
+                Avg. Annual Growth: <span className="font-semibold text-foreground">{censusData.growth_rate_annual_avg?.toFixed(2)}%</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                * Projected
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Filter Status */}
         <div className="text-xs text-muted-foreground text-center pt-2 border-t">
-          {selectedLGA ? 
-            `All data filtered for ${selectedLGA.name}` : 
+          {selectedLGA ?
+            `All data filtered for ${selectedLGA.name}` :
             'Showing statewide data • Select an LGA to filter'
           }
         </div>

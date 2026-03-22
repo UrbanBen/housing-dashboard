@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Home, TrendingUp, Users, MapPin, BarChart3, Square, Database, AlertCircle, Target } from "lucide-react";
+import { Home, TrendingUp, Users, MapPin, BarChart3, Square, Database, AlertCircle, Target, Percent, DollarSign } from "lucide-react";
 import type { LGA } from '@/components/filters/LGALookup';
 import { KeyMetricsConfigForm, type KeyMetricsConfig } from './KeyMetricsConfigForm';
 import { DataItemConfigForm, type DataItemDetailedConfig } from './DataItemConfigForm';
@@ -85,6 +85,8 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
   const [currentConfig, setCurrentConfig] = useState<KeyMetricsConfig | null>(null);
   const [showDataItemForm, setShowDataItemForm] = useState(false);
   const [currentDataItem, setCurrentDataItem] = useState<{ key: string; title: string; config: DataItemDetailedConfig | null } | null>(null);
+  const [censusData, setCensusData] = useState<any>(null);
+  const [isLoadingCensus, setIsLoadingCensus] = useState(false);
 
   // Get stored configuration
   const getStoredConfig = (): KeyMetricsConfig => {
@@ -136,8 +138,18 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
           title: 'Total Residential Value',
           subtitle: 'FYTD Total Value'
         },
-        area: {
+        approvalRate: {
           enabled: true,
+          title: 'Dwelling Approval Rate',
+          subtitle: 'Per 1000 Population'
+        },
+        valuePerCapita: {
+          enabled: true,
+          title: 'Construction Value Per Capita',
+          subtitle: 'Per Person'
+        },
+        area: {
+          enabled: false,
           title: 'LGA Area',
           subtitle: 'Square Kilometers'
         },
@@ -356,6 +368,38 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
     }
   }, [externalSelectedLGA]);
 
+  // Fetch census data for calculated metrics
+  useEffect(() => {
+    const fetchCensusData = async () => {
+      if (!selectedLGA) {
+        setCensusData(null);
+        return;
+      }
+
+      setIsLoadingCensus(true);
+
+      try {
+        const lgaName = selectedLGA.id === 'nsw-state' ? 'NSW' : selectedLGA.name;
+        const response = await fetch(`/api/census-data?lgaName=${encodeURIComponent(lgaName)}`);
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setCensusData(result.data);
+        } else {
+          console.warn('Census data not found:', result.error);
+          setCensusData(null);
+        }
+      } catch (error) {
+        console.error('Error fetching census data:', error);
+        setCensusData(null);
+      } finally {
+        setIsLoadingCensus(false);
+      }
+    };
+
+    fetchCensusData();
+  }, [selectedLGA]);
+
   // Handle double click to configure
   const handleDoubleClick = () => {
     const config = getStoredConfig();
@@ -412,6 +456,20 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
   const data = getLGAData(selectedLGA, areaData, accordTargetData, buildingApprovalsData);
   const config = getStoredConfig();
 
+  // Calculate derived metrics
+  const calculateApprovalRate = () => {
+    if (!data.buildingApprovals || !censusData?.population_2026_proj) return null;
+    return ((data.buildingApprovals / censusData.population_2026_proj) * 1000).toFixed(2);
+  };
+
+  const calculateValuePerCapita = () => {
+    if (!data.valueTotalRes || !censusData?.population_2026_proj) return null;
+    return Math.round(data.valueTotalRes / censusData.population_2026_proj);
+  };
+
+  const approvalRate = calculateApprovalRate();
+  const valuePerCapita = calculateValuePerCapita();
+
   // Map data item keys to their display properties
   const dataItemMap = {
     totalDwellings: {
@@ -436,6 +494,18 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
       icon: TrendingUp,
       value: data.valueTotalRes !== null ? `$${(data.valueTotalRes / 1000).toFixed(1)}M` : 'N/A',
       loading: isLoadingBuildingApprovals,
+      error: buildingApprovalsError
+    },
+    approvalRate: {
+      icon: Percent,
+      value: approvalRate ? `${approvalRate} per 1000` : 'N/A',
+      loading: isLoadingBuildingApprovals || isLoadingCensus,
+      error: buildingApprovalsError
+    },
+    valuePerCapita: {
+      icon: DollarSign,
+      value: valuePerCapita ? `$${valuePerCapita.toLocaleString()}` : 'N/A',
+      loading: isLoadingBuildingApprovals || isLoadingCensus,
       error: buildingApprovalsError
     },
     accordTarget: {
