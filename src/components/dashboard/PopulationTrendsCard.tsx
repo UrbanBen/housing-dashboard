@@ -12,11 +12,11 @@ interface PopulationTrendsCardProps {
 
 interface CensusData {
   name: string;
-  population_2011: number;
-  population_2016: number;
-  population_2021: number;
-  population_2026_proj: number;
-  growth_rate_annual_avg: number;
+  population_2011: number | null;
+  population_2016: number | null;
+  population_2021: number | null;
+  population_2026_proj: number | null;
+  growth_rate_annual_avg: number | null;
 }
 
 export function PopulationTrendsCard({ selectedLGA }: PopulationTrendsCardProps) {
