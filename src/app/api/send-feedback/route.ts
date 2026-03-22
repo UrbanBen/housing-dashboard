@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth-config';
 import { Client } from '@microsoft/microsoft-graph-client';
 import { ClientSecretCredential } from '@azure/identity';
+import { executeQuery } from '@/lib/db-pool';
 import 'isomorphic-fetch';
 
 // Initialize Graph client with application credentials
@@ -37,27 +40,39 @@ function getGraphClient() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Get user from session
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Please log in to submit feedback' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
-    const { name, email, subject, message, userAgent, url } = body;
+    const { subject, message, userAgent, url } = body;
 
     // Validate required fields
-    if (!name || !email || !subject || !message) {
+    if (!subject || !message) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Invalid email address' },
-        { status: 400 }
-      );
-    }
+    const userName = session.user.name || 'Unknown User';
+    const userEmail = session.user.email || 'no-email@unknown.com';
 
     const { client, fromEmail } = getGraphClient();
+
+    // Store in database for weekly/monthly reports
+    await executeQuery(
+      `INSERT INTO housing_dashboard.user_feedback
+       (user_id, user_name, user_email, subject, feedback_text, user_agent, page_url, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+      [session.user.id, userName, userEmail, subject, message, userAgent || null, url || null]
+    );
 
     // Compose email body with feedback details
     const emailBody = `
@@ -69,8 +84,9 @@ export async function POST(request: NextRequest) {
 
   <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
     <h3 style="margin-top: 0; color: #555;">Contact Information</h3>
-    <p><strong>Name:</strong> ${name}</p>
-    <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+    <p><strong>Name:</strong> ${userName}</p>
+    <p><strong>Email:</strong> <a href="mailto:${userEmail}">${userEmail}</a></p>
+    <p><strong>User ID:</strong> ${session.user.id}</p>
   </div>
 
   <div style="background-color: #fff; padding: 20px; border-left: 4px solid #22c55e; margin: 20px 0;">
@@ -100,7 +116,7 @@ export async function POST(request: NextRequest) {
     `.trim();
 
     // Send email via Microsoft Graph API
-    const message = {
+    const emailMessage = {
       subject: `[Dashboard Feedback] ${subject}`,
       body: {
         contentType: 'HTML',
@@ -121,8 +137,8 @@ export async function POST(request: NextRequest) {
       replyTo: [
         {
           emailAddress: {
-            address: email,
-            name: name
+            address: userEmail,
+            name: userName
           }
         }
       ]
@@ -131,11 +147,11 @@ export async function POST(request: NextRequest) {
     await client
       .api(`/users/${fromEmail}/sendMail`)
       .post({
-        message,
+        message: emailMessage,
         saveToSentItems: true
       });
 
-    console.log(`[Feedback] Email sent successfully from ${email}`);
+    console.log(`[Feedback] Email sent successfully from ${userEmail} (User ID: ${session.user.id})`);
 
     return NextResponse.json(
       {
