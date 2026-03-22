@@ -30,6 +30,7 @@ import {
   RotateCcw,
   Globe,
   GitCompare,
+  GitBranch,
   History,
   MessageSquare
 } from "lucide-react";
@@ -43,9 +44,10 @@ interface AdminToolbarProps {
 interface CardTemplate {
   id: string;
   title: string;
-  category: 'search' | 'map' | 'charts' | 'kpi' | 'data' | 'blank';
+  category: 'search' | 'map' | 'charts' | 'kpi' | 'data' | 'blank' | 'analysis';
   icon: React.ComponentType<any>;
   description: string;
+  color?: string;
   defaultConfig?: Partial<DashboardCard>;
 }
 
@@ -467,6 +469,12 @@ const categoryStyles = {
     border: 'border-blue-500/30',
     text: 'text-blue-400',
     hover: 'hover:border-blue-500 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+  },
+  'analysis': {
+    bg: 'bg-zinc-900',
+    border: 'border-emerald-500/30',
+    text: 'text-emerald-400',
+    hover: 'hover:border-emerald-500 hover:shadow-[0_0_10px_rgba(16,185,129,0.3)]'
   }
 };
 
@@ -636,7 +644,8 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
     { id: 'map', label: 'Maps', icon: Map },
     { id: 'charts', label: 'Charts', icon: BarChart3 },
     { id: 'kpi', label: 'KPIs', icon: Activity },
-    { id: 'data', label: 'Data', icon: Database }
+    { id: 'data', label: 'Data', icon: Database },
+    { id: 'analysis', label: 'Analysis', icon: TrendingUp }
   ];
 
   const filteredTemplates = selectedCategory

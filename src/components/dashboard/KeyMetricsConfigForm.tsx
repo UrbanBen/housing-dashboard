@@ -43,6 +43,8 @@ export interface KeyMetricsConfig {
     newHouses: DataItemConfig;
     newOther: DataItemConfig;
     valueTotalRes: DataItemConfig;
+    approvalRate: DataItemConfig;
+    valuePerCapita: DataItemConfig;
     area: DataItemConfig;
     accordTarget: DataItemConfig;
   };
@@ -75,6 +77,16 @@ const defaultDataItems = {
     enabled: true,
     title: 'Total Residential Value',
     subtitle: 'FYTD Total Value'
+  },
+  approvalRate: {
+    enabled: true,
+    title: 'Dwelling Approval Rate',
+    subtitle: 'Per 1000 Population'
+  },
+  valuePerCapita: {
+    enabled: true,
+    title: 'Construction Value Per Capita',
+    subtitle: 'Per Person'
   },
   area: {
     enabled: true,

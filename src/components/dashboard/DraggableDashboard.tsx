@@ -70,7 +70,12 @@ export type CardType =
   | 'population-metrics'
   | 'comparison-table'
   | 'time-series'
-  | 'insights-panel';
+  | 'insights-panel'
+  // Analysis Cards
+  | 'population-trends'
+  | 'building-approvals-trend'
+  | 'regional-market-share'
+  | 'lga-comparison';
 
 export interface DashboardCard {
   id: string;

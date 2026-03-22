@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { executeQuery } from '@/lib/db-pool';
+import { executeQuery, getReadonlyPool } from '@/lib/db-pool';
 
 export async function GET(request: NextRequest) {
   try {
@@ -61,16 +61,24 @@ export async function GET(request: NextRequest) {
       params = [lgaName];
     }
 
-    const result = await executeQuery(query, params);
+    const pool = getReadonlyPool();
+    const result = await executeQuery(pool, query, params);
 
-    if (result.rows.length === 0) {
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || 'Failed to fetch census data' },
+        { status: 500 }
+      );
+    }
+
+    if (result.data.length === 0) {
       return NextResponse.json(
         { error: 'No census data found for this LGA' },
         { status: 404 }
       );
     }
 
-    const data = result.rows[0];
+    const data = result.data[0];
 
     // Calculate population density if we have both population and area
     let populationDensity = null;

@@ -28,6 +28,7 @@ export interface LGADetailsConfig {
   };
   dataItems: {
     area: DataItemConfig;
+    populationDensity: DataItemConfig;
     avgProcessingDays: DataItemConfig;
     developmentApplications: DataItemConfig;
     landReleases: DataItemConfig;
@@ -47,6 +48,11 @@ const defaultDataItems = {
     enabled: true,
     title: 'Area',
     subtitle: 'Administrative Area'
+  },
+  populationDensity: {
+    enabled: true,
+    title: 'Population Density',
+    subtitle: 'People per km²'
   },
   avgProcessingDays: {
     enabled: true,
