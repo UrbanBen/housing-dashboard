@@ -8,7 +8,7 @@ import type { LGA } from '@/components/filters/LGALookup';
 
 interface CDCHistoryCardProps {
   selectedLGA: LGA | null;
-  cardWidth?: 'small' | 'medium' | 'large' | 'xl';
+  cardWidth?: number;
 }
 
 interface HistoryData {
@@ -16,7 +16,7 @@ interface HistoryData {
   total_dwellings: number;
 }
 
-export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryCardProps) {
+export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardProps) {
   const [data, setData] = useState<HistoryData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,47 +97,38 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 'large' }: CDCHistoryC
 
   // Responsive configuration based on card width
   const getChartConfig = () => {
-    switch (cardWidth) {
-      case 'small':
-        return {
-          height: 250,
-          summaryGrid: 'grid grid-cols-2 gap-2 mb-4',
-          fontSize: 'text-base',
-          showBrush: false,
-          xAxisInterval: 'preserveStartEnd' as const
-        };
-      case 'medium':
-        return {
-          height: 300,
-          summaryGrid: 'grid grid-cols-4 gap-2 mb-5',
-          fontSize: 'text-xl',
-          showBrush: true,
-          xAxisInterval: 'preserveStartEnd' as const
-        };
-      case 'large':
-        return {
-          height: 350,
-          summaryGrid: 'grid grid-cols-4 gap-3 mb-6',
-          fontSize: 'text-2xl',
-          showBrush: true,
-          xAxisInterval: 'preserveStartEnd' as const
-        };
-      case 'xl':
-        return {
-          height: 400,
-          summaryGrid: 'grid grid-cols-4 gap-4 mb-6',
-          fontSize: 'text-3xl',
-          showBrush: true,
-          xAxisInterval: 'preserveStartEnd' as const
-        };
-      default:
-        return {
-          height: 350,
-          summaryGrid: 'grid grid-cols-4 gap-3 mb-6',
-          fontSize: 'text-2xl',
-          showBrush: true,
-          xAxisInterval: 'preserveStartEnd' as const
-        };
+    if (cardWidth < 400) {
+      return {
+        height: 250,
+        summaryGrid: 'grid grid-cols-2 gap-2 mb-4',
+        fontSize: 'text-base',
+        showBrush: false,
+        xAxisInterval: 'preserveStartEnd' as const
+      };
+    } else if (cardWidth < 600) {
+      return {
+        height: 300,
+        summaryGrid: 'grid grid-cols-4 gap-2 mb-5',
+        fontSize: 'text-xl',
+        showBrush: true,
+        xAxisInterval: 'preserveStartEnd' as const
+      };
+    } else if (cardWidth < 800) {
+      return {
+        height: 350,
+        summaryGrid: 'grid grid-cols-4 gap-3 mb-6',
+        fontSize: 'text-2xl',
+        showBrush: true,
+        xAxisInterval: 'preserveStartEnd' as const
+      };
+    } else {
+      return {
+        height: 400,
+        summaryGrid: 'grid grid-cols-4 gap-4 mb-6',
+        fontSize: 'text-3xl',
+        showBrush: true,
+        xAxisInterval: 'preserveStartEnd' as const
+      };
     }
   };
 

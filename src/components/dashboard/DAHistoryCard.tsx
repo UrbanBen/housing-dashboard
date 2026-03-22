@@ -72,8 +72,8 @@ export default function DAHistoryCard({ selectedLGA, cardWidth = 600 }: DAHistor
 
           // Get date range
           const dates = result.data.map((d: DAHistoryData) => new Date(d.period_start));
-          const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
-          const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+          const minDate = new Date(Math.min(...dates.map((d: Date) => d.getTime())));
+          const maxDate = new Date(Math.max(...dates.map((d: Date) => d.getTime())));
 
           const dateRange = `${minDate.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })} - ${maxDate.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}`;
 

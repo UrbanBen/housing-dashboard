@@ -459,33 +459,33 @@ export function DraggableCard({
         return <BAHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
 
       case 'cdc-history':
-        return <CDCHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+        return <CDCHistoryCard selectedLGA={selectedLGA} />;
 
       case 'cdc-latest-month':
-        return <CDCLatestMonthCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+        return <CDCLatestMonthCard selectedLGA={selectedLGA} />;
 
       case 'cdc-building-code-pie':
-        return <CDCBuildingCodePieCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+        return <CDCBuildingCodePieCard selectedLGA={selectedLGA} />;
 
       // DA Cards
       case 'da-history':
-        return <DAHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+        return <DAHistoryCard selectedLGA={selectedLGA} />;
 
       case 'da-latest-month':
-        return <DALatestMonthCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+        return <DALatestMonthCard selectedLGA={selectedLGA} />;
 
       case 'da-development-type-pie':
-        return <DADevelopmentTypePieCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+        return <DADevelopmentTypePieCard selectedLGA={selectedLGA} />;
 
       // CC Cards
       case 'cc-history':
-        return <CCHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+        return <CCHistoryCard selectedLGA={selectedLGA} />;
 
       case 'cc-latest-month':
-        return <CCLatestMonthCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+        return <CCLatestMonthCard selectedLGA={selectedLGA} />;
 
       case 'cc-building-code-pie':
-        return <CCBuildingCodePieCard selectedLGA={selectedLGA} cardWidth={card.size} />;
+        return <CCBuildingCodePieCard selectedLGA={selectedLGA} />;
 
       // Median Rent Cards
       case 'median-rent-overview':

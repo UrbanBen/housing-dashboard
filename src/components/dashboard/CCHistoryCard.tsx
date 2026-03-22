@@ -71,8 +71,8 @@ export default function CCHistoryCard({ selectedLGA, cardWidth = 600 }: CCHistor
 
           // Get date range
           const dates = result.data.map((d: CCHistoryData) => new Date(d.period_start));
-          const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
-          const maxDate = new Date(Math.max(...dates.map(d => d.getTime())));
+          const minDate = new Date(Math.min(...dates.map((d: Date) => d.getTime())));
+          const maxDate = new Date(Math.max(...dates.map((d: Date) => d.getTime())));
 
           const dateRange = `${minDate.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })} - ${maxDate.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' })}`;
 
