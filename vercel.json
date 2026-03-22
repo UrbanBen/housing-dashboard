@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npm run build",
   "headers": [
     {
       "source": "/dashboard/:path*",
@@ -6,6 +7,10 @@
         {
           "key": "Content-Security-Policy",
           "value": "script-src 'self' 'unsafe-eval' 'unsafe-inline'; default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.azure.com https://*.nsw.gov.au https://*.planningportal.nsw.gov.au;"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     },
