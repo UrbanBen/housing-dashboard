@@ -485,7 +485,7 @@ export default function DashboardPage() {
                   letterSpacing: '0.05em'
                 }}
               >
-                Spatio Dash
+                Urban Analytics
               </h2>
               <div
                 className="rounded-md bg-transparent border-4"
