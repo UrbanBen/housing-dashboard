@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { Client } from '@microsoft/microsoft-graph-client';
 import { ClientSecretCredential } from '@azure/identity';
-import { executeQuery } from '@/lib/db-pool';
+import { executeQuery, getAdminPool } from '@/lib/db-pool';
 import 'isomorphic-fetch';
 
 // Initialize Graph client with application credentials
@@ -67,7 +67,9 @@ export async function POST(request: NextRequest) {
     const { client, fromEmail } = getGraphClient();
 
     // Store in database for weekly/monthly reports
+    const pool = getAdminPool();
     await executeQuery(
+      pool,
       `INSERT INTO housing_dashboard.user_feedback
        (user_id, user_name, user_email, subject, feedback_text, user_agent, page_url, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
