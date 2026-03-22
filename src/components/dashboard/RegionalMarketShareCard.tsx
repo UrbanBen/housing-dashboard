@@ -74,7 +74,8 @@ export function RegionalMarketShareCard({ selectedLGA }: RegionalMarketShareCard
     generateMockData();
   }, [selectedLGA]);
 
-  const formatPercent = (value: number) => {
+  const formatPercent = (value: number | null | undefined) => {
+    if (value == null) return 'N/A';
     return `${value.toFixed(1)}%`;
   };
 
@@ -173,7 +174,7 @@ export function RegionalMarketShareCard({ selectedLGA }: RegionalMarketShareCard
                   <span className="text-sm font-medium">Market Insights</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {selectedLGA?.name} capturing {lgaList[0]?.currentShare.toFixed(1)}% of regional growth
+                  {selectedLGA?.name} capturing {lgaList[0]?.currentShare ? lgaList[0].currentShare.toFixed(1) : '0.0'}% of regional growth
                 </div>
               </div>
             </div>

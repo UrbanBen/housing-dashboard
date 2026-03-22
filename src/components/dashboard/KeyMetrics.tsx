@@ -458,12 +458,12 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
 
   // Calculate derived metrics
   const calculateApprovalRate = () => {
-    if (!data.buildingApprovals || !censusData?.population_2026_proj) return null;
+    if (!data.buildingApprovals || !censusData?.population_2026_proj || censusData.population_2026_proj <= 0) return null;
     return ((data.buildingApprovals / censusData.population_2026_proj) * 1000).toFixed(2);
   };
 
   const calculateValuePerCapita = () => {
-    if (!data.valueTotalRes || !censusData?.population_2026_proj) return null;
+    if (!data.valueTotalRes || !censusData?.population_2026_proj || censusData.population_2026_proj <= 0) return null;
     return Math.round(data.valueTotalRes / censusData.population_2026_proj);
   };
 

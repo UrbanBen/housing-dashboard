@@ -373,7 +373,7 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
             </div>
             <div className="mt-3 pt-3 border-t border-secondary/20 flex justify-between items-center">
               <div className="text-xs text-muted-foreground">
-                Avg. Annual Growth: <span className="font-semibold text-foreground">{censusData.growth_rate_annual_avg?.toFixed(2)}%</span>
+                Avg. Annual Growth: <span className="font-semibold text-foreground">{censusData.growth_rate_annual_avg != null ? censusData.growth_rate_annual_avg.toFixed(2) : 'N/A'}%</span>
               </div>
               <div className="text-xs text-muted-foreground">
                 * Projected

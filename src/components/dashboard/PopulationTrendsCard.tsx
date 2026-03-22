@@ -82,7 +82,8 @@ export function PopulationTrendsCard({ selectedLGA }: PopulationTrendsCardProps)
     }
   ] : [];
 
-  const formatPopulation = (value: number) => {
+  const formatPopulation = (value: number | null | undefined) => {
+    if (value == null) return 'N/A';
     if (value >= 1000000) {
       return `${(value / 1000000).toFixed(2)}M`;
     } else if (value >= 1000) {
@@ -183,7 +184,7 @@ export function PopulationTrendsCard({ selectedLGA }: PopulationTrendsCardProps)
                 <span className="text-sm font-medium">Average Annual Growth Rate (2011-2026)</span>
               </div>
               <div className="text-2xl font-bold text-secondary">
-                {censusData.growth_rate_annual_avg?.toFixed(2)}%
+                {censusData.growth_rate_annual_avg != null ? censusData.growth_rate_annual_avg.toFixed(2) : 'N/A'}%
               </div>
             </div>
 
