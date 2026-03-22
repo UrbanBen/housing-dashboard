@@ -35,10 +35,6 @@ import { BAHistoryCard } from './BAHistoryCard';
 import { CDCHistoryCard } from './CDCHistoryCard';
 import CDCLatestMonthCard from './CDCLatestMonthCard';
 import CDCBuildingCodePieCard from './CDCBuildingCodePieCard';
-import { PopulationTrendsCard } from './PopulationTrendsCard';
-import { BuildingApprovalsTrendCard } from './BuildingApprovalsTrendCard';
-import { RegionalMarketShareCard } from './RegionalMarketShareCard';
-import { LGAComparisonCard } from './LGAComparisonCard';
 import CCHistoryCard from './CCHistoryCard';
 import CCLatestMonthCard from './CCLatestMonthCard';
 import CCBuildingCodePieCard from './CCBuildingCodePieCard';
@@ -503,18 +499,6 @@ export function DraggableCard({
 
       case 'rent-quartile':
         return <RentQuartileCard selectedLGA={selectedLGA} />;
-
-      case 'population-trends':
-        return <PopulationTrendsCard selectedLGA={selectedLGA} />;
-
-      case 'building-approvals-trend':
-        return <BuildingApprovalsTrendCard selectedLGA={selectedLGA} />;
-
-      case 'regional-market-share':
-        return <RegionalMarketShareCard selectedLGA={selectedLGA} />;
-
-      case 'lga-comparison':
-        return <LGAComparisonCard selectedLGA={selectedLGA} />;
 
       default:
         return (
