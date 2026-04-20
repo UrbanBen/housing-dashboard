@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileCheck } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from 'recharts';
@@ -160,15 +160,29 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardP
 
   const chartConfig = getChartConfig();
 
-  // Format data for chart
-  const chartData = data.map(item => ({
-    date: new Date(item.period_start).toLocaleDateString('en-AU', { month: 'short', year: '2-digit' }),
-    Dwellings: item.total_dwellings,
-  }));
+  // Format data for chart - memoized to prevent unnecessary re-renders
+  const chartData = useMemo(() => {
+    return data.map(item => ({
+      date: new Date(item.period_start).toLocaleDateString('en-AU', { month: 'short', year: '2-digit' }),
+      Dwellings: item.total_dwellings,
+    }));
+  }, [data]);
 
   // Calculate Y-axis domain to ensure all data is visible
   const maxValue = Math.max(...chartData.map(d => d.Dwellings), 0);
   const yAxisDomain = [0, Math.ceil(maxValue * 1.1)];
+
+  // Memoize the brush onChange handler
+  const handleBrushChange = useCallback((brushData: any) => {
+    if (brushData && brushData.startIndex !== undefined && brushData.endIndex !== undefined) {
+      setBrushRange({
+        startIndex: brushData.startIndex,
+        endIndex: brushData.endIndex
+      });
+    } else {
+      setBrushRange(null);
+    }
+  }, []);
 
   return (
     <Card className="bg-card/50 backdrop-blur-sm shadow-lg border border-border/50">
@@ -296,20 +310,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardP
                     stroke="#14b8a6"
                     fill="hsl(var(--muted))"
                     fillOpacity={0.3}
-                    data={chartData}
-                    onChange={(brushData: any) => {
-                      // Use setTimeout to avoid blocking the drag interaction
-                      setTimeout(() => {
-                        if (brushData && brushData.startIndex !== undefined && brushData.endIndex !== undefined) {
-                          setBrushRange({
-                            startIndex: brushData.startIndex,
-                            endIndex: brushData.endIndex
-                          });
-                        } else {
-                          setBrushRange(null);
-                        }
-                      }, 0);
-                    }}
+                    onChange={handleBrushChange}
                   />
                 )}
               </AreaChart>

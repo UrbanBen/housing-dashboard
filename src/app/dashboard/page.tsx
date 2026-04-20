@@ -270,6 +270,18 @@ export default function DashboardPage() {
           console.error('Failed to load saved dashboard layout:', error);
         }
       }
+
+      // Load saved LGA selection
+      const savedLGA = localStorage.getItem('selected-lga');
+      if (savedLGA) {
+        try {
+          const parsedLGA = JSON.parse(savedLGA);
+          console.log('[DashboardPage] Loading LGA from localStorage:', parsedLGA);
+          setSelectedLGA(parsedLGA);
+        } catch (error) {
+          console.error('Failed to load saved LGA selection:', error);
+        }
+      }
     };
 
     loadPreferences();
@@ -297,6 +309,11 @@ export default function DashboardPage() {
       } else {
         // Save to localStorage for non-logged-in users
         localStorage.setItem('dashboard-layout', JSON.stringify(cards));
+        if (selectedLGA) {
+          localStorage.setItem('selected-lga', JSON.stringify(selectedLGA));
+        } else {
+          localStorage.removeItem('selected-lga');
+        }
       }
     };
 
