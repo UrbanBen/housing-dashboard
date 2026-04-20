@@ -296,10 +296,19 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardP
                     stroke="#14b8a6"
                     fill="hsl(var(--muted))"
                     fillOpacity={0.3}
-                    onChange={(range: any) => {
-                      if (range && range.startIndex !== undefined && range.endIndex !== undefined) {
-                        setBrushRange({ startIndex: range.startIndex, endIndex: range.endIndex });
-                      }
+                    data={chartData}
+                    onChange={(brushData: any) => {
+                      // Use setTimeout to avoid blocking the drag interaction
+                      setTimeout(() => {
+                        if (brushData && brushData.startIndex !== undefined && brushData.endIndex !== undefined) {
+                          setBrushRange({
+                            startIndex: brushData.startIndex,
+                            endIndex: brushData.endIndex
+                          });
+                        } else {
+                          setBrushRange(null);
+                        }
+                      }, 0);
                     }}
                   />
                 )}
