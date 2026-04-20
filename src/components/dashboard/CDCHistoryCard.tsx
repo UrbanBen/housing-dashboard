@@ -21,6 +21,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<any>(null);
+  const [brushRange, setBrushRange] = useState<{ startIndex: number; endIndex: number } | null>(null);
 
   useEffect(() => {
     if (!selectedLGA) {
@@ -61,11 +62,36 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardP
     fetchData();
   }, [selectedLGA]);
 
-  // Calculate date range
-  const getDateRange = () => {
-    if (data.length === 0) return null;
-    const earliest = new Date(data[0].period_start);
-    const latest = new Date(data[data.length - 1].period_start);
+  // Get filtered data based on brush selection
+  const getFilteredData = () => {
+    if (!brushRange) return data;
+    return data.slice(brushRange.startIndex, brushRange.endIndex + 1);
+  };
+
+  const filteredData = getFilteredData();
+
+  // Calculate summary stats from filtered data
+  const calculateSummary = (dataSubset: HistoryData[]) => {
+    if (dataSubset.length === 0) return null;
+
+    const totalDwellings = dataSubset.reduce((sum, item) => sum + item.total_dwellings, 0);
+    const monthlyAverage = Math.round(totalDwellings / dataSubset.length);
+    const annualAverage = Math.round(monthlyAverage * 12);
+
+    return {
+      total_dwellings: totalDwellings,
+      monthly_average: monthlyAverage,
+      annual_average: annualAverage
+    };
+  };
+
+  const filteredSummary = calculateSummary(filteredData);
+
+  // Calculate date range from filtered data
+  const getDateRange = (dataSubset: HistoryData[]) => {
+    if (dataSubset.length === 0) return null;
+    const earliest = new Date(dataSubset[0].period_start);
+    const latest = new Date(dataSubset[dataSubset.length - 1].period_start);
 
     // Calculate total months difference
     const totalMonths = (latest.getFullYear() - earliest.getFullYear()) * 12
@@ -93,7 +119,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardP
     };
   };
 
-  const dateRange = getDateRange();
+  const dateRange = getDateRange(filteredData);
 
   // Responsive configuration based on card width
   const getChartConfig = () => {
@@ -153,7 +179,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardP
             <div>
               <CardTitle className="text-xl text-teal-600 dark:text-teal-400">Complying Development History</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                All available data • {selectedLGA?.name || 'Select LGA'}
+                {dateRange ? `${dateRange.from} to ${dateRange.to}` : 'All available data'} • {selectedLGA?.name || 'Select LGA'}
               </p>
             </div>
           </div>
@@ -185,7 +211,7 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardP
             <div className={chartConfig.summaryGrid}>
               <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg p-3 text-center hover:bg-teal-500/10 transition-all">
                 <div className={`${chartConfig.fontSize} font-bold text-teal-600 dark:text-teal-400`}>
-                  {summary?.total_dwellings?.toLocaleString() || 0}
+                  {filteredSummary?.total_dwellings?.toLocaleString() || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Total Approved Dwellings</div>
               </div>
@@ -212,14 +238,14 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardP
 
               <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg p-3 text-center hover:bg-teal-500/10 transition-all">
                 <div className={`${chartConfig.fontSize} font-bold text-teal-600 dark:text-teal-400`}>
-                  {summary?.monthly_average?.toLocaleString() || 0}
+                  {filteredSummary?.monthly_average?.toLocaleString() || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Monthly Average CDC Dwellings Approved</div>
               </div>
 
               <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg p-3 text-center hover:bg-teal-500/10 transition-all">
                 <div className={`${chartConfig.fontSize} font-bold text-teal-600 dark:text-teal-400`}>
-                  {summary?.annual_average?.toLocaleString() || 0}
+                  {filteredSummary?.annual_average?.toLocaleString() || 0}
                 </div>
                 <div className="text-xs text-muted-foreground">Annual Average CDC Dwellings Approved</div>
               </div>
@@ -270,16 +296,15 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardP
                     stroke="#14b8a6"
                     fill="hsl(var(--muted))"
                     fillOpacity={0.3}
+                    onChange={(range: any) => {
+                      if (range && range.startIndex !== undefined && range.endIndex !== undefined) {
+                        setBrushRange({ startIndex: range.startIndex, endIndex: range.endIndex });
+                      }
+                    }}
                   />
                 )}
               </AreaChart>
             </ResponsiveContainer>
-
-            {dateRange && (
-              <div className="mt-4 text-center text-sm text-muted-foreground">
-                Data Coverage: {dateRange.from} to {dateRange.to} ({dateRange.years} years)
-              </div>
-            )}
           </>
         )}
       </CardContent>

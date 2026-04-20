@@ -400,13 +400,13 @@ const cardTemplates: CardTemplate[] = [
   }
 ];
 
-// Category styling with orange highlights for Edit Mode
+// Category styling for Edit Mode
 const categoryStyles = {
   'blank': {
     bg: 'bg-zinc-900',
-    border: 'border-orange-500/30',
-    text: 'text-orange-500',
-    hover: 'hover:border-orange-500 hover:shadow-[0_0_10px_rgba(249,115,22,0.3)]'
+    border: 'border-zinc-500/30',
+    text: 'text-zinc-400',
+    hover: 'hover:border-zinc-400 hover:shadow-[0_0_10px_rgba(161,161,170,0.3)]'
   },
   'search': {
     bg: 'bg-zinc-900',
@@ -539,9 +539,9 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
     hover: 'hover:border-[#22c55e] hover:shadow-[0_0_15px_rgba(34,197,94,0.5)]'
   } : isLGADwellingApprovals ? {
     bg: 'bg-zinc-900',
-    border: 'border-orange-500/50',
-    text: 'text-orange-500',
-    hover: 'hover:border-orange-500 hover:shadow-[0_0_15px_rgba(249,115,22,0.5)]'
+    border: 'border-[#f59e0b]/50',
+    text: 'text-[#f59e0b]',
+    hover: 'hover:border-[#f59e0b] hover:shadow-[0_0_15px_rgba(245,158,11,0.5)]'
   } : isCensusCard ? {
     bg: 'bg-zinc-900',
     border: 'border-[#eab308]/50',
@@ -631,8 +631,8 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
       {/* Sidebar */}
       <div
         className={`
-          h-full bg-black/95 backdrop-blur-xl border-r border-orange-500/20
-          shadow-[0_0_30px_rgba(249,115,22,0.1)]
+          h-full bg-black/95 backdrop-blur-xl border-r border-zinc-700/50
+          shadow-[0_0_30px_rgba(0,0,0,0.3)]
           transition-all duration-500 ease-in-out
           flex flex-col
           overflow-hidden
@@ -640,23 +640,23 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
         `}
       >
         {/* Header */}
-        <div className="flex-shrink-0 p-4 border-b border-orange-500/20 flex items-center justify-between">
+        <div className="flex-shrink-0 p-4 border-b border-zinc-700/50 flex items-center justify-between">
           {isExpanded && (
             <div className="flex items-center gap-2">
-              <Layout className="h-5 w-5 text-orange-500" />
-              <h3 className="font-bold text-orange-500 text-lg drop-shadow-[0_0_10px_rgba(249,115,22,0.5)]">
+              <Layout className="h-5 w-5 text-white" />
+              <h3 className="font-bold text-white text-lg">
                 Card Library
               </h3>
             </div>
           )}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-2 rounded-lg bg-zinc-900 border border-orange-500/30 hover:border-orange-500 hover:shadow-[0_0_10px_rgba(249,115,22,0.3)] transition-all"
+            className="p-2 rounded-lg bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition-all"
           >
             {isExpanded ? (
-              <ChevronLeft className="h-4 w-4 text-orange-500" />
+              <ChevronLeft className="h-4 w-4 text-white" />
             ) : (
-              <ChevronRight className="h-4 w-4 text-orange-500" />
+              <ChevronRight className="h-4 w-4 text-white" />
             )}
           </button>
         </div>
@@ -664,16 +664,16 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
         {isExpanded && (
           <>
             {/* Category Filter */}
-            <div className="flex-shrink-0 p-4 border-b border-orange-500/20">
-              <div className="text-xs font-semibold text-orange-500 mb-2">CATEGORIES</div>
+            <div className="flex-shrink-0 p-4 border-b border-zinc-700/50">
+              <div className="text-xs font-semibold text-gray-300 mb-2">CATEGORIES</div>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedCategory(null)}
                   className={`
                     px-3 py-1.5 rounded-md text-xs font-medium transition-all
                     ${!selectedCategory
-                      ? 'bg-orange-500/20 text-orange-500 border border-orange-500'
-                      : 'bg-zinc-900 text-gray-400 border border-zinc-700 hover:border-orange-500/50'
+                      ? 'bg-zinc-700 text-white border border-zinc-500'
+                      : 'bg-zinc-900 text-gray-400 border border-zinc-700 hover:border-zinc-500'
                     }
                   `}
                 >
@@ -689,8 +689,8 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
                       className={`
                         px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1
                         ${selectedCategory === cat.id
-                          ? 'bg-orange-500/20 text-orange-500 border border-orange-500'
-                          : 'bg-zinc-900 text-gray-400 border border-zinc-700 hover:border-orange-500/50'
+                          ? 'bg-zinc-700 text-white border border-zinc-500'
+                          : 'bg-zinc-900 text-gray-400 border border-zinc-700 hover:border-zinc-500'
                         }
                       `}
                     >
@@ -704,7 +704,7 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
 
             {/* Card Templates Grid */}
             <div className="flex-1 min-h-0 overflow-y-auto p-4 custom-scrollbar">
-              <div className="text-xs font-semibold text-orange-500 mb-3">
+              <div className="text-xs font-semibold text-gray-300 mb-3">
                 {selectedCategory
                   ? `${categories.find(c => c.id === selectedCategory)?.label.toUpperCase()} CARDS`
                   : 'ALL CARDS'}
@@ -717,7 +717,7 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
             </div>
 
             {/* Reset Layout Button */}
-            <div className="flex-shrink-0 p-4 border-t border-orange-500/20">
+            <div className="flex-shrink-0 p-4 border-t border-zinc-700/50">
               <button
                 onClick={onResetLayout}
                 className="w-full px-4 py-2.5 rounded-lg bg-zinc-900 border border-red-500/30 text-red-400 hover:border-red-500 hover:bg-red-500/10 hover:shadow-[0_0_10px_rgba(239,68,68,0.3)] transition-all flex items-center justify-center gap-2 text-sm font-medium"
@@ -730,7 +730,7 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
             {/* Footer Tip */}
             <div className="flex-shrink-0 p-4 bg-zinc-950">
               <div className="text-xs text-gray-400 text-center">
-                💡 <span className="text-orange-500">Drag</span> cards to dashboard • <span className="text-orange-500">Double-click</span> to configure
+                💡 <span className="text-white">Drag</span> cards to dashboard • <span className="text-white">Double-click</span> to configure
               </div>
             </div>
           </>
@@ -748,10 +748,10 @@ export function AdminToolbar({ isVisible, onResetLayout }: AdminToolbarProps) {
                     setIsExpanded(true);
                     setSelectedCategory(cat.id);
                   }}
-                  className="w-full p-2 rounded-lg bg-zinc-900 border border-orange-500/30 hover:border-orange-500 hover:shadow-[0_0_10px_rgba(249,115,22,0.3)] transition-all"
+                  className="w-full p-2 rounded-lg bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition-all"
                   title={cat.label}
                 >
-                  <Icon className="h-5 w-5 text-orange-500 mx-auto" />
+                  <Icon className="h-5 w-5 text-white mx-auto" />
                 </button>
               );
             })}
