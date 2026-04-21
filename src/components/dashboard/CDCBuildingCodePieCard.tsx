@@ -1,10 +1,15 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart as PieChartIcon } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { Building, TrendingUp } from 'lucide-react';
 import type { LGA } from '@/components/filters/LGALookup';
+
+interface BuildingClassData {
+  building_class: string;
+  total_count: number;
+}
 
 interface CDCBuildingCodePieCardProps {
   selectedLGA: LGA | null;
@@ -12,33 +17,28 @@ interface CDCBuildingCodePieCardProps {
   cdcTimeframe?: { startDate: string; endDate: string } | null;
 }
 
-interface BuildingClassData {
-  building_class: string;
-  total_count: number;
-}
-
-// Teal color palette for CDC cards
 const COLORS = [
-  '#14b8a6', // Teal 500
-  '#2dd4bf', // Teal 400
-  '#5eead4', // Teal 300
-  '#99f6e4', // Teal 200
-  '#ccfbf1', // Teal 100
+  '#14b8a6', // Teal - Class 1
+  '#2dd4bf', // Teal 400 - Class 2
+  '#5eead4', // Teal 300 - Class 3
+  '#99f6e4', // Teal 200 - Class 4
+  '#ccfbf1', // Teal 100 - Class 5
+  '#0d9488', // Teal 600 - Class 6
 ];
 
 export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, cdcTimeframe }: CDCBuildingCodePieCardProps) {
   const [data, setData] = useState<BuildingClassData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<string>('Most Recent Month');
 
   useEffect(() => {
-    if (!selectedLGA) {
-      setData([]);
-      return;
-    }
+    async function fetchData() {
+      if (!selectedLGA) {
+        setLoading(false);
+        return;
+      }
 
-    const fetchData = async () => {
       setLoading(true);
       setError(null);
 
@@ -67,161 +67,217 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
           body: JSON.stringify(body),
         });
 
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
         const result = await response.json();
 
-        if (result.success) {
-          // Filter out classes with zero count
-          const filteredData = result.data.filter((item: BuildingClassData) => item.total_count > 0);
-          setData(filteredData);
+        if (result.success && result.data) {
+          setData(result.data);
         } else {
-          setError(result.error || 'Failed to fetch data');
+          throw new Error(result.error || 'Failed to fetch data');
         }
       } catch (err: any) {
-        setError(err.message || 'Network error');
+        console.error('[CDC Building Code Pie Card] Error:', err);
+        setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     fetchData();
   }, [selectedLGA, cdcTimeframe]);
 
-  // Calculate total for percentage display
-  const total = data.reduce((sum, item) => sum + item.total_count, 0);
+  if (!selectedLGA) {
+    return (
+      <Card className="w-full h-full border-teal-200 bg-gradient-to-br from-teal-50 to-white">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-teal-700">
+            <Building className="h-5 w-5" />
+            CDC by Building Class
+          </CardTitle>
+          <CardDescription>{dateRange}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[200px] text-gray-500">
+            Select an LGA to view building class distribution
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  // Format data for pie chart
+  if (loading) {
+    return (
+      <Card className="w-full h-full border-teal-200 bg-gradient-to-br from-teal-50 to-white">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-teal-700">
+            <Building className="h-5 w-5" />
+            CDC by Building Class
+          </CardTitle>
+          <CardDescription>{dateRange}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[200px]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-700"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="w-full h-full border-red-200 bg-gradient-to-br from-red-50 to-white">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-700">
+            <Building className="h-5 w-5" />
+            CDC by Building Class
+          </CardTitle>
+          <CardDescription>{dateRange}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[200px] text-red-600">
+            Error: {error}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <Card className="w-full h-full border-teal-200 bg-gradient-to-br from-teal-50 to-white">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-teal-700">
+            <Building className="h-5 w-5" />
+            CDC by Building Class
+          </CardTitle>
+          <CardDescription>{dateRange}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[200px] text-gray-500">
+            No data available for {selectedLGA.name}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Prepare chart data
   const chartData = data.map(item => ({
-    name: item.building_class.replace('Class ', ''),
+    name: item.building_class || 'Unknown',
     value: item.total_count,
-    percentage: total > 0 ? ((item.total_count / total) * 100).toFixed(1) : '0',
   }));
 
-  // Responsive configuration
-  const getChartConfig = () => {
-    if (cardWidth < 400) {
-      return { height: 250, showLabels: false, fontSize: 'text-sm' };
-    } else if (cardWidth < 600) {
-      return { height: 300, showLabels: true, fontSize: 'text-base' };
-    } else {
-      return { height: 350, showLabels: true, fontSize: 'text-lg' };
-    }
-  };
+  const totalCount = data.reduce((sum, item) => sum + item.total_count, 0);
 
-  const chartConfig = getChartConfig();
-
-  // Custom label for pie slices
-  const renderCustomLabel = (entry: any) => {
-    if (!chartConfig.showLabels) return null;
-    return `${entry.percentage}%`;
-  };
+  // Responsive chart size
+  const chartSize = cardWidth < 400 ? 150 : cardWidth < 600 ? 200 : 250;
 
   return (
-    <Card className="bg-card/50 backdrop-blur-sm shadow-lg border border-border/50">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <PieChartIcon className="h-6 w-6 text-teal-500" />
-            <div>
-              <CardTitle className="text-xl text-teal-600 dark:text-teal-400">CDC by Building Class</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {dateRange} • {selectedLGA?.name || 'Select LGA'}
-              </p>
+    <Card className="w-full h-full border-teal-200 bg-gradient-to-br from-teal-50 to-white">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-teal-700">
+          <Building className="h-5 w-5" />
+          CDC by Building Class
+        </CardTitle>
+        <CardDescription>
+          {dateRange} • {selectedLGA.name}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Summary */}
+        <div className="bg-white rounded-lg p-3 border border-teal-100">
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-gray-600">Total CDC Certificates</div>
+            <div className="text-xl font-bold text-teal-700">
+              {totalCount.toLocaleString()}
             </div>
+          </div>
+          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+            <TrendingUp className="h-3 w-3" />
+            <span>{data.length} building classes</span>
           </div>
         </div>
-      </CardHeader>
 
-      <CardContent className="pt-2">
-        {loading && (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        )}
-
-        {error && (
-          <div className="flex items-center justify-center h-64 text-destructive">
-            <p>{error}</p>
-          </div>
-        )}
-
-        {!loading && !error && data.length === 0 && (
-          <div className="flex items-center justify-center h-64 text-muted-foreground">
-            <p>Select an LGA to view building class distribution</p>
-          </div>
-        )}
-
-        {!loading && !error && data.length > 0 && (
-          <>
-            {/* Summary Stats */}
-            <div className="mb-4 p-4 bg-teal-500/5 border border-teal-500/10 rounded-lg text-center">
-              <div className="text-3xl font-bold text-teal-600 dark:text-teal-400">
-                {total.toLocaleString()}
-              </div>
-              <div className="text-xs text-muted-foreground">Total CDC Certificates</div>
-            </div>
-
-            {/* Pie Chart */}
-            <ResponsiveContainer width="100%" height={chartConfig.height}>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={renderCustomLabel}
-                  outerRadius={chartConfig.height / 3}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value: number, name: string, props: any) => [
-                    `${value.toLocaleString()} (${props.payload.percentage}%)`,
-                    name
-                  ]}
-                />
+        {/* Pie Chart */}
+        <div className="bg-white rounded-lg p-4 border border-teal-100">
+          <ResponsiveContainer width="100%" height={chartSize}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) =>
+                  cardWidth > 500 ? `${name}: ${(percent * 100).toFixed(0)}%` : `${(percent * 100).toFixed(0)}%`
+                }
+                outerRadius={cardWidth < 400 ? 60 : cardWidth < 600 ? 80 : 100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  fontSize: '12px'
+                }}
+                formatter={(value: number, name: string, props: any) => [
+                  `${value.toLocaleString()} (${((value / totalCount) * 100).toFixed(1)}%)`,
+                  props.payload.name
+                ]}
+              />
+              {cardWidth > 500 && (
                 <Legend
-                  verticalAlign="bottom"
-                  height={36}
+                  wrapperStyle={{ fontSize: '11px' }}
                   iconType="circle"
-                  wrapperStyle={{ fontSize: '12px' }}
                 />
-              </PieChart>
-            </ResponsiveContainer>
+              )}
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
 
-            {/* Breakdown Table */}
-            <div className="mt-4 space-y-2">
-              {chartData.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-2 bg-teal-500/5 border border-teal-500/10 rounded-lg hover:bg-teal-500/10 transition-all"
-                >
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                    />
-                    <span className="text-sm font-medium">{item.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-teal-600 dark:text-teal-400">
-                      {item.value.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-muted-foreground">{item.percentage}%</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        {/* Breakdown Table */}
+        <div className="bg-white rounded-lg border border-teal-100 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-teal-50">
+              <tr>
+                <th className="text-left p-2 text-gray-700 font-semibold">Class</th>
+                <th className="text-right p-2 text-gray-700 font-semibold">Count</th>
+                <th className="text-right p-2 text-gray-700 font-semibold">%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((item, index) => {
+                const percentage = ((item.total_count / totalCount) * 100).toFixed(1);
+                return (
+                  <tr key={index} className="border-t border-gray-100">
+                    <td className="p-2 flex items-center gap-2">
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      />
+                      <span className="text-gray-900 text-xs">{item.building_class}</span>
+                    </td>
+                    <td className="p-2 text-right text-gray-900 font-medium">
+                      {item.total_count.toLocaleString()}
+                    </td>
+                    <td className="p-2 text-right text-gray-600">
+                      {percentage}%
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </CardContent>
     </Card>
   );
