@@ -9,6 +9,7 @@ import type { LGA } from '@/components/filters/LGALookup';
 interface CDCHistoryCardProps {
   selectedLGA: LGA | null;
   cardWidth?: number;
+  onCdcTimeframeChange?: (timeframe: { startDate: string; endDate: string } | null) => void;
 }
 
 interface HistoryData {
@@ -16,7 +17,7 @@ interface HistoryData {
   total_dwellings: number;
 }
 
-export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardProps) {
+export function CDCHistoryCard({ selectedLGA, cardWidth = 600, onCdcTimeframeChange }: CDCHistoryCardProps) {
   const [data, setData] = useState<HistoryData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -120,6 +121,17 @@ export function CDCHistoryCard({ selectedLGA, cardWidth = 600 }: CDCHistoryCardP
   };
 
   const dateRange = getDateRange(filteredData);
+
+  // Update shared CDC timeframe when filtered data changes
+  useEffect(() => {
+    if (onCdcTimeframeChange && filteredData.length > 0) {
+      const startDate = filteredData[0].period_start;
+      const endDate = filteredData[filteredData.length - 1].period_start;
+      onCdcTimeframeChange({ startDate, endDate });
+    } else if (onCdcTimeframeChange && filteredData.length === 0) {
+      onCdcTimeframeChange(null);
+    }
+  }, [filteredData, onCdcTimeframeChange]);
 
   // Responsive configuration based on card width
   const getChartConfig = () => {

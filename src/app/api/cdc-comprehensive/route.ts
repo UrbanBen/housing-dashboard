@@ -18,7 +18,7 @@ import { getReadonlyPool } from '@/lib/db-pool';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { type, lgaCode, lgaName } = body;
+    const { type, lgaCode, lgaName, startDate, endDate } = body;
 
     if (!type) {
       return NextResponse.json(
@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'pie-chart':
-        query = buildPieChartQuery(lgaCode, lgaName);
-        params = buildParams(lgaCode, lgaName);
+        query = buildPieChartQuery(lgaCode, lgaName, startDate, endDate);
+        params = buildPieChartParams(lgaCode, lgaName, startDate, endDate);
         break;
 
       default:
@@ -163,9 +163,25 @@ function buildLatestMonthQuery(lgaCode?: string, lgaName?: string): string {
   `;
 }
 
-function buildPieChartQuery(lgaCode?: string, lgaName?: string): string {
-  const whereClause = buildWhereClause(lgaCode, lgaName);
-  const whereFilter = whereClause ? `WHERE ${whereClause}` : '';
+function buildPieChartQuery(lgaCode?: string, lgaName?: string, startDate?: string, endDate?: string): string {
+  const whereClauses: string[] = [];
+
+  if (lgaCode) {
+    whereClauses.push(`lga_code = $1`);
+  } else if (lgaName) {
+    whereClauses.push(`lga_name ILIKE $1`);
+  }
+
+  if (startDate && endDate) {
+    const paramIndex = (lgaCode || lgaName) ? 3 : 1;
+    whereClauses.push(`month >= $${paramIndex - 1}`);
+    whereClauses.push(`month <= $${paramIndex}`);
+  } else if (!startDate && !endDate) {
+    // Default to most recent month if no date range specified
+    whereClauses.push(`month = (SELECT MAX(month) FROM housing_dashboard.cdc_historic)`);
+  }
+
+  const whereFilter = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
   return `
     SELECT
@@ -218,6 +234,23 @@ function buildParams(lgaCode?: string, lgaName?: string): any[] {
   if (lgaCode) return [lgaCode];
   if (lgaName) return [`%${lgaName}%`];
   return [];
+}
+
+function buildPieChartParams(lgaCode?: string, lgaName?: string, startDate?: string, endDate?: string): any[] {
+  const params: any[] = [];
+
+  if (lgaCode) {
+    params.push(lgaCode);
+  } else if (lgaName) {
+    params.push(`%${lgaName}%`);
+  }
+
+  if (startDate && endDate) {
+    params.push(startDate);
+    params.push(endDate);
+  }
+
+  return params;
 }
 
 function calculateSummary(rows: any[]): any {

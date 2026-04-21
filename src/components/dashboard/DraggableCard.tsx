@@ -65,6 +65,8 @@ interface DraggableCardProps {
   onCardSizeChange?: (cardId: string, size: 'small' | 'medium' | 'large' | 'xl') => void;
   isLoggedIn?: boolean;
   disableHover?: boolean;
+  cdcTimeframe?: { startDate: string; endDate: string } | null;
+  onCdcTimeframeChange?: (timeframe: { startDate: string; endDate: string } | null) => void;
 }
 
 export function DraggableCard({
@@ -79,7 +81,9 @@ export function DraggableCard({
   isBeingDragged = false,
   onCardSizeChange,
   isLoggedIn = true,
-  disableHover = false
+  disableHover = false,
+  cdcTimeframe,
+  onCdcTimeframeChange
 }: DraggableCardProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const cardRef = React.useRef<HTMLDivElement>(null);
@@ -459,13 +463,13 @@ export function DraggableCard({
         return <BAHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
 
       case 'cdc-history':
-        return <CDCHistoryCard selectedLGA={selectedLGA} />;
+        return <CDCHistoryCard selectedLGA={selectedLGA} onCdcTimeframeChange={onCdcTimeframeChange} />;
 
       case 'cdc-latest-month':
         return <CDCLatestMonthCard selectedLGA={selectedLGA} />;
 
       case 'cdc-building-code-pie':
-        return <CDCBuildingCodePieCard selectedLGA={selectedLGA} />;
+        return <CDCBuildingCodePieCard selectedLGA={selectedLGA} cdcTimeframe={cdcTimeframe} />;
 
       // DA Cards
       case 'da-history':

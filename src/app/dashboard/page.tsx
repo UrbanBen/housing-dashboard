@@ -173,6 +173,7 @@ export default function DashboardPage() {
   const [activeCard, setActiveCard] = useState<DashboardCard | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [cdcTimeframe, setCdcTimeframe] = useState<{ startDate: string; endDate: string } | null>(null);
 
   // Authentication check - allow access without login for now (free tier)
   // In production, you might want to require auth for all users
@@ -681,6 +682,8 @@ export default function DashboardPage() {
               clearDragState={clearDragState}
               isLoggedIn={isLoggedIn}
               disableHover={showLoginModal}
+              cdcTimeframe={cdcTimeframe}
+              onCdcTimeframeChange={setCdcTimeframe}
             />
           </div>
         </div>

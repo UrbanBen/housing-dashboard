@@ -214,7 +214,7 @@ const cardTemplates: CardTemplate[] = [
   },
   {
     id: 'cdc-building-code-pie',
-    title: 'CDC by Building Code',
+    title: 'CDC by Building Class',
     category: 'charts',
     icon: PieChart,
     description: 'Breakdown by building class'

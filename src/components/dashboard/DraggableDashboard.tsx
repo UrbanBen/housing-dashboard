@@ -93,6 +93,8 @@ interface DraggableDashboardProps {
   clearDragState: () => void;
   isLoggedIn?: boolean;
   disableHover?: boolean;
+  cdcTimeframe?: { startDate: string; endDate: string } | null;
+  onCdcTimeframeChange?: (timeframe: { startDate: string; endDate: string } | null) => void;
 }
 
 interface DroppableDashboardGridProps {
@@ -107,6 +109,8 @@ interface DroppableDashboardGridProps {
   onCardSizeChange: (cardId: string, size: 'small' | 'medium' | 'large' | 'xl') => void;
   isLoggedIn?: boolean;
   disableHover?: boolean;
+  cdcTimeframe?: { startDate: string; endDate: string } | null;
+  onCdcTimeframeChange?: (timeframe: { startDate: string; endDate: string } | null) => void;
 }
 
 function DroppableDashboardGrid({
@@ -120,7 +124,9 @@ function DroppableDashboardGrid({
   activeCard,
   onCardSizeChange,
   isLoggedIn = true,
-  disableHover = false
+  disableHover = false,
+  cdcTimeframe,
+  onCdcTimeframeChange
 }: DroppableDashboardGridProps) {
   const { isOver, setNodeRef } = useDroppable({
     id: 'dashboard-grid',
@@ -174,6 +180,8 @@ function DroppableDashboardGrid({
             onCardSizeChange={onCardSizeChange}
             isLoggedIn={isLoggedIn}
             disableHover={disableHover}
+            cdcTimeframe={cdcTimeframe}
+            onCdcTimeframeChange={onCdcTimeframeChange}
           />
         );
       })}
@@ -344,7 +352,7 @@ const defaultCards: DashboardCard[] = [
   },
 ];
 
-export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode, cards, setCards, activeCard, clearDragState, isLoggedIn = true, disableHover = false }: DraggableDashboardProps) {
+export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEditMode, isAdminMode, cards, setCards, activeCard, clearDragState, isLoggedIn = true, disableHover = false, cdcTimeframe, onCdcTimeframeChange }: DraggableDashboardProps) {
 
   // Handle card deletion
   const handleDeleteCard = React.useCallback((cardId: string) => {
@@ -449,6 +457,8 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
             onCardSizeChange={handleCardSizeChange}
             isLoggedIn={isLoggedIn}
             disableHover={disableHover}
+            cdcTimeframe={cdcTimeframe}
+            onCdcTimeframeChange={onCdcTimeframeChange}
           />
         </SortableContext>
       </div>
