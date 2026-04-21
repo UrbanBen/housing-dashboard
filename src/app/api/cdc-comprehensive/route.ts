@@ -178,12 +178,12 @@ function buildPieChartQuery(lgaCode?: string, lgaName?: string, startDate?: stri
 
   if (startDate && endDate) {
     const paramIndex = (lgaCode || lgaName) ? 3 : 1;
-    whereClauses.push(`determination_date >= $${paramIndex - 1}::date`);
-    whereClauses.push(`determination_date <= $${paramIndex}::date`);
+    whereClauses.push(`determined_date >= $${paramIndex - 1}::date`);
+    whereClauses.push(`determined_date <= $${paramIndex}::date`);
   } else if (!startDate && !endDate) {
     // Default to most recent month if no date range specified
-    whereClauses.push(`determination_date >= date_trunc('month', (SELECT MAX(determination_date) FROM housing_dashboard.cdc_records_raw))`);
-    whereClauses.push(`determination_date < date_trunc('month', (SELECT MAX(determination_date) FROM housing_dashboard.cdc_records_raw)) + interval '1 month'`);
+    whereClauses.push(`determined_date >= date_trunc('month', (SELECT MAX(determined_date) FROM housing_dashboard.cdc_records_raw))`);
+    whereClauses.push(`determined_date < date_trunc('month', (SELECT MAX(determined_date) FROM housing_dashboard.cdc_records_raw)) + interval '1 month'`);
   }
 
   const whereFilter = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
