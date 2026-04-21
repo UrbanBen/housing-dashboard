@@ -191,7 +191,7 @@ function buildPieChartQuery(lgaCode?: string, lgaName?: string, startDate?: stri
   return `
     SELECT
       building_code_class as building_class,
-      COUNT(*) as total_count
+      COUNT(*)::INTEGER as total_count
     FROM housing_dashboard.cdc_records_raw
     ${whereFilter}
     GROUP BY building_code_class

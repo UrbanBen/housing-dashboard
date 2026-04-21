@@ -165,16 +165,16 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
     );
   }
 
-  // Prepare chart data
+  // Prepare chart data - ensure values are numbers
   const chartData = data.map(item => ({
     name: item.building_class || 'Unknown',
-    value: item.total_count,
+    value: Number(item.total_count) || 0,
   }));
 
-  const totalCount = data.reduce((sum, item) => sum + item.total_count, 0);
+  const totalCount = data.reduce((sum, item) => sum + (Number(item.total_count) || 0), 0);
 
-  // Responsive chart size
-  const chartSize = cardWidth < 400 ? 150 : cardWidth < 600 ? 200 : 250;
+  // Responsive chart size - increased for better visibility
+  const chartSize = cardWidth < 400 ? 200 : cardWidth < 600 ? 280 : 350;
 
   return (
     <Card className="w-full h-full border-teal-200 bg-gradient-to-br from-teal-50 to-white">
@@ -214,7 +214,7 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
                 label={({ name, percent }) =>
                   cardWidth > 500 ? `${name}: ${(percent * 100).toFixed(0)}%` : `${(percent * 100).toFixed(0)}%`
                 }
-                outerRadius={cardWidth < 400 ? 60 : cardWidth < 600 ? 80 : 100}
+                outerRadius={cardWidth < 400 ? 70 : cardWidth < 600 ? 100 : 130}
                 fill="#8884d8"
                 dataKey="value"
               >
@@ -256,7 +256,8 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
             </thead>
             <tbody>
               {data.map((item, index) => {
-                const percentage = ((item.total_count / totalCount) * 100).toFixed(1);
+                const count = Number(item.total_count) || 0;
+                const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : '0.0';
                 return (
                   <tr key={index} className="border-t border-gray-100">
                     <td className="p-2 flex items-center gap-2">
@@ -267,7 +268,7 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
                       <span className="text-gray-900 text-xs">{item.building_class}</span>
                     </td>
                     <td className="p-2 text-right text-gray-900 font-medium">
-                      {item.total_count.toLocaleString()}
+                      {count.toLocaleString()}
                     </td>
                     <td className="p-2 text-right text-gray-600">
                       {percentage}%
