@@ -166,6 +166,10 @@ function buildLatestMonthQuery(lgaCode?: string, lgaName?: string): string {
 function buildPieChartQuery(lgaCode?: string, lgaName?: string, startDate?: string, endDate?: string): string {
   const whereClauses: string[] = [];
 
+  // Base condition: building_code_class must exist
+  whereClauses.push(`building_code_class IS NOT NULL`);
+  whereClauses.push(`building_code_class != ''`);
+
   if (lgaCode) {
     whereClauses.push(`lga_code = $1`);
   } else if (lgaName) {
@@ -174,46 +178,25 @@ function buildPieChartQuery(lgaCode?: string, lgaName?: string, startDate?: stri
 
   if (startDate && endDate) {
     const paramIndex = (lgaCode || lgaName) ? 3 : 1;
-    whereClauses.push(`month >= $${paramIndex - 1}`);
-    whereClauses.push(`month <= $${paramIndex}`);
+    whereClauses.push(`determination_date >= $${paramIndex - 1}::date`);
+    whereClauses.push(`determination_date <= $${paramIndex}::date`);
   } else if (!startDate && !endDate) {
     // Default to most recent month if no date range specified
-    whereClauses.push(`month = (SELECT MAX(month) FROM housing_dashboard.cdc_historic)`);
+    whereClauses.push(`determination_date >= date_trunc('month', (SELECT MAX(determination_date) FROM housing_dashboard.cdc_records_raw))`);
+    whereClauses.push(`determination_date < date_trunc('month', (SELECT MAX(determination_date) FROM housing_dashboard.cdc_records_raw)) + interval '1 month'`);
   }
 
   const whereFilter = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
   return `
     SELECT
-      'Class 1 - Houses' as building_class,
-      SUM(COALESCE(building_code_class_1_houses, 0)) as total_count
-    FROM housing_dashboard.cdc_historic
+      building_code_class as building_class,
+      COUNT(*) as total_count
+    FROM housing_dashboard.cdc_records_raw
     ${whereFilter}
-    UNION ALL
-    SELECT
-      'Class 2 - Apartments' as building_class,
-      SUM(COALESCE(building_code_class_2_apartments, 0)) as total_count
-    FROM housing_dashboard.cdc_historic
-    ${whereFilter}
-    UNION ALL
-    SELECT
-      'Class 3 - Residential Care' as building_class,
-      SUM(COALESCE(building_code_class_3_residential_care, 0)) as total_count
-    FROM housing_dashboard.cdc_historic
-    ${whereFilter}
-    UNION ALL
-    SELECT
-      'Class 4 - Dwelling in Building' as building_class,
-      SUM(COALESCE(building_code_class_4_dwelling_in_building, 0)) as total_count
-    FROM housing_dashboard.cdc_historic
-    ${whereFilter}
-    UNION ALL
-    SELECT
-      'Class 10 - Non-Habitable' as building_class,
-      SUM(COALESCE(building_code_class_10_non_habitable, 0)) as total_count
-    FROM housing_dashboard.cdc_historic
-    ${whereFilter}
+    GROUP BY building_code_class
     ORDER BY total_count DESC
+    LIMIT 10
   `;
 }
 
