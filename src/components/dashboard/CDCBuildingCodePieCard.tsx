@@ -91,16 +91,16 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
 
   if (!selectedLGA) {
     return (
-      <Card className="w-full h-full border-teal-200 bg-gradient-to-br from-teal-50 to-white">
+      <Card className="w-full h-full bg-card/50 backdrop-blur-sm shadow-lg border border-border/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-teal-700">
+          <CardTitle className="flex items-center gap-2 text-teal-600 dark:text-teal-400">
             <Building className="h-5 w-5" />
             CDC by Building Class
           </CardTitle>
           <CardDescription>{dateRange}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px] text-gray-500">
+          <div className="flex items-center justify-center h-[200px] text-muted-foreground">
             Select an LGA to view building class distribution
           </div>
         </CardContent>
@@ -110,9 +110,9 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
 
   if (loading) {
     return (
-      <Card className="w-full h-full border-teal-200 bg-gradient-to-br from-teal-50 to-white">
+      <Card className="w-full h-full bg-card/50 backdrop-blur-sm shadow-lg border border-border/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-teal-700">
+          <CardTitle className="flex items-center gap-2 text-teal-600 dark:text-teal-400">
             <Building className="h-5 w-5" />
             CDC by Building Class
           </CardTitle>
@@ -120,7 +120,7 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-[200px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-700"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
       </Card>
@@ -129,16 +129,16 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
 
   if (error) {
     return (
-      <Card className="w-full h-full border-red-200 bg-gradient-to-br from-red-50 to-white">
+      <Card className="w-full h-full bg-card/50 backdrop-blur-sm shadow-lg border border-border/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-700">
+          <CardTitle className="flex items-center gap-2 text-teal-600 dark:text-teal-400">
             <Building className="h-5 w-5" />
             CDC by Building Class
           </CardTitle>
           <CardDescription>{dateRange}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px] text-red-600">
+          <div className="flex items-center justify-center h-[200px] text-destructive">
             Error: {error}
           </div>
         </CardContent>
@@ -148,16 +148,16 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
 
   if (data.length === 0) {
     return (
-      <Card className="w-full h-full border-teal-200 bg-gradient-to-br from-teal-50 to-white">
+      <Card className="w-full h-full bg-card/50 backdrop-blur-sm shadow-lg border border-border/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-teal-700">
+          <CardTitle className="flex items-center gap-2 text-teal-600 dark:text-teal-400">
             <Building className="h-5 w-5" />
             CDC by Building Class
           </CardTitle>
           <CardDescription>{dateRange}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px] text-gray-500">
+          <div className="flex items-center justify-center h-[200px] text-muted-foreground">
             No data available for {selectedLGA.name}
           </div>
         </CardContent>
@@ -177,9 +177,9 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
   const chartSize = cardWidth < 400 ? 200 : cardWidth < 600 ? 280 : 350;
 
   return (
-    <Card className="w-full h-full border-teal-200 bg-gradient-to-br from-teal-50 to-white">
+    <Card className="w-full h-full bg-card/50 backdrop-blur-sm shadow-lg border border-border/50">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-teal-700">
+        <CardTitle className="flex items-center gap-2 text-teal-600 dark:text-teal-400">
           <Building className="h-5 w-5" />
           CDC by Building Class
         </CardTitle>
@@ -189,21 +189,21 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Summary */}
-        <div className="bg-white rounded-lg p-3 border border-teal-100">
+        <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg p-3">
           <div className="flex items-center justify-between">
-            <div className="text-xs text-gray-600">Total CDC Certificates</div>
-            <div className="text-xl font-bold text-teal-700">
+            <div className="text-xs text-muted-foreground">Total CDC Certificates</div>
+            <div className="text-xl font-bold text-teal-600 dark:text-teal-400">
               {totalCount.toLocaleString()}
             </div>
           </div>
-          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
             <TrendingUp className="h-3 w-3" />
             <span>{data.length} building classes</span>
           </div>
         </div>
 
         {/* Pie Chart */}
-        <div className="bg-white rounded-lg p-4 border border-teal-100">
+        <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg p-4">
           <ResponsiveContainer width="100%" height={chartSize}>
             <PieChart>
               <Pie
@@ -224,8 +224,8 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
                   borderRadius: '6px',
                   fontSize: '12px'
                 }}
@@ -245,13 +245,13 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
         </div>
 
         {/* Breakdown Table */}
-        <div className="bg-white rounded-lg border border-teal-100 overflow-hidden">
+        <div className="bg-teal-500/5 border border-teal-500/10 rounded-lg overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-teal-50">
+            <thead className="bg-teal-500/10">
               <tr>
-                <th className="text-left p-2 text-gray-700 font-semibold">Class</th>
-                <th className="text-right p-2 text-gray-700 font-semibold">Count</th>
-                <th className="text-right p-2 text-gray-700 font-semibold">%</th>
+                <th className="text-left p-2 text-foreground font-semibold">Class</th>
+                <th className="text-right p-2 text-foreground font-semibold">Count</th>
+                <th className="text-right p-2 text-foreground font-semibold">%</th>
               </tr>
             </thead>
             <tbody>
@@ -259,18 +259,18 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
                 const count = Number(item.total_count) || 0;
                 const percentage = totalCount > 0 ? ((count / totalCount) * 100).toFixed(1) : '0.0';
                 return (
-                  <tr key={index} className="border-t border-gray-100">
+                  <tr key={index} className="border-t border-border">
                     <td className="p-2 flex items-center gap-2">
                       <div
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: COLORS[index % COLORS.length] }}
                       />
-                      <span className="text-gray-900 text-xs">{item.building_class}</span>
+                      <span className="text-foreground text-xs">{item.building_class}</span>
                     </td>
-                    <td className="p-2 text-right text-gray-900 font-medium">
+                    <td className="p-2 text-right text-foreground font-medium">
                       {count.toLocaleString()}
                     </td>
-                    <td className="p-2 text-right text-gray-600">
+                    <td className="p-2 text-right text-muted-foreground">
                       {percentage}%
                     </td>
                   </tr>
