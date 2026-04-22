@@ -573,28 +573,6 @@ export default function DashboardPage() {
               {/* Theme Toggle */}
               <ThemeToggle />
 
-              {isAdminMode && (
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
-                  <span className="text-sm font-medium text-orange-500 orange-glow-pulse">
-                    Edit Mode - Drag cards from sidebar
-                  </span>
-                  <style jsx>{`
-                    @keyframes glowPulse {
-                      0%, 100% {
-                        text-shadow: 0 0 10px rgb(249 115 22 / 0.5), 0 0 20px rgb(249 115 22 / 0.3);
-                      }
-                      50% {
-                        text-shadow: 0 0 20px rgb(249 115 22 / 0.8), 0 0 30px rgb(249 115 22 / 0.5);
-                      }
-                    }
-                    .orange-glow-pulse {
-                      animation: glowPulse 2s ease-in-out infinite;
-                    }
-                  `}</style>
-                </div>
-              )}
-
               <div className="flex items-center gap-2">
                 <label className="text-sm text-muted-foreground">Max Columns:</label>
                 <select
