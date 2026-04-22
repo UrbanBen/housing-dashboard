@@ -78,7 +78,7 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
   const renderChangeIndicator = (changePct: number | null, label: string) => {
     if (changePct === null || changePct === undefined) {
       return (
-        <div className="text-xs text-gray-400">
+        <div className="text-xs text-muted-foreground">
           {label}: N/A
         </div>
       );
@@ -86,8 +86,8 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
 
     const isPositive = changePct >= 0;
     const Icon = isPositive ? TrendingUp : TrendingDown;
-    const colorClass = isPositive ? 'text-green-600' : 'text-red-600';
-    const bgClass = isPositive ? 'bg-green-50' : 'bg-red-50';
+    const colorClass = isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+    const bgClass = isPositive ? 'bg-green-500/10' : 'bg-red-500/10';
 
     return (
       <div className={`flex items-center gap-1 ${bgClass} px-2 py-1 rounded text-xs ${colorClass} font-medium`}>
@@ -99,16 +99,16 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
 
   if (!selectedLGA) {
     return (
-      <Card className="w-full h-full border-green-200 bg-gradient-to-br from-green-50 to-white">
+      <Card className="w-full h-full bg-card/50 backdrop-blur-sm shadow-lg border border-border/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-green-700">
+          <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400">
             <Calendar className="h-5 w-5" />
             CDC Latest Month
           </CardTitle>
           <CardDescription>Current month snapshot with trends</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px] text-gray-500">
+          <div className="flex items-center justify-center h-[200px] text-muted-foreground">
             Select an LGA to view latest month data
           </div>
         </CardContent>
@@ -118,9 +118,9 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
 
   if (loading) {
     return (
-      <Card className="w-full h-full border-green-200 bg-gradient-to-br from-green-50 to-white">
+      <Card className="w-full h-full bg-card/50 backdrop-blur-sm shadow-lg border border-border/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-green-700">
+          <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400">
             <Calendar className="h-5 w-5" />
             CDC Latest Month
           </CardTitle>
@@ -128,7 +128,7 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-[200px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
       </Card>
@@ -137,16 +137,16 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
 
   if (error || !data) {
     return (
-      <Card className="w-full h-full border-red-200 bg-gradient-to-br from-red-50 to-white">
+      <Card className="w-full h-full bg-card/50 backdrop-blur-sm shadow-lg border border-border/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-700">
+          <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400">
             <Calendar className="h-5 w-5" />
             CDC Latest Month
           </CardTitle>
           <CardDescription>Current month snapshot with trends</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[200px] text-red-600">
+          <div className="flex items-center justify-center h-[200px] text-destructive">
             Error: {error || 'No data available'}
           </div>
         </CardContent>
@@ -164,9 +164,9 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
     : '0';
 
   return (
-    <Card className="w-full h-full border-green-200 bg-gradient-to-br from-green-50 to-white">
+    <Card className="w-full h-full bg-card/50 backdrop-blur-sm shadow-lg border border-border/50">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-green-700">
+        <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400">
           <Calendar className="h-5 w-5" />
           CDC Latest Month
         </CardTitle>
@@ -177,9 +177,9 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
       <CardContent className="space-y-4">
         {/* Main Statistics */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-lg p-4 border border-green-100">
-            <div className="text-xs text-gray-600 mb-1">New Dwellings</div>
-            <div className="text-2xl font-bold text-green-700">
+          <div className="bg-green-500/5 rounded-lg p-4 border border-green-500/10">
+            <div className="text-xs text-muted-foreground mb-1">New Dwellings</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {data.total_dwellings.toLocaleString()}
             </div>
             <div className="mt-2 space-y-1">
@@ -188,56 +188,56 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
             </div>
           </div>
 
-          <div className="bg-white rounded-lg p-4 border border-green-100">
-            <div className="text-xs text-gray-600 mb-1">Total CDCs</div>
-            <div className="text-2xl font-bold text-green-600">
+          <div className="bg-green-500/5 rounded-lg p-4 border border-green-500/10">
+            <div className="text-xs text-muted-foreground mb-1">Total CDCs</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {data.total_cdcs.toLocaleString()}
             </div>
-            <div className="mt-2 text-xs text-gray-500">
+            <div className="mt-2 text-xs text-muted-foreground">
               {privateCertifierPct}% private
             </div>
           </div>
         </div>
 
         {/* Breakdown */}
-        <div className="bg-white rounded-lg p-4 border border-green-100">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Breakdown</h4>
+        <div className="bg-green-500/5 rounded-lg p-4 border border-green-500/10">
+          <h4 className="text-sm font-semibold text-foreground mb-3">Breakdown</h4>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-start gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5" />
               <div>
-                <div className="text-xs text-gray-600">Private Certifier</div>
-                <div className="text-lg font-semibold text-green-700">
+                <div className="text-xs text-muted-foreground">Private Certifier</div>
+                <div className="text-lg font-semibold text-green-600 dark:text-green-400">
                   {data.total_private_certifier.toLocaleString()}
                 </div>
               </div>
             </div>
 
             <div className="flex items-start gap-2">
-              <Building className="h-4 w-4 text-blue-600 mt-0.5" />
+              <Building className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
               <div>
-                <div className="text-xs text-gray-600">Council Certifier</div>
-                <div className="text-lg font-semibold text-blue-700">
+                <div className="text-xs text-muted-foreground">Council Certifier</div>
+                <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                   {data.total_council_certifier.toLocaleString()}
                 </div>
               </div>
             </div>
 
             <div className="flex items-start gap-2">
-              <DollarSign className="h-4 w-4 text-purple-600 mt-0.5" />
+              <DollarSign className="h-4 w-4 text-purple-600 dark:text-purple-400 mt-0.5" />
               <div>
-                <div className="text-xs text-gray-600">Total Cost</div>
-                <div className="text-lg font-semibold text-purple-700">
+                <div className="text-xs text-muted-foreground">Total Cost</div>
+                <div className="text-lg font-semibold text-purple-600 dark:text-purple-400">
                   ${(data.total_cost / 1000000).toFixed(1)}M
                 </div>
               </div>
             </div>
 
             <div className="flex items-start gap-2">
-              <DollarSign className="h-4 w-4 text-amber-600 mt-0.5" />
+              <DollarSign className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
               <div>
-                <div className="text-xs text-gray-600">Avg Cost</div>
-                <div className="text-lg font-semibold text-amber-700">
+                <div className="text-xs text-muted-foreground">Avg Cost</div>
+                <div className="text-lg font-semibold text-amber-600 dark:text-amber-400">
                   ${(data.avg_cost / 1000).toFixed(0)}k
                 </div>
               </div>
@@ -247,21 +247,21 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
 
         {/* Comparisons */}
         {(data.prev_month_dwellings || data.prev_year_dwellings) && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-100">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">Comparisons</h4>
+          <div className="bg-green-500/5 rounded-lg p-4 border border-green-500/10">
+            <h4 className="text-sm font-semibold text-foreground mb-3">Comparisons</h4>
             <div className="space-y-2">
               {data.prev_month_dwellings !== null && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Previous Month:</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="text-muted-foreground">Previous Month:</span>
+                  <span className="font-semibold text-foreground">
                     {data.prev_month_dwellings.toLocaleString()} dwellings
                   </span>
                 </div>
               )}
               {data.prev_year_dwellings !== null && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Same Month Last Year:</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="text-muted-foreground">Same Month Last Year:</span>
+                  <span className="font-semibold text-foreground">
                     {data.prev_year_dwellings.toLocaleString()} dwellings
                   </span>
                 </div>
