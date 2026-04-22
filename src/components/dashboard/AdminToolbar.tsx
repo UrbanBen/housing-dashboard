@@ -68,22 +68,8 @@ const cardTemplates: CardTemplate[] = [
     icon: Search,
     description: 'LGA/location search and selection'
   },
-  {
-    id: 'advanced-search',
-    title: 'Advanced Search',
-    category: 'search',
-    icon: Sparkles,
-    description: 'Multi-criteria search with filters'
-  },
 
   // Map Cards
-  {
-    id: 'location-details',
-    title: 'Location Details',
-    category: 'map',
-    icon: MapPin,
-    description: 'Detailed area information'
-  },
 
   // Chart Cards
   {
@@ -311,27 +297,6 @@ const cardTemplates: CardTemplate[] = [
     icon: Activity,
     description: 'Important indicators'
   },
-  {
-    id: 'housing-affordability',
-    title: 'Affordability',
-    category: 'kpi',
-    icon: Home,
-    description: 'Affordability ratios'
-  },
-  {
-    id: 'property-values',
-    title: 'Property Values',
-    category: 'kpi',
-    icon: DollarSign,
-    description: 'Median prices'
-  },
-  {
-    id: 'population-metrics',
-    title: 'Population',
-    category: 'kpi',
-    icon: Users,
-    description: 'Demographics'
-  },
 
   // Data Tables
   {
@@ -379,20 +344,6 @@ const cardTemplates: CardTemplate[] = [
     category: 'charts',
     icon: BarChart3,
     description: 'Market summary and analysis'
-  },
-  {
-    id: 'market-forecast',
-    title: 'Market Forecast',
-    category: 'charts',
-    icon: TrendingUp,
-    description: 'Future market predictions'
-  },
-  {
-    id: 'regional-comparison',
-    title: 'Regional Comparison',
-    category: 'charts',
-    icon: GitCompare,
-    description: 'Compare multiple regions side-by-side'
   },
 
   // System & Utility Cards (previously not in library)

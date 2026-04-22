@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, Users, BarChart3, Home, Building2, Square, TrendingUp } from "lucide-react";
+import { Users, BarChart3, Square } from "lucide-react";
 import type { LGA } from '@/components/filters/LGALookup';
 import { LGADetailsConfigForm, type LGADetailsConfig } from './LGADetailsConfigForm';
 import { DataItemConfigForm, type DataItemDetailedConfig } from './DataItemConfigForm';
@@ -10,51 +10,6 @@ import { DataItemConfigForm, type DataItemDetailedConfig } from './DataItemConfi
 interface LGADetailsProps {
   selectedLGA: LGA | null;
 }
-
-// Mock data for different LGAs - in real implementation, this would come from an API
-const getLGAData = (lga: LGA | null) => {
-  if (!lga || lga.id === 'nsw-state') {
-    // NSW State-wide aggregated data (all 128 LGAs combined)
-    return {
-      area: 800000, // NSW total area in km²
-      buildingApprovals: 147200, // Aggregated across all NSW LGAs
-      averageApprovalTime: 42,
-      developmentApplications: 165300,
-      approvalRate: 87,
-      landReleases: 18400,
-      constructionStarts: 132600,
-      completions: 124800,
-      medianPrice: 485000
-    };
-  }
-
-  // Mock data variations based on LGA characteristics
-  const baseMultiplier = (lga.population || 100000) / 100000;
-  const regionMultipliers: { [key: string]: number } = {
-    'Urban LGA': 1.5,
-    'Rural LGA': 0.8
-  };
-
-  const regionMultiplier = regionMultipliers[lga.region] || 1;
-  const finalMultiplier = baseMultiplier * regionMultiplier;
-
-  // Use deterministic values based on LGA name to avoid hydration errors
-  const nameHash = lga.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const approvalVariation = ((nameHash % 20) - 10); // -10 to +10
-  const rateVariation = ((nameHash % 15) - 7); // -7 to +7
-
-  return {
-    area: lga.area || 0,
-    buildingApprovals: Math.round(2840 * finalMultiplier),
-    averageApprovalTime: Math.round(45 + approvalVariation),
-    developmentApplications: Math.round(3200 * finalMultiplier),
-    approvalRate: Math.round(89 + rateVariation),
-    landReleases: Math.round(450 * finalMultiplier),
-    constructionStarts: Math.round(2100 * finalMultiplier),
-    completions: Math.round(1850 * finalMultiplier),
-    medianPrice: Math.round(485000 * (lga.region === 'Urban LGA' ? 1.8 : 0.7))
-  };
-};
 
 export function LGADetails({ selectedLGA }: LGADetailsProps) {
   const [showConfigForm, setShowConfigForm] = useState(false);
@@ -93,26 +48,6 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
           enabled: true,
           title: 'Population Density',
           subtitle: 'People per km²'
-        },
-        avgProcessingDays: {
-          enabled: true,
-          title: 'Average DA Processing',
-          subtitle: 'Processing Time'
-        },
-        developmentApplications: {
-          enabled: true,
-          title: 'Development Applications',
-          subtitle: 'Total DAs'
-        },
-        landReleases: {
-          enabled: true,
-          title: 'Land Releases',
-          subtitle: 'Lots Released'
-        },
-        completions: {
-          enabled: true,
-          title: 'Completions',
-          subtitle: 'Units Completed'
         }
       }
     };
@@ -257,7 +192,6 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
     fetchCensusData();
   }, [selectedLGA]);
 
-  const data = getLGAData(selectedLGA);
   const config = getStoredConfig();
 
   // Map data item keys to their display properties
@@ -271,26 +205,6 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
       icon: Users,
       value: isLoadingCensus ? 'Loading...' : censusData?.population_density ? `${censusData.population_density.toLocaleString()} per km²` : 'N/A',
       subtitle: 'Population Density (2026)'
-    },
-    avgProcessingDays: {
-      icon: Clock,
-      value: `${data.averageApprovalTime} days`,
-      subtitle: 'Processing Time'
-    },
-    developmentApplications: {
-      icon: BarChart3,
-      value: data.developmentApplications.toLocaleString(),
-      subtitle: 'Total DAs'
-    },
-    landReleases: {
-      icon: Home,
-      value: data.landReleases.toLocaleString(),
-      subtitle: 'Lots Released'
-    },
-    completions: {
-      icon: Building2,
-      value: data.completions.toLocaleString(),
-      subtitle: 'Units Completed'
     }
   };
 
