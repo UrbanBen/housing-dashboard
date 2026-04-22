@@ -143,6 +143,13 @@ const cardTemplates: CardTemplate[] = [
     description: 'Average household/personal income and weekly rent with rankings'
   },
   {
+    id: 'population-growth',
+    title: 'Population Growth',
+    category: 'kpi',
+    icon: TrendingUp,
+    description: 'Census population data (2011-2026) with growth trends'
+  },
+  {
     id: 'da-history',
     title: 'Development Application History',
     category: 'charts',
@@ -472,6 +479,7 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
   const isCitizenship = template.id === 'citizenship';
   const isCitizenshipTrend = template.id === 'citizenship-trend';
   const isIncome = template.id === 'income';
+  const isPopulationGrowth = template.id === 'population-growth';
 
   // OC cards - all styled in red (#ef4444)
   const isOCDaily = template.id === 'oc-daily';
@@ -512,7 +520,7 @@ function DraggableTemplate({ template }: { template: CardTemplate }) {
 
   // Census data cards - all styled in yellow (#eab308)
   const isCensusCard = isAgeBySex || isDwellingType || isCountryOfBirth ||
-                       isAustralianBorn || isCitizenship || isCitizenshipTrend || isIncome;
+                       isAustralianBorn || isCitizenship || isCitizenshipTrend || isIncome || isPopulationGrowth;
 
   // OC cards grouped
   const isOCCard = isOCDaily || isOCWeekly || isOCMonthly || isOC13Month || isOCYoY || isOCHistory;

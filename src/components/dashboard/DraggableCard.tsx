@@ -43,6 +43,7 @@ import { MedianRentOverviewCard } from './MedianRentOverviewCard';
 import { RentByBedroomCard } from './RentByBedroomCard';
 import { RentTrendsCard } from './RentTrendsCard';
 import { RentQuartileCard } from './RentQuartileCard';
+import PopulationGrowthCard from './PopulationGrowthCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   TrendingUp, TrendingDown, Activity, Home, DollarSign, Building, GitBranch, MapPin,
@@ -455,6 +456,9 @@ export function DraggableCard({
             onAdminClick={() => {}}
           />
         );
+
+      case 'population-growth':
+        return <PopulationGrowthCard selectedLGA={selectedLGA} />;
 
       case 'oc-history':
         return <OCHistoryCard selectedLGA={selectedLGA} cardWidth={card.size} />;
