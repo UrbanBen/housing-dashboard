@@ -199,6 +199,12 @@ export default function PopulationGrowthCard({ selectedLGA, cardWidth = 600 }: P
                 dot={{ fill: '#eab308', r: 5 }}
                 activeDot={{ r: 7 }}
                 name="Population"
+                label={{
+                  position: 'top',
+                  fill: 'hsl(var(--foreground))',
+                  fontSize: 12,
+                  formatter: (value: number) => value.toLocaleString()
+                }}
               />
             </LineChart>
           </ResponsiveContainer>
