@@ -32,6 +32,7 @@ export type CardType =
   | 'citizenship'
   | 'citizenship-trend'
   | 'income'
+  | 'population-growth'
   // Development Applications Comprehensive Cards
   | 'da-history'
   | 'da-latest-month'
