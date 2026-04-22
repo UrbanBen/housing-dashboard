@@ -19,23 +19,6 @@ interface CensusData {
   growth_rate_annual_avg: number;
 }
 
-// Custom label component for chart
-const CustomLabel = (props: any) => {
-  const { x, y, value } = props;
-  return (
-    <text
-      x={x}
-      y={y - 10}
-      fill="hsl(var(--foreground))"
-      textAnchor="middle"
-      fontSize={12}
-      fontWeight={500}
-    >
-      {value?.toLocaleString()}
-    </text>
-  );
-};
-
 export default function PopulationGrowthCard({ selectedLGA, cardWidth = 600 }: PopulationGrowthCardProps) {
   const [data, setData] = useState<CensusData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -216,7 +199,22 @@ export default function PopulationGrowthCard({ selectedLGA, cardWidth = 600 }: P
                 dot={{ fill: '#eab308', r: 5 }}
                 activeDot={{ r: 7 }}
                 name="Population"
-                label={<CustomLabel />}
+                label={(props: any) => {
+                  const { x, y, value } = props;
+                  if (value == null) return null;
+                  return (
+                    <text
+                      x={x}
+                      y={y - 10}
+                      fill="#eab308"
+                      textAnchor="middle"
+                      fontSize={13}
+                      fontWeight={600}
+                    >
+                      {value.toLocaleString()}
+                    </text>
+                  );
+                }}
               />
             </LineChart>
           </ResponsiveContainer>
