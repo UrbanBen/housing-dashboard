@@ -3,9 +3,11 @@ import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 // Parse .env file to get password
 function getPasswordFromEnv(envPath: string): string | null {
+  const logger = createAPILogger('/api/lga-database', generateRequestId());
   try {
     // Resolve path with home directory support
     let resolvedPath = envPath;
@@ -14,7 +16,7 @@ function getPasswordFromEnv(envPath: string): string | null {
     }
 
     if (!fs.existsSync(resolvedPath)) {
-      console.error('Env file not found:', resolvedPath);
+      logger.error('Env file not found', new Error(`File not found: ${resolvedPath}`));
       return null;
     }
 
@@ -30,7 +32,7 @@ function getPasswordFromEnv(envPath: string): string | null {
       }
     }
   } catch (error) {
-    console.error('Error reading env file:', error);
+    logger.error('Error reading env file', error instanceof Error ? error : new Error(String(error)));
   }
   return null;
 }
@@ -39,6 +41,7 @@ function getPasswordFromEnv(envPath: string): string | null {
 let pool: Pool | null = null;
 
 function getPool(): Pool {
+  const logger = createAPILogger('/api/lga-database', generateRequestId());
   if (!pool) {
     const password = getPasswordFromEnv('/users/ben/permissions/.env.admin');
 
@@ -62,7 +65,7 @@ function getPool(): Pool {
     });
 
     pool.on('error', (err) => {
-      console.error('Unexpected error on idle client', err);
+      logger.error('Unexpected error on idle client', err instanceof Error ? err : new Error(String(err)));
     });
   }
   return pool;
@@ -135,7 +138,8 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
   } catch (error) {
-    console.error('Database query error:', error);
+    const logger = createAPILogger('/api/lga-database', generateRequestId());
+    logger.error('Database query error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({
       success: false,
       error: 'Database connection failed',

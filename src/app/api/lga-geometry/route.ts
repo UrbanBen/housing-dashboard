@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReadonlyPool, executeQuery } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
+  const requestId = generateRequestId();
+  const logger = createAPILogger('/api/lga-geometry', requestId);
+
   const searchParams = request.nextUrl.searchParams;
   const schema = searchParams.get('schema') || 'housing_dashboard';
   const table = searchParams.get('table') || 'search';
@@ -22,8 +26,7 @@ export async function GET(request: NextRequest) {
     'Australian Capital Territory'
   ];
 
-  const requestId = Math.random().toString(36).substr(2, 9);
-  console.log(`[${requestId}] LGA Geometry API Request:`, {
+  logger.info('LGA Geometry API Request', {
     schema,
     table,
     geometryColumn,
@@ -70,10 +73,9 @@ export async function GET(request: NextRequest) {
       LIMIT 1
     `;
 
-    console.log(`[${requestId}] Executing geometry query for:`, lgaName);
-    console.log(`[${requestId}] Is state/territory:`, isState);
+    logger.debug('Executing geometry query', { lgaName, isState });
     if (isState) {
-      console.log(`[${requestId}] Simplification tolerance:`, simplifyTolerance);
+      logger.debug('Using simplification', { simplifyTolerance });
     }
 
     const result = isState
@@ -89,7 +91,7 @@ export async function GET(request: NextRequest) {
         try {
           geometry = JSON.parse(row.geometry_geojson);
         } catch (e) {
-          console.error('Failed to parse geometry GeoJSON:', e);
+          logger.error('Failed to parse geometry GeoJSON', e instanceof Error ? e : new Error(String(e)));
         }
       }
 
@@ -105,7 +107,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      console.log(`[${requestId}] Geometry found for LGA:`, {
+      logger.info('Geometry found for LGA', {
         lgaName,
         hasGeometry: !!geometry,
         areaKm2: row.area_km2
@@ -143,7 +145,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error: any) {
-    console.error(`[${requestId}] LGA Geometry API error:`, error);
+    logger.error('LGA Geometry API error', error instanceof Error ? error : new Error(String(error)));
 
     // Check if it's a PostGIS function error
     if (error.message && error.message.includes('ST_')) {

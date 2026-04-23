@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET(request: Request) {
+  const logger = createAPILogger('/api/lgas/boundaries', generateRequestId());
   const { searchParams } = new URL(request.url);
   const lgaName = searchParams.get('lga');
   
@@ -55,7 +57,7 @@ export async function GET(request: Request) {
         lgaBoundary = JSON.parse(boundaryResult.rows[0].geometry);
       }
     } catch (error) {
-      console.log('No direct LGA boundary found, that\'s expected');
+      logger.debug('No direct LGA boundary found, that\'s expected');
     }
 
     return NextResponse.json({
@@ -68,7 +70,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Boundary fetch error:', error);
+    logger.error('Boundary fetch error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({
       error: 'Failed to fetch boundary data',
       details: error instanceof Error ? error.message : 'Unknown error'

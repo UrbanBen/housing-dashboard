@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReadonlyPool, executeQuery } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
-  const requestId = Math.random().toString(36).substr(2, 9);
+  const requestId = generateRequestId();
+  const logger = createAPILogger('/api/test-data', requestId);
   const startTime = Date.now();
 
   const { searchParams } = new URL(request.url);
@@ -11,17 +13,17 @@ export async function GET(request: NextRequest) {
   const column = searchParams.get('column') || 'lga_name24';
   const rowNumber = parseInt(searchParams.get('row') || '1');
 
-  console.log(`[${requestId}] Test API Request Started:`, {
+  logger.info('Test API Request Started', {
     schema, table, column, rowNumber,
     timestamp: new Date().toISOString(),
     userAgent: request.headers.get('user-agent')?.slice(0, 50)
   });
 
   try {
-    console.log(`[${requestId}] Getting connection pool...`);
+    logger.debug('Getting connection pool');
     const pool = getReadonlyPool();
 
-    console.log(`[${requestId}] Pool status:`, {
+    logger.debug('Pool status', {
       totalCount: pool.totalCount,
       idleCount: pool.idleCount,
       waitingCount: pool.waitingCount
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
       LIMIT 1 OFFSET $1
     `;
 
-    console.log(`[${requestId}] Executing query:`, {
+    logger.debug('Executing query', {
       query: query.trim(),
       parameters: [rowNumber - 1],
       timeout: Date.now() - startTime + 'ms'
@@ -45,7 +47,7 @@ export async function GET(request: NextRequest) {
     const result = await pool.query(query, [rowNumber - 1]); // Convert to 0-based offset
     const queryDuration = Date.now() - queryStartTime;
 
-    console.log(`[${requestId}] Query completed:`, {
+    logger.debug('Query completed', {
       duration: queryDuration + 'ms',
       rowCount: result.rows.length,
       totalDuration: Date.now() - startTime + 'ms'
@@ -54,7 +56,7 @@ export async function GET(request: NextRequest) {
     if (result.rows.length > 0) {
       const value = result.rows[0][column];
 
-      console.log(`[${requestId}] Success response:`, {
+      logger.info('Success response', {
         value: value?.toString().slice(0, 50) + (value?.toString().length > 50 ? '...' : ''),
         totalDuration: Date.now() - startTime + 'ms'
       });
@@ -102,10 +104,8 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     const errorDuration = Date.now() - startTime;
-    console.error(`[${requestId}] Test data query error (after ${errorDuration}ms):`, {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error('Test data query error', error instanceof Error ? error : new Error(String(error)), {
       errorType: error instanceof Error ? error.constructor.name : typeof error,
-      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 3) : undefined,
       schema, table, column, rowNumber,
       totalDuration: errorDuration + 'ms'
     });

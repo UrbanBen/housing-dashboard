@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { query, testConnection } from '@/lib/database';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET() {
+  const logger = createAPILogger('/api/db/test', generateRequestId());
   try {
     // Test connection
     const connectionTest = await testConnection();
@@ -19,7 +21,7 @@ export async function GET() {
       `);
       existingTables = tablesResult.rows;
     } catch (error) {
-      console.warn('Could not list tables:', error);
+      logger.warn('Could not list tables', error instanceof Error ? error : new Error(String(error)));
     }
 
     // Check user permissions
@@ -32,7 +34,7 @@ export async function GET() {
         database: dbResult.rows[0]?.current_database
       };
     } catch (error) {
-      console.warn('Could not check permissions:', error);
+      logger.warn('Could not check permissions', error instanceof Error ? error : new Error(String(error)));
     }
 
     // Try to check if we can create tables
@@ -42,7 +44,7 @@ export async function GET() {
       await query('DROP TABLE IF EXISTS test_permissions_check');
       canCreateTables = true;
     } catch (error) {
-      console.log('Cannot create tables:', error);
+      logger.debug('Cannot create tables', error instanceof Error ? error : new Error(String(error)));
     }
 
     return NextResponse.json({

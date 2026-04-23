@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 const NSW_SPATIAL_BASE_URL = 'https://portal.spatial.nsw.gov.au/server/rest/services/NSW_Administrative_Boundaries_Theme_multiCRS/FeatureServer/8';
 
 export async function GET(request: Request) {
+  const logger = createAPILogger('/api/nsw-boundaries', generateRequestId());
   const { searchParams } = new URL(request.url);
   const lgaName = searchParams.get('lga');
   const includeGeometry = searchParams.get('geometry') !== 'false';
@@ -31,8 +33,8 @@ export async function GET(request: Request) {
       }).toString();
     }
 
-    console.log('Querying NSW Spatial:', queryUrl);
-    
+    logger.debug('Querying NSW Spatial', { queryUrl });
+
     const response = await fetch(queryUrl, {
       headers: {
         'User-Agent': 'Housing-Insights-Dashboard/1.0'
@@ -105,7 +107,7 @@ export async function GET(request: Request) {
     }
 
   } catch (error) {
-    console.error('Error fetching NSW boundary data:', error);
+    logger.error('Error fetching NSW boundary data', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { 
         error: 'Failed to fetch boundary data from NSW Spatial Services',

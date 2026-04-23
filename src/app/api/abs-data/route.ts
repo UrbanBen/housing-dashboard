@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET() {
+  const logger = createAPILogger('/api/abs-data', generateRequestId());
+
   try {
-    console.log('Server-side: Fetching ABS Excel data...');
+    logger.info('Server-side: Fetching ABS Excel data');
     
     const ABS_EXCEL_URL = 'https://www.abs.gov.au/statistics/industry/building-and-construction/building-approvals-australia/jul-2025/8731006.xlsx';
     
@@ -24,7 +27,7 @@ export async function GET() {
       }
     });
 
-    console.log(`Server-side: Successfully fetched ${response.data.byteLength} bytes from ABS`);
+    logger.info(`Server-side: Successfully fetched ${response.data.byteLength} bytes from ABS`);
 
     // Return the Excel file data as a response
     return new NextResponse(response.data, {
@@ -40,7 +43,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Server-side: Error fetching ABS data:', error);
+    logger.error('Server-side: Error fetching ABS data', error instanceof Error ? error : new Error(String(error)));
     
     let errorMessage = 'Unknown error occurred';
     let statusCode = 500;

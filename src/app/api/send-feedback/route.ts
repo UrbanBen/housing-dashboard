@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth-config';
 import { Client } from '@microsoft/microsoft-graph-client';
 import { ClientSecretCredential } from '@azure/identity';
 import { executeQuery, getAdminPool } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 import 'isomorphic-fetch';
 
 // Initialize Graph client with application credentials
@@ -39,6 +40,8 @@ function getGraphClient() {
 }
 
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/send-feedback', generateRequestId());
+
   try {
     // Get user from session
     const session = await getServerSession(authOptions);
@@ -153,7 +156,7 @@ export async function POST(request: NextRequest) {
         saveToSentItems: true
       });
 
-    console.log(`[Feedback] Email sent successfully from ${userEmail} (User ID: ${session.user.id})`);
+    logger.info(`Email sent successfully from ${userEmail} (User ID: ${session.user.id})`);
 
     return NextResponse.json(
       {
@@ -164,7 +167,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error: any) {
-    console.error('[Feedback] Error sending email:', error);
+    logger.error('Error sending email', error instanceof Error ? error : new Error(String(error)));
 
     // Handle specific Graph API errors
     if (error.statusCode === 401) {

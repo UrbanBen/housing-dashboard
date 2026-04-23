@@ -1,14 +1,17 @@
 import { NextResponse } from 'next/server';
 import { ABSDataService } from '@/lib/abs-data';
 import { HousingDBService } from '@/lib/housing-db-service';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function POST() {
+  const logger = createAPILogger('/api/db/migrate-abs', generateRequestId());
+
   try {
-    console.log('Starting ABS data migration...');
+    logger.info('Starting ABS data migration');
 
     // Fetch latest ABS data
     const absData = await ABSDataService.fetchBuildingApprovalsData();
-    console.log(`Fetched ${absData.length} records from ABS`);
+    logger.info(`Fetched ${absData.length} records from ABS`);
 
     // Migrate to database
     const migrationResult = await HousingDBService.migrateABSData(absData);
@@ -24,7 +27,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('ABS data migration failed:', error);
+    logger.error('ABS data migration failed', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({
       success: false,
       error: 'ABS data migration failed',

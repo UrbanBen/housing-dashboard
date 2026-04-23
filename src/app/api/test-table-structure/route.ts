@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
 import fs from 'fs';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET(request: Request) {
+  const logger = createAPILogger('/api/test-table-structure', generateRequestId());
   const { searchParams } = new URL(request.url);
   const tableName = searchParams.get('table') || 'building_approvals_nsw_lga';
 
@@ -32,7 +34,7 @@ export async function GET(request: Request) {
         }
       }
     } catch (error) {
-      console.error('Error reading password file:', error);
+      logger.error('Error reading password file', error instanceof Error ? error : new Error(String(error)));
     }
 
     pool = new Pool({
@@ -75,7 +77,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Table structure test error:', error);
+    logger.error('Table structure test error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({
       error: 'Failed to get table structure',
       details: error instanceof Error ? error.message : 'Unknown error'

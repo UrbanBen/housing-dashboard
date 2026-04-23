@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { query, testConnection } from '@/lib/database';
 import { HousingDBService } from '@/lib/housing-db-service';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 import fs from 'fs';
 import path from 'path';
 
 export async function POST() {
+  const logger = createAPILogger('/api/db/init', generateRequestId());
   try {
-    console.log('Starting database initialization...');
+    logger.info('Starting database initialization');
 
     // Test connection first
     const connectionTest = await testConnection();
@@ -35,14 +37,14 @@ export async function POST() {
         executedStatements++;
       } catch (error) {
         // Some statements might fail if already exist (CREATE TABLE IF NOT EXISTS), which is OK
-        console.warn('SQL statement warning:', error);
+        logger.warn('SQL statement warning', { error: error instanceof Error ? error.message : String(error) });
       }
     }
 
     // Perform health check
     const healthCheck = await HousingDBService.healthCheck();
 
-    console.log('Database initialization completed');
+    logger.info('Database initialization completed');
 
     return NextResponse.json({
       success: true,
@@ -53,7 +55,7 @@ export async function POST() {
     });
 
   } catch (error) {
-    console.error('Database initialization failed:', error);
+    logger.error('Database initialization failed', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({
       success: false,
       error: 'Database initialization failed',

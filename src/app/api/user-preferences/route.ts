@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { executeQuery, getReadonlyPool, getAdminPool } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 // GET /api/user-preferences - Load user preferences
 export async function GET(request: NextRequest) {
+  const logger = createAPILogger('/api/user-preferences', generateRequestId());
+
   try {
     // Get user session
     const session = await getServerSession(authOptions);
@@ -54,7 +57,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[API] Error loading user preferences:', error);
+    logger.error('Error loading user preferences', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Failed to load preferences' },
       { status: 500 }
@@ -64,6 +67,8 @@ export async function GET(request: NextRequest) {
 
 // POST /api/user-preferences - Save user preferences
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/user-preferences', generateRequestId());
+
   try {
     // Get user session
     const session = await getServerSession(authOptions);
@@ -129,7 +134,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('[API] Error saving user preferences:', error);
+    logger.error('Error saving user preferences', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Failed to save preferences' },
       { status: 500 }

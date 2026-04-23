@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 // NSW LGA boundary data from ABS 2021 Census boundaries
 // This is a simplified dataset with actual boundary coordinates for major NSW LGAs
@@ -168,12 +169,13 @@ function normalizeLGAName(name: string): string {
 }
 
 export async function GET(request: Request) {
+  const logger = createAPILogger('/api/lga-boundaries', generateRequestId());
   const { searchParams } = new URL(request.url);
   const lgaName = searchParams.get('lga');
 
   try {
     if (lgaName) {
-      console.log('Fetching boundary data for:', lgaName);
+      logger.debug('Fetching boundary data', { lgaName });
       
       const normalizedSearch = normalizeLGAName(lgaName);
       
@@ -210,7 +212,7 @@ export async function GET(request: Request) {
     }
     
   } catch (error) {
-    console.error('Error fetching LGA boundaries:', error);
+    logger.error('Error fetching LGA boundaries', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Failed to fetch LGA boundaries' },
       { status: 500 }

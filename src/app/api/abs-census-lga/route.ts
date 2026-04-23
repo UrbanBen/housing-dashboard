@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 // Mosaic_pro server connection configuration
 const pool = new Pool({
@@ -12,6 +13,7 @@ const pool = new Pool({
 });
 
 export async function GET(request: Request) {
+  const logger = createAPILogger('/api/abs-census-lga', generateRequestId());
   const { searchParams } = new URL(request.url);
   const lgaName = searchParams.get('lga');
   const includeGeometry = searchParams.get('geometry') !== 'false';
@@ -67,7 +69,7 @@ export async function GET(request: Request) {
       `;
     }
 
-    console.log('Querying Mosaic_pro ABS Census 2024 data:', query, params);
+    logger.debug('Querying Mosaic_pro ABS Census 2024 data', { query, params });
 
     const result = await pool.query(query, params);
 
@@ -80,7 +82,7 @@ export async function GET(request: Request) {
         try {
           boundary = JSON.parse(lga.boundary_geojson);
         } catch (e) {
-          console.error('Error parsing boundary GeoJSON:', e);
+          logger.error('Error parsing boundary GeoJSON', e instanceof Error ? e : new Error(String(e)));
         }
       }
 
@@ -133,7 +135,7 @@ export async function GET(request: Request) {
     }
 
   } catch (error) {
-    console.error('Error querying Mosaic_pro ABS Census data:', error);
+    logger.error('Error querying Mosaic_pro ABS Census data', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       {
         error: 'Failed to fetch ABS Census 2024 data from Mosaic_pro',
