@@ -215,11 +215,11 @@ const cardTemplates: CardTemplate[] = [
 
   // DA Cards (Blue Theme)
   {
-    id: 'da-history',
-    title: 'DA Complete History',
+    id: 'da-comprehensive',
+    title: 'DA Comprehensive Data',
     category: 'charts',
     icon: History,
-    description: 'All available DA data'
+    description: 'Complete DA dataset with all timeframes'
   },
   {
     id: 'da-latest-month',
