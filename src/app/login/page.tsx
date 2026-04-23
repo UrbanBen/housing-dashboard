@@ -17,6 +17,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('LoginPage');
 
 function LoginForm() {
   const router = useRouter();
@@ -36,7 +39,7 @@ function LoginForm() {
         const config = await response.json();
         setOAuthConfig(config);
       } catch (error) {
-        console.error('[Login] Error fetching OAuth config:', error);
+        logger.error('Error fetching OAuth config', error instanceof Error ? error : new Error(String(error)));
       }
     };
     fetchOAuthConfig();

@@ -22,6 +22,7 @@ import {
   useSensors,
   closestCenter,
 } from '@dnd-kit/core';
+import { createComponentLogger } from '@/lib/logger';
 
 // Default card configuration
 const defaultCards: DashboardCard[] = [
@@ -156,6 +157,8 @@ const defaultCards: DashboardCard[] = [
   },
 ];
 
+const logger = createComponentLogger('DashboardPage');
+
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -221,10 +224,10 @@ export default function DashboardPage() {
 
   // Debug: Log selectedLGA changes
   useEffect(() => {
-    console.log('[DashboardPage] selectedLGA changed:', selectedLGA);
+    logger.debug('selectedLGA changed', { selectedLGA });
     const dwellingApprovalCards = cards.filter(c => c.type === 'lga-dwelling-approvals');
     if (dwellingApprovalCards.length > 0) {
-      console.log('[DashboardPage] Found lga-dwelling-approvals cards:', dwellingApprovalCards);
+      logger.debug('Found lga-dwelling-approvals cards', { dwellingApprovalCards });
     }
   }, [selectedLGA, cards]);
 
@@ -237,7 +240,7 @@ export default function DashboardPage() {
           const response = await fetch('/api/user-preferences');
           if (response.ok) {
             const prefs = await response.json();
-            console.log('[DashboardPage] Loaded preferences from API:', prefs);
+            logger.info('Loaded preferences from API', { prefs });
 
             if (prefs.dashboardLayout && prefs.dashboardLayout.length > 0) {
               setCards(prefs.dashboardLayout);
@@ -250,7 +253,7 @@ export default function DashboardPage() {
             }
           }
         } catch (error) {
-          console.error('[DashboardPage] Failed to load preferences from API:', error);
+          logger.error('Failed to load preferences from API', error instanceof Error ? error : new Error(String(error)));
           // Fallback to localStorage on error
           loadFromLocalStorage();
         }
@@ -265,10 +268,10 @@ export default function DashboardPage() {
       if (savedLayout) {
         try {
           const parsedLayout = JSON.parse(savedLayout);
-          console.log('[DashboardPage] Loading cards from localStorage:', parsedLayout);
+          logger.debug('Loading cards from localStorage', { parsedLayout });
           setCards(parsedLayout);
         } catch (error) {
-          console.error('Failed to load saved dashboard layout:', error);
+          logger.error('Failed to load saved dashboard layout', error instanceof Error ? error : new Error(String(error)));
         }
       }
 
@@ -277,10 +280,10 @@ export default function DashboardPage() {
       if (savedLGA) {
         try {
           const parsedLGA = JSON.parse(savedLGA);
-          console.log('[DashboardPage] Loading LGA from localStorage:', parsedLGA);
+          logger.debug('Loading LGA from localStorage', { parsedLGA });
           setSelectedLGA(parsedLGA);
         } catch (error) {
-          console.error('Failed to load saved LGA selection:', error);
+          logger.error('Failed to load saved LGA selection', error instanceof Error ? error : new Error(String(error)));
         }
       }
     };
@@ -303,9 +306,9 @@ export default function DashboardPage() {
               lastSelectedLGA: selectedLGA
             })
           });
-          console.log('[DashboardPage] Saved preferences to API');
+          logger.info('Saved preferences to API');
         } catch (error) {
-          console.error('[DashboardPage] Failed to save preferences to API:', error);
+          logger.error('Failed to save preferences to API', error instanceof Error ? error : new Error(String(error)));
         }
       } else {
         // Save to localStorage for non-logged-in users
@@ -338,7 +341,7 @@ export default function DashboardPage() {
   }, []);
   
   const resetLayout = async () => {
-    console.log('Reset Layout clicked');
+    logger.info('Reset Layout clicked');
     setCards(defaultCards);
 
     if (isLoggedIn && session?.user?.email) {
@@ -354,7 +357,7 @@ export default function DashboardPage() {
           })
         });
       } catch (error) {
-        console.error('Failed to reset layout in API:', error);
+        logger.error('Failed to reset layout in API', error instanceof Error ? error : new Error(String(error)));
       }
     } else {
       // Reset in localStorage for non-logged-in users
@@ -363,7 +366,7 @@ export default function DashboardPage() {
   };
 
   const toggleEditMode = () => {
-    console.log('Toggle Edit Mode clicked');
+    logger.debug('Toggle Edit Mode clicked');
     setIsEditMode(!isEditMode);
   };
 
@@ -375,7 +378,7 @@ export default function DashboardPage() {
 
   // Drag event handlers
   const handleDragStart = (event: DragStartEvent) => {
-    console.log('Drag start:', event);
+    logger.debug('Drag start', { event });
     if (event.active.data.current?.type === 'template') {
       setActiveTemplate(event.active.data.current.template);
     } else {
@@ -386,7 +389,7 @@ export default function DashboardPage() {
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    console.log('🎯 Drag end event:', {
+    logger.debug('Drag end event', {
       activeId: event.active.id,
       overId: event.over?.id,
       activeData: event.active.data.current,
@@ -397,13 +400,13 @@ export default function DashboardPage() {
     clearDragState();
 
     if (!over) {
-      console.log('⚠️ No drop target detected');
+      logger.debug('No drop target detected');
       return;
     }
 
     // Handle dropping templates from admin toolbar
     if (active.data.current?.type === 'template') {
-      console.log('📦 Template drop detected:', active.data.current.template);
+      logger.debug('Template drop detected', { template: active.data.current.template });
 
       // Check if dropped on dashboard grid or on another card
       if (over.id === 'dashboard-grid' || cards.some(card => card.id === over.id)) {
@@ -417,9 +420,9 @@ export default function DashboardPage() {
           ...template.defaultConfig
         };
 
-        console.log('✅ Adding new card:', newCard);
+        logger.info('Adding new card', { newCard });
         if (newCard.type === 'lga-dwelling-approvals') {
-          console.log('[DEBUG lga-dwelling-approvals] Card created from library template with type:', newCard.type);
+          logger.debug('Card created from library template with type', { type: newCard.type });
         }
 
         setCards(currentCards => {
@@ -435,7 +438,7 @@ export default function DashboardPage() {
                 newCard,
                 ...currentCards.slice(overIndex + 1)
               ];
-              console.log(`📍 Inserted card at position ${overIndex + 1}`);
+              logger.debug('Inserted card at position', { position: overIndex + 1 });
             } else {
               // Fallback: add to end
               newCards = [...currentCards, newCard];
@@ -446,11 +449,11 @@ export default function DashboardPage() {
           }
 
           localStorage.setItem('dashboard-layout', JSON.stringify(newCards));
-          console.log('💾 Updated cards:', newCards.length, 'cards');
+          logger.debug('Updated cards', { count: newCards.length });
           return newCards;
         });
       } else {
-        console.log('❌ Drop target not valid:', over.id);
+        logger.debug('Drop target not valid', { overId: over.id });
       }
       return;
     }

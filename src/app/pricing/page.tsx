@@ -14,6 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Loader2 } from 'lucide-react';
 import { getTierComparison, formatPrice, type TierName } from '@/lib/tiers';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('PricingPage');
 
 export default function PricingPage() {
   const { data: session, status } = useSession();
@@ -39,11 +42,11 @@ export default function PricingPage() {
     try {
       // TODO: Implement Stripe checkout session creation
       // For now, just show a message
-      console.log('Upgrade to', tierName);
+      logger.info('Upgrade to tier', { tierName });
       alert(`Stripe integration coming soon! You selected ${tierName} tier.`);
       setIsLoading(null);
     } catch (error) {
-      console.error('Subscription error:', error);
+      logger.error('Subscription error', error instanceof Error ? error : new Error(String(error)));
       alert('Failed to start checkout. Please try again.');
       setIsLoading(null);
     }

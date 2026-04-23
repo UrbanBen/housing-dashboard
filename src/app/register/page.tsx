@@ -16,6 +16,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('RegisterPage');
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -47,7 +50,7 @@ export default function RegisterPage() {
         const email = oauthEmail; // Email field is disabled, use URL parameter
 
         // Debug logging
-        console.log('[OAuth Signup] OAuth data:', {
+        logger.debug('OAuth Signup - OAuth data', {
           email,
           name,
           oauthProvider,
