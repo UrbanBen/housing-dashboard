@@ -90,7 +90,7 @@ export default function DAHistoryCard({ selectedLGA, cardWidth = 600 }: DAHistor
           throw new Error(result.error || 'Failed to fetch data');
         }
       } catch (err: any) {
-        logger.error('[DA History Card] Error', { error: err });
+        logger.error('[DA History Card] Error', err );
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

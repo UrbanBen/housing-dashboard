@@ -49,7 +49,7 @@ export const TrendChart = forwardRef<TrendChartRef, TrendChartProps>(
       try {
         return JSON.parse(stored);
       } catch (e) {
-        logger.error('Failed to parse stored config', { error: e });
+        logger.error('Failed to parse stored config', e );
       }
     }
     return getDefaultConfig();
@@ -125,7 +125,7 @@ export const TrendChart = forwardRef<TrendChartRef, TrendChartProps>(
           setError('No building approvals data available from database');
         }
       } catch (err) {
-        logger.error('Error fetching building approvals data from database', { error: err });
+        logger.error('Error fetching building approvals data from database', err );
 
         let errorMessage = 'Failed to load building approvals data from database';
         if (err instanceof Error) {

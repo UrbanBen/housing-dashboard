@@ -108,7 +108,7 @@ export function DwellingTypeCard({ selectedLGA, isAdminMode = false, onAdminClic
           setError('No data available for this LGA');
         }
       } catch (err) {
-        logger.error('Error fetching dwelling type data', { error: err });
+        logger.error('Error fetching dwelling type data', err );
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);

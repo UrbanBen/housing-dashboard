@@ -47,7 +47,7 @@ export const LGADwellingApprovalsChart = forwardRef<LGADwellingApprovalsChartRef
       try {
         return JSON.parse(stored);
       } catch (e) {
-        logger.error('Failed to parse stored config', { error: e });
+        logger.error('Failed to parse stored config', e );
       }
     }
     return getDefaultConfig();
@@ -142,7 +142,7 @@ export const LGADwellingApprovalsChart = forwardRef<LGADwellingApprovalsChartRef
           setError(dbData.message || 'No dwelling approvals data available for this LGA');
         }
       } catch (err) {
-        logger.error('Error fetching LGA dwelling approvals data', { error: err });
+        logger.error('Error fetching LGA dwelling approvals data', err );
 
         let errorMessage = 'Failed to load dwelling approvals data from database';
         if (err instanceof Error) {

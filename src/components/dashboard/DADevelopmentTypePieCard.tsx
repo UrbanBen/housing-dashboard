@@ -67,7 +67,7 @@ export default function DADevelopmentTypePieCard({ selectedLGA, cardWidth = 600 
           throw new Error(result.error || 'Failed to fetch data');
         }
       } catch (err: any) {
-        logger.error('[DA Development Type Pie Card] Error', { error: err });
+        logger.error('[DA Development Type Pie Card] Error', err );
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

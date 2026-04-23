@@ -130,7 +130,7 @@ export function AgeBySexCard({ selectedLGA, isAdminMode = false, onAdminClick }:
           setError('No data available for this LGA');
         }
       } catch (err) {
-        logger.error('Error fetching age by sex data', { error: err });
+        logger.error('Error fetching age by sex data', err );
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);

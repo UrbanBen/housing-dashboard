@@ -61,7 +61,7 @@ export function ABSLGAMap({
       try {
         return JSON.parse(stored);
       } catch (e) {
-        logger.error('Failed to parse stored map config', { error: e });
+        logger.error('Failed to parse stored map config', e );
       }
     }
     return {
@@ -142,7 +142,7 @@ export function ABSLGAMap({
         setSelectedLGA(lgaData); // Set without geometry on error
       }
     } catch (err) {
-      logger.error('Error fetching LGA geometry', { error: err });
+      logger.error('Error fetching LGA geometry', err );
       setError(err instanceof Error ? err.message : 'Network error');
       setSelectedLGA(lgaData); // Set without geometry on error
     } finally {

@@ -83,7 +83,7 @@ export function CountryOfBirthCard({ selectedLGA, isAdminMode = false, onAdminCl
           setError('No data available for this LGA');
         }
       } catch (err) {
-        logger.error('Error fetching country of birth data', { error: err });
+        logger.error('Error fetching country of birth data', err );
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);

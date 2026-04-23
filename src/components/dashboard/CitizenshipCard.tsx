@@ -127,7 +127,7 @@ export function CitizenshipCard({ selectedLGA, isAdminMode = false, onAdminClick
           setError(result.error || 'Failed to fetch citizenship data');
         }
       } catch (err) {
-        logger.error('Error fetching citizenship data', { error: err });
+        logger.error('Error fetching citizenship data', err );
         setError('Network error');
       } finally {
         setIsLoading(false);

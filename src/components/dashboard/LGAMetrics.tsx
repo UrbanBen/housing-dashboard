@@ -186,7 +186,7 @@ export function LGAMetrics({ selectedLGA }: LGAMetricsProps) {
           }
         };
       } catch (e) {
-        logger.error('Failed to parse stored LGA metrics config', { error: e });
+        logger.error('Failed to parse stored LGA metrics config', e );
       }
     }
     return defaultConfig;
@@ -215,7 +215,7 @@ export function LGAMetrics({ selectedLGA }: LGAMetricsProps) {
       try {
         itemConfig = JSON.parse(stored);
       } catch (e) {
-        logger.error('Failed to parse data item config', { error: e });
+        logger.error('Failed to parse data item config', e );
       }
     }
 

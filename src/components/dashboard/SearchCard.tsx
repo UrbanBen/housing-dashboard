@@ -140,11 +140,11 @@ export function SearchCard({
       if (result.success && result.data) {
         setLgaOptions(result.data);
       } else {
-        logger.error('Failed to fetch LGAs', { error: result.error });
+        logger.error('Failed to fetch LGAs', result.error );
         setError(result.error || 'Failed to fetch LGA list');
       }
     } catch (err) {
-      logger.error('Error fetching LGAs', { error: err });
+      logger.error('Error fetching LGAs', err );
       setError('Failed to fetch LGA list');
     } finally {
       setIsLoadingLGAs(false);

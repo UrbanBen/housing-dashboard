@@ -66,7 +66,7 @@ export function AustralianBornCard({ selectedLGA, isAdminMode = false, onAdminCl
           setError('No data available for this LGA');
         }
       } catch (err) {
-        logger.error('Error fetching Australian born data', { error: err });
+        logger.error('Error fetching Australian born data', err );
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);

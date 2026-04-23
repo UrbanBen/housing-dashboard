@@ -39,7 +39,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         const config = await response.json();
         setOAuthConfig(config);
       } catch (error) {
-        logger.error('[LoginModal] Error fetching OAuth config', { error: error });
+        logger.error('[LoginModal] Error fetching OAuth config', error );
       }
     };
     fetchOAuthConfig();

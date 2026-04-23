@@ -90,7 +90,7 @@ export function DevelopmentApplicationsCard({ selectedLGA, isAdminMode = false, 
           setError('No data available for this LGA');
         }
       } catch (err) {
-        logger.error('Error fetching development applications data', { error: err });
+        logger.error('Error fetching development applications data', err );
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);

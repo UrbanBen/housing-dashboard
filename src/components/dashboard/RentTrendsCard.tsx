@@ -38,7 +38,7 @@ export function RentTrendsCard({ selectedLGA }: RentTrendsCardProps) {
           setQuarter(result.summary?.quarter || '');
         }
       } catch (err) {
-        logger.error('Error fetching rent trends', { error: err });
+        logger.error('Error fetching rent trends', err );
       } finally {
         setLoading(false);
       }

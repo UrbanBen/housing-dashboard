@@ -58,7 +58,7 @@ export function BADailyCard({ selectedLGA }: BADailyCardProps) {
         setData(result.data || []);
         setSummary(result.summary || null);
       } catch (err) {
-        logger.error('Error fetching data', { error: err });
+        logger.error('Error fetching data', err );
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);

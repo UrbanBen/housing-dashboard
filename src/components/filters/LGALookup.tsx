@@ -102,12 +102,12 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
           if (!cancelled) {
             setLgaData([]);
             setError(data.error || 'Database connection failed');
-            logger.error('Failed to load LGAs from database', { error: data.error });
+            logger.error('Failed to load LGAs from database', data.error );
           }
         }
       } catch (err) {
         if (cancelled) return;
-        logger.error('Error fetching LGAs from database', { error: err });
+        logger.error('Error fetching LGAs from database', err );
         setLgaData([]);
         setError('Database connection error');
       } finally {

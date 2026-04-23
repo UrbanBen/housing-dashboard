@@ -48,7 +48,7 @@ export default function PopulationGrowthCard({ selectedLGA, cardWidth = 600 }: P
           throw new Error(result.error || 'No census data available');
         }
       } catch (err: any) {
-        logger.error('[Population Growth Card] Error', { error: err });
+        logger.error('[Population Growth Card] Error', err);
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

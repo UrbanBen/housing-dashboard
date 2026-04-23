@@ -69,7 +69,7 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
       }, 5000);
 
     } catch (error) {
-      logger.error('Error submitting feedback', { error: error });
+      logger.error('Error submitting feedback', error );
       setSubmitStatus('error');
       setErrorMessage(error instanceof Error ? error.message : 'Failed to submit feedback');
     } finally {

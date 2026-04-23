@@ -73,7 +73,7 @@ export default function CCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CCLa
           throw new Error(result.error || 'No data available');
         }
       } catch (err: any) {
-        logger.error('[CC Latest Month Card] Error', { error: err });
+        logger.error('[CC Latest Month Card] Error', err );
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

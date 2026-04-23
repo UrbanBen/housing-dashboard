@@ -58,7 +58,7 @@ export function ABSLGALookup({ onLGAChange, selectedLGA }: ABSLGALookupProps) {
           }
         }
       } catch (err) {
-        logger.error('Error fetching ABS Census LGAs', { error: err });
+        logger.error('Error fetching ABS Census LGAs', err );
         if (err instanceof Error && err.message.includes('permission denied')) {
           setError('Database permissions required: mosaic_readonly user needs boundaries schema access');
         } else {
