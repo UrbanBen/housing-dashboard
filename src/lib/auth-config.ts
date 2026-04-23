@@ -17,6 +17,9 @@ import {
   linkOAuthAccount,
 } from '@/lib/auth-helpers';
 import { TierName } from '@/lib/tiers';
+import { createLogger } from './logger';
+
+const logger = createLogger({ prefix: 'NextAuth' });
 
 /**
  * Extended User type with subscription information
@@ -37,13 +40,13 @@ if (process.env.NODE_ENV === 'development') {
     microsoft: !!(process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET),
   };
 
-  console.log('\n[OAuth Config]');
-  console.log('  Google:    ' + (oauthStatus.google ? 'Configured' : 'Not configured'));
-  console.log('  Microsoft: ' + (oauthStatus.microsoft ? 'Configured' : 'Not configured'));
+  logger.info('OAuth Config', {
+    google: oauthStatus.google ? 'Configured' : 'Not configured',
+    microsoft: oauthStatus.microsoft ? 'Configured' : 'Not configured'
+  });
 
   if (!oauthStatus.google && !oauthStatus.microsoft) {
-    console.warn('\n[Warning] No OAuth providers configured. Only email/password login available.');
-    console.warn('See AUTH_SETUP_GUIDE.md for setup instructions.\n');
+    logger.warn('No OAuth providers configured. Only email/password login available. See AUTH_SETUP_GUIDE.md for setup instructions.');
   }
 }
 
@@ -120,7 +123,7 @@ export const authOptions: AuthOptions = {
             subscriptionCurrentPeriodEnd: user.subscription_current_period_end,
           };
         } catch (error) {
-          console.error('[NextAuth] Credentials authorization error:', error);
+          logger.error('Credentials authorization error', error instanceof Error ? error : new Error(String(error)));
           throw error;
         }
       },
@@ -202,7 +205,7 @@ export const authOptions: AuthOptions = {
             token.subscriptionCurrentPeriodEnd = refreshedUser.subscription_current_period_end;
           }
         } catch (error) {
-          console.error('[NextAuth] Error refreshing user data:', error);
+          logger.error('Error refreshing user data', error instanceof Error ? error : new Error(String(error)));
         }
       }
 
@@ -238,7 +241,7 @@ export const authOptions: AuthOptions = {
       if (account && profile && user.email) {
         try {
           // Debug logging for OAuth data
-          console.log('[NextAuth] OAuth sign in data:', {
+          logger.debug('OAuth sign in data', {
             provider: account.provider,
             email: user.email,
             userName: user.name,
@@ -271,7 +274,7 @@ export const authOptions: AuthOptions = {
           const image = user.image || (profile as any).picture || '';
           const providerId = account.providerAccountId || '';
 
-          console.log('[NextAuth] Redirecting to register with:', {
+          logger.debug('Redirecting to register with', {
             provider: account.provider,
             email: user.email,
             name,
@@ -290,7 +293,7 @@ export const authOptions: AuthOptions = {
           // Redirect to register page
           return registerUrl;
         } catch (error) {
-          console.error('[NextAuth] OAuth sign in error:', error);
+          logger.error('OAuth sign in error', error instanceof Error ? error : new Error(String(error)));
           return false;
         }
       }

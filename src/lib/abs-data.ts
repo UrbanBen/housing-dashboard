@@ -1,5 +1,8 @@
 import axios from 'axios';
 import * as XLSX from 'xlsx';
+import { createLogger } from './logger';
+
+const logger = createLogger({ prefix: 'ABS Data' });
 
 export interface BuildingApprovalsData {
   month: string;
@@ -34,12 +37,12 @@ export class ABSDataService {
   }
   
   static async fetchBuildingApprovalsData(): Promise<BuildingApprovalsData[]> {
-    console.log('Fetching ABS Building Approvals data...');
-    
+    logger.info('Fetching ABS Building Approvals data...');
+
     try {
       // Use server-side proxy to avoid CORS issues
       const proxyUrl = '/api/abs-data';
-      console.log(`Fetching from server proxy: ${proxyUrl}`);
+      logger.info(`Fetching from server proxy: ${proxyUrl}`);
       const response = await axios.get(proxyUrl, {
         responseType: 'arraybuffer',
         timeout: 30000,
@@ -48,10 +51,10 @@ export class ABSDataService {
         }
       });
       
-      console.log(`Response received, size: ${response.data.byteLength} bytes`);
-      
+      logger.info(`Response received, size: ${response.data.byteLength} bytes`);
+
       const workbook = XLSX.read(response.data, { type: 'buffer' });
-      console.log('Available worksheets:', workbook.SheetNames);
+      logger.info('Available worksheets:', { sheets: workbook.SheetNames });
       
       // Try multiple potential sheet names
       const possibleSheetNames = ['Data 1', 'Data1', 'Sheet1', 'Data', 'Building Approvals'];
@@ -60,13 +63,13 @@ export class ABSDataService {
       for (const sheetName of possibleSheetNames) {
         if (workbook.Sheets[sheetName]) {
           worksheet = workbook.Sheets[sheetName];
-          console.log(`Using worksheet: ${sheetName}`);
+          logger.info(`Using worksheet: ${sheetName}`);
           break;
         }
       }
-      
+
       if (!worksheet) {
-        console.error('Available sheets:', Object.keys(workbook.Sheets));
+        logger.error('No suitable data sheet found', undefined, { availableSheets: Object.keys(workbook.Sheets) });
         throw new Error(`No suitable data sheet found. Available sheets: ${Object.keys(workbook.Sheets).join(', ')}`);
       }
       
@@ -75,28 +78,28 @@ export class ABSDataService {
       if (parsedData.length === 0) {
         throw new Error('No building approvals data found in Excel file');
       }
-      
-      console.log(`Successfully parsed ${parsedData.length} data points from ABS Excel file`);
+
+      logger.info(`Successfully parsed ${parsedData.length} data points from ABS Excel file`);
       return parsedData;
-      
+
     } catch (error) {
-      console.error('Error fetching ABS data:', error);
+      logger.error('Error fetching ABS data', error instanceof Error ? error : new Error(String(error)));
       
       // Check if it's a network error or server error
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 503) {
-          console.error('ABS server is temporarily unavailable');
+          logger.error('ABS server is temporarily unavailable');
         } else if (error.response?.status && error.response.status >= 500) {
-          console.error('ABS server error:', error.response.status);
+          logger.error('ABS server error', undefined, { status: error.response.status });
         } else if (error.code === 'NETWORK_ERROR' || error.code === 'ERR_NETWORK') {
-          console.error('Network connectivity issue');
+          logger.error('Network connectivity issue');
         } else {
-          console.error('HTTP error:', error.response?.status, error.response?.statusText);
+          logger.error('HTTP error', undefined, { status: error.response?.status, statusText: error.response?.statusText });
         }
       }
-      
+
       // Only use fallback as last resort with clear indication
-      console.warn('Using fallback data due to ABS data fetch failure');
+      logger.warn('Using fallback data due to ABS data fetch failure');
       const mockData: BuildingApprovalsData[] = [
         { month: 'Jul 2024', approvals: 11245, period: '2024-07', year: 2024 },
         { month: 'Aug 2024', approvals: 10897, period: '2024-08', year: 2024 },
@@ -119,12 +122,12 @@ export class ABSDataService {
   
   private static parseExcelDataFromColumnO(worksheet: XLSX.WorkSheet): BuildingApprovalsData[] {
     const data: BuildingApprovalsData[] = [];
-    
-    console.log('Starting Excel parsing for building approvals data');
-    
+
+    logger.info('Starting Excel parsing for building approvals data');
+
     // Get the range of the worksheet to find all data
     const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:Z200');
-    console.log(`Worksheet range: ${range.s.r} to ${range.e.r} rows, ${range.s.c} to ${range.e.c} columns`);
+    logger.info(`Worksheet range: ${range.s.r} to ${range.e.r} rows, ${range.s.c} to ${range.e.c} columns`);
     
     // Check multiple potential date columns (A, B, C) and data rows
     const potentialDateColumns = [0, 1, 2]; // Columns A, B, C
@@ -162,8 +165,8 @@ export class ABSDataService {
         if (dateObj && dateObj.getFullYear() >= 2023) { // Filter for 2023+ data to get July 2024 - July 2025
           const monthStr = dateObj.toLocaleDateString('en-AU', { month: 'short', year: 'numeric' });
           const periodStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
-          
-          console.log(`Found data: ${monthStr} = ${approvalsValue} approvals`);
+
+          logger.debug(`Found data: ${monthStr} = ${approvalsValue} approvals`);
           
           data.push({
             month: monthStr,
@@ -175,14 +178,13 @@ export class ABSDataService {
       }
     }
     
-    console.log(`Total data points found: ${data.length}`);
-    
+    logger.info(`Total data points found: ${data.length}`);
+
     // Sort by period to ensure chronological order
     data.sort((a, b) => a.period.localeCompare(b.period));
-    
+
     // Check what data we actually have available
-    console.log('All available data points:');
-    data.forEach(item => console.log(`${item.month}: ${item.approvals} (${item.period})`));
+    logger.debug('All available data points:', { data: data.map(item => `${item.month}: ${item.approvals}`) });
     
     // Filter for July 2024 to July 2025 range specifically
     const filteredData = data.filter(item => {
@@ -190,18 +192,17 @@ export class ABSDataService {
       return (year === 2024 && month >= 7) || (year === 2025 && month <= 7);
     });
     
-    console.log(`Filtered data for July 2024 - July 2025: ${filteredData.length} points`);
-    
+    logger.info(`Filtered data for July 2024 - July 2025: ${filteredData.length} points`);
+
     // If we don't have the target range, get the most recent 13 months available
     if (filteredData.length < 5) {
-      console.log('Target date range not available, using most recent 13 months');
+      logger.info('Target date range not available, using most recent 13 months');
       const recentData = data.slice(-13);
-      console.log('Using recent data:');
-      recentData.forEach(item => console.log(`${item.month}: ${item.approvals}`));
+      logger.debug('Using recent data:', { data: recentData.map(item => `${item.month}: ${item.approvals}`) });
       return recentData;
     }
-    
-    filteredData.forEach(item => console.log(`${item.month}: ${item.approvals}`));
+
+    logger.debug('Filtered data:', { data: filteredData.map(item => `${item.month}: ${item.approvals}`) });
     
     // Return the filtered data or last 13 entries if we have more
     return filteredData.length > 13 ? filteredData.slice(-13) : filteredData;
@@ -252,7 +253,7 @@ export class ABSDataService {
       }
       return null;
     } catch (error) {
-      console.warn(`Failed to parse date: ${excelDate}`, error);
+      logger.warn(`Failed to parse date: ${excelDate}`, { error: error instanceof Error ? error.message : String(error) });
       return null;
     }
   }

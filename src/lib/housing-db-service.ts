@@ -1,5 +1,8 @@
 import { query } from './database';
 import type { BuildingApprovalsRecord, LGARecord, HousingMetricsRecord } from './database';
+import { createLogger } from './logger';
+
+const logger = createLogger({ prefix: 'Housing DB Service' });
 
 export class HousingDBService {
   
@@ -232,7 +235,7 @@ export class HousingDBService {
    */
   static async migrateABSData(absData: any[]): Promise<{ success: boolean; message: string; stats: any }> {
     try {
-      console.log(`Starting migration of ${absData.length} ABS records...`);
+      logger.info(`Starting migration of ${absData.length} ABS records...`);
       
       const buildingApprovalsData: BuildingApprovalsRecord[] = absData.map(item => ({
         period: item.period,
@@ -256,7 +259,7 @@ export class HousingDBService {
         stats
       };
     } catch (error) {
-      console.error('Migration failed:', error);
+      logger.error('Migration failed', error instanceof Error ? error : new Error(String(error)));
       
       // Log the failure
       await query(`

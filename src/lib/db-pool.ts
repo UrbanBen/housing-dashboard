@@ -1,6 +1,9 @@
 import { Pool, PoolClient, PoolConfig } from 'pg';
 import fs from 'fs';
 import path from 'path';
+import { createLogger } from './logger'
+
+const logger = createLogger({ prefix: 'DB Pool' });
 
 /**
  * Database Connection Pool Manager
@@ -34,7 +37,7 @@ const POOL_CONFIG: Partial<PoolConfig> = {
 function readPasswordFromFile(filePath: string): string | null {
   try {
     if (!fs.existsSync(filePath)) {
-      console.error(`Password file not found: ${filePath}`);
+      logger.error(`Password file not found: ${filePath}`);
       return null;
     }
 
@@ -54,10 +57,10 @@ function readPasswordFromFile(filePath: string): string | null {
       }
     }
 
-    console.error(`No password found in file: ${filePath}`);
+    logger.error(`No password found in file: ${filePath}`);
     return null;
   } catch (error) {
-    console.error(`Error reading password file ${filePath}:`, error);
+    logger.error(`Error reading password file ${filePath}`, error instanceof Error ? error : new Error(String(error)));
     return null;
   }
 }
@@ -67,7 +70,7 @@ function readPasswordFromFile(filePath: string): string | null {
  */
 function initReadonlyPool(): Pool {
   if (!readonlyPool) {
-    console.log('[DB Pool] Initializing READONLY pool...');
+    logger.info('Initializing READONLY pool...');
 
     // Try environment variable first (production/Vercel), then fall back to file (local dev)
     let password: string | null | undefined = process.env.DATABASE_PASSWORD;
@@ -88,15 +91,15 @@ function initReadonlyPool(): Pool {
 
     // Handle pool errors
     readonlyPool.on('error', (err, client) => {
-      console.error('[DB Pool] Unexpected READONLY pool error:', err);
+      logger.error('Unexpected READONLY pool error', err instanceof Error ? err : new Error(String(err)));
       // Pool will automatically try to reconnect
     });
 
     readonlyPool.on('connect', (client) => {
-      console.log('[DB Pool] READONLY client connected');
+      logger.info('READONLY client connected');
     });
 
-    console.log('[DB Pool] READONLY pool initialized successfully');
+    logger.info('READONLY pool initialized successfully');
   }
 
   return readonlyPool;
@@ -107,7 +110,7 @@ function initReadonlyPool(): Pool {
  */
 function initAdminPool(): Pool {
   if (!adminPool) {
-    console.log('[DB Pool] Initializing ADMIN pool...');
+    logger.info('Initializing ADMIN pool...');
 
     // Try environment variable first (production/Vercel), then fall back to file (local dev)
     let password: string | null | undefined = process.env.DATABASE_ADMIN_PASSWORD;
@@ -128,15 +131,15 @@ function initAdminPool(): Pool {
 
     // Handle pool errors
     adminPool.on('error', (err, client) => {
-      console.error('[DB Pool] Unexpected ADMIN pool error:', err);
+      logger.error('Unexpected ADMIN pool error', err instanceof Error ? err : new Error(String(err)));
       // Pool will automatically try to reconnect
     });
 
     adminPool.on('connect', (client) => {
-      console.log('[DB Pool] ADMIN client connected');
+      logger.info('ADMIN client connected');
     });
 
-    console.log('[DB Pool] ADMIN pool initialized successfully');
+    logger.info('ADMIN pool initialized successfully');
   }
 
   return adminPool;
@@ -173,7 +176,7 @@ export async function executeQuery<T = any>(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       if (attempt > 0) {
-        console.log(`[DB Query] Retry attempt ${attempt}/${maxRetries}`);
+        logger.info(`Retry attempt ${attempt}/${maxRetries}`);
         await new Promise(resolve => setTimeout(resolve, retryDelay));
       }
 
@@ -181,7 +184,7 @@ export async function executeQuery<T = any>(
       const result = await pool.query(query, params);
       const duration = Date.now() - startTime;
 
-      console.log(`[DB Query] Success (${duration}ms, ${result.rowCount} rows)`);
+      logger.info(`Query success (${duration}ms, ${result.rowCount} rows)`);
 
       return {
         success: true,
@@ -190,7 +193,7 @@ export async function executeQuery<T = any>(
       };
     } catch (error: any) {
       lastError = error;
-      console.error(`[DB Query] Attempt ${attempt + 1} failed:`, error.message);
+      logger.error(`Query attempt ${attempt + 1} failed`, error instanceof Error ? error : new Error(String(error)));
 
       // Don't retry on syntax errors or other non-transient errors
       if (error.code === '42P01' || error.code === '42703') {
@@ -251,7 +254,7 @@ export async function healthCheck(): Promise<{
  * Call this on application shutdown
  */
 export async function closeAllPools(): Promise<void> {
-  console.log('[DB Pool] Closing all connection pools...');
+  logger.info('Closing all connection pools...');
 
   const promises: Promise<void>[] = [];
 
@@ -266,5 +269,5 @@ export async function closeAllPools(): Promise<void> {
   }
 
   await Promise.all(promises);
-  console.log('[DB Pool] All pools closed');
+  logger.info('All pools closed');
 }

@@ -7,6 +7,9 @@
 import bcrypt from 'bcrypt';
 import { getAdminPool } from './db-pool';
 import type { TierName } from './tiers';
+import { createLogger } from './logger';
+
+const logger = createLogger({ prefix: 'Auth Helpers' });
 
 const SALT_ROUNDS = 10;
 
@@ -67,7 +70,7 @@ export async function createUser(data: {
 
     return { success: true, userId };
   } catch (error) {
-    console.error('[createUser] Error:', error);
+    logger.error('createUser error', error instanceof Error ? error : new Error(String(error)));
     return { success: false, error: 'Failed to create user account' };
   }
 }
@@ -164,7 +167,7 @@ export async function updateUserTier(
 
     return true;
   } catch (error) {
-    console.error('[updateUserTier] Error:', error);
+    logger.error('updateUserTier error', error instanceof Error ? error : new Error(String(error)));
     return false;
   }
 }
@@ -194,7 +197,7 @@ export async function logCardUsage(
     );
   } catch (error) {
     // Don't fail the request if logging fails
-    console.error('[logCardUsage] Error:', error);
+    logger.error('logCardUsage error', error instanceof Error ? error : new Error(String(error)));
   }
 }
 
@@ -272,7 +275,7 @@ export async function createOAuthUser(data: {
 
     return { success: true, userId };
   } catch (error) {
-    console.error('[createOAuthUser] Error:', error);
+    logger.error('createOAuthUser error', error instanceof Error ? error : new Error(String(error)));
     return { success: false, error: 'Failed to create OAuth user account' };
   }
 }
@@ -321,7 +324,7 @@ export async function linkOAuthAccount(data: {
 
     return true;
   } catch (error) {
-    console.error('[linkOAuthAccount] Error:', error);
+    logger.error('linkOAuthAccount error', error instanceof Error ? error : new Error(String(error)));
     return false;
   }
 }

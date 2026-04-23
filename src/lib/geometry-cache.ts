@@ -4,6 +4,10 @@
  * Caches LGA geometry data in localStorage to avoid repeated expensive queries
  */
 
+import { createLogger } from './logger';
+
+const logger = createLogger({ prefix: 'Geometry Cache' });
+
 interface CacheEntry {
   data: any;
   timestamp: number;
@@ -33,10 +37,10 @@ export function getGeometryFromCache(lgaName: string): any | null {
       return null;
     }
 
-    console.log(`[Geometry Cache] Hit for ${lgaName}`);
+    logger.debug(`Cache hit for ${lgaName}`);
     return entry.data;
   } catch (error) {
-    console.error('[Geometry Cache] Error reading cache:', error);
+    logger.error('Error reading cache', error instanceof Error ? error : new Error(String(error)));
     return null;
   }
 }
@@ -55,9 +59,9 @@ export function saveGeometryToCache(lgaName: string, data: any): void {
 
   try {
     localStorage.setItem(cacheKey, JSON.stringify(entry));
-    console.log(`[Geometry Cache] Saved for ${lgaName}`);
+    logger.debug(`Saved cache for ${lgaName}`);
   } catch (error) {
-    console.error('[Geometry Cache] Error saving cache:', error);
+    logger.error('Error saving cache', error instanceof Error ? error : new Error(String(error)));
     // If localStorage is full, clear old entries
     if (error instanceof DOMException && error.name === 'QuotaExceededError') {
       clearOldCacheEntries();
@@ -65,7 +69,7 @@ export function saveGeometryToCache(lgaName: string, data: any): void {
       try {
         localStorage.setItem(cacheKey, JSON.stringify(entry));
       } catch (e) {
-        console.error('[Geometry Cache] Still failed after cleanup:', e);
+        logger.error('Still failed after cleanup', e instanceof Error ? e : new Error(String(e)));
       }
     }
   }
@@ -99,7 +103,7 @@ function clearOldCacheEntries(): void {
       }
     }
   } catch (error) {
-    console.error('[Geometry Cache] Error clearing old entries:', error);
+    logger.error('Error clearing old entries', error instanceof Error ? error : new Error(String(error)));
   }
 }
 
@@ -116,8 +120,8 @@ export function clearGeometryCache(): void {
         localStorage.removeItem(key);
       }
     }
-    console.log('[Geometry Cache] Cleared all entries');
+    logger.info('Cleared all entries');
   } catch (error) {
-    console.error('[Geometry Cache] Error clearing cache:', error);
+    logger.error('Error clearing cache', error instanceof Error ? error : new Error(String(error)));
   }
 }

@@ -1,5 +1,8 @@
 import { PoolClient } from 'pg';
 import { getReadonlyPool, getClient as getPoolClient } from './db-pool';
+import { createLogger } from './logger';
+
+const logger = createLogger({ prefix: 'Database (legacy)' });
 
 /**
  * Legacy database.ts - Now uses centralized db-pool
@@ -22,7 +25,7 @@ export async function query(text: string, params?: any[]): Promise<any> {
     const result = await client.query(text, params);
     return result;
   } catch (error) {
-    console.error('Database query error:', error);
+    logger.error('Database query error', error instanceof Error ? error : new Error(String(error)));
     throw error;
   } finally {
     client.release();
@@ -38,7 +41,7 @@ export async function testConnection(): Promise<{ success: boolean; message: str
       message: `Connected successfully. Server time: ${result.rows[0].current_time}`
     };
   } catch (error) {
-    console.error('Database connection test failed:', error);
+    logger.error('Database connection test failed', error instanceof Error ? error : new Error(String(error)));
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Unknown connection error'
@@ -49,7 +52,7 @@ export async function testConnection(): Promise<{ success: boolean; message: str
 // Close all connections (useful for cleanup)
 // NOTE: This is now a no-op since pools are managed centrally
 export async function closePool(): Promise<void> {
-  console.warn('closePool() is deprecated. Use closeAllPools() from db-pool instead.');
+  logger.warn('closePool() is deprecated. Use closeAllPools() from db-pool instead.');
 }
 
 // Database schema types
