@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, Database, Settings, Save, FolderOpen, BarChart3, Link, Clock, Home, Building2 } from "lucide-react";
+import { X, Database, Settings, Save, FolderOpen, BarChart3, Link, Square, Users } from "lucide-react";
 
 export interface DataItemConfig {
   enabled: boolean;
@@ -29,10 +29,6 @@ export interface LGADetailsConfig {
   dataItems: {
     area: DataItemConfig;
     populationDensity: DataItemConfig;
-    avgProcessingDays: DataItemConfig;
-    developmentApplications: DataItemConfig;
-    landReleases: DataItemConfig;
-    completions: DataItemConfig;
   };
 }
 
@@ -53,26 +49,6 @@ const defaultDataItems = {
     enabled: true,
     title: 'Population Density',
     subtitle: 'People per km²'
-  },
-  avgProcessingDays: {
-    enabled: true,
-    title: 'Average DA Processing',
-    subtitle: 'Processing Time'
-  },
-  developmentApplications: {
-    enabled: true,
-    title: 'Development Applications',
-    subtitle: 'Total DAs'
-  },
-  landReleases: {
-    enabled: true,
-    title: 'Land Releases',
-    subtitle: 'Lots Released'
-  },
-  completions: {
-    enabled: true,
-    title: 'Completions',
-    subtitle: 'Units Completed'
   }
 };
 
@@ -156,11 +132,9 @@ export function LGADetailsConfigForm({
 
   if (!isOpen) return null;
 
-  const dataItemIcons = {
-    avgProcessingDays: Clock,
-    developmentApplications: BarChart3,
-    landReleases: Home,
-    completions: Building2
+  const dataItemIcons: Record<string, any> = {
+    area: Square,
+    populationDensity: Users
   };
 
   return createPortal(
@@ -200,7 +174,7 @@ export function LGADetailsConfigForm({
             <div>
               <h3 className="flex items-center gap-2 text-base font-semibold mb-4">
                 <Settings className="h-4 w-4" />
-                Data Items (4 Maximum)
+                Data Items
               </h3>
               <div className="space-y-3">
                 {Object.entries(config.dataItems).map(([key, item]) => {

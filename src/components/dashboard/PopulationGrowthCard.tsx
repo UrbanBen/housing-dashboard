@@ -201,7 +201,7 @@ export default function PopulationGrowthCard({ selectedLGA, cardWidth = 600 }: P
                 name="Population"
                 label={(props: any) => {
                   const { x, y, value } = props;
-                  if (value == null) return null;
+                  if (value == null) return <></>;
                   return (
                     <text
                       x={x}
