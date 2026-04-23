@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Building2, TrendingUp } from 'lucide-react';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('DADevelopmentTypePieCard');
 
 interface DevelopmentTypeData {
   development_type: string;
@@ -64,7 +67,7 @@ export default function DADevelopmentTypePieCard({ selectedLGA, cardWidth = 600 
           throw new Error(result.error || 'Failed to fetch data');
         }
       } catch (err: any) {
-        console.error('[DA Development Type Pie Card] Error:', err);
+        logger.error('[DA Development Type Pie Card] Error', { error: err);
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

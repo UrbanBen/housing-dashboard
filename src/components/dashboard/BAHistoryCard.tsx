@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { History } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('BAHistoryCard');
 
 interface BAHistoryCardProps {
   selectedLGA: LGA | null;
@@ -52,7 +55,7 @@ export function BAHistoryCard({ selectedLGA, cardWidth = 'large' }: BAHistoryCar
         setData(result.data || []);
         setSummary(result.summary || null);
       } catch (err) {
-        console.error('[BAHistoryCard] Error:', err);
+        logger.error('[BAHistoryCard] Error', { error: err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);

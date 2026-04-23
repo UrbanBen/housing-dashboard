@@ -6,8 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, Database, RefreshCw, AlertCircle, ChevronDown } from "lucide-react";
 import { TestCardConnectionForm } from './TestCardConnectionForm';
 import { AustraliaStateMap } from '@/components/maps/AustraliaStateMap';
+import { createComponentLogger } from '@/lib/logger';
 
 import type { LGA } from '@/components/filters/LGALookup';
+
+const logger = createComponentLogger('SearchCard');
 
 interface SearchCardProps {
   isAdminMode?: boolean;
@@ -137,11 +140,11 @@ export function SearchCard({
       if (result.success && result.data) {
         setLgaOptions(result.data);
       } else {
-        console.error('Failed to fetch LGAs:', result.error);
+        logger.error('Failed to fetch LGAs', { error: result.error });
         setError(result.error || 'Failed to fetch LGA list');
       }
     } catch (err) {
-      console.error('Error fetching LGAs:', err);
+      logger.error('Error fetching LGAs', { error: err });
       setError('Failed to fetch LGA list');
     } finally {
       setIsLoadingLGAs(false);
@@ -281,7 +284,7 @@ export function SearchCard({
         region: 'Unknown',
         population: null
       };
-      console.log('[TestSearchCard] Calling onLGAChange with:', lgaObject);
+      logger.info('Calling onLGAChange with selected LGA', { lgaObject });
       onLGAChange(lgaObject);
     }
 
@@ -349,7 +352,7 @@ export function SearchCard({
       region: 'State/Territory',
       population: null
     };
-    console.log('[SearchCard] State clicked, calling onLGAChange with:', stateOption);
+    logger.info('State clicked, calling onLGAChange', { stateOption });
     onLGAChange?.(stateOption);
 
     // Also emit custom event for backward compatibility

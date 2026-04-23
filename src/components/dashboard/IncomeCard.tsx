@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Settings, TrendingUp, Home, User } from "lucide-react";
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('IncomeCard');
 
 interface IncomeCardProps {
   selectedLGA?: { name: string; id: string } | null;
@@ -58,7 +61,7 @@ export function IncomeCard({ selectedLGA, isAdminMode = false, onAdminClick }: I
 
         setData(result.data);
       } catch (err) {
-        console.error('Error fetching income data:', err);
+        logger.error('Error fetching income data', { error: err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);

@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, TrendingUp, TrendingDown } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('BAWeeklyCard');
 
 interface BAWeeklyCardProps {
   selectedLGA: LGA | null;
@@ -51,7 +54,7 @@ export function BAWeeklyCard({ selectedLGA }: BAWeeklyCardProps) {
         setData(result.data || []);
         setSummary(result.summary || null);
       } catch (err) {
-        console.error('[BAWeeklyCard] Error:', err);
+        logger.error('[BAWeeklyCard] Error', { error: err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);

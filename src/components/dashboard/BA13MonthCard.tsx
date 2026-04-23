@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('BA13MonthCard');
 
 interface BA13MonthCardProps {
   selectedLGA: LGA | null;
@@ -51,7 +54,7 @@ export function BA13MonthCard({ selectedLGA }: BA13MonthCardProps) {
         setData(result.data || []);
         setSummary(result.summary || null);
       } catch (err) {
-        console.error('[BA13MonthCard] Error:', err);
+        logger.error('[BA13MonthCard] Error', { error: err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);

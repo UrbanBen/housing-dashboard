@@ -9,6 +9,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tool
 import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import type { LGA } from '@/components/filters/LGALookup';
 import { LGADwellingApprovalsConfigForm, type LGADwellingApprovalsConfig } from '@/components/dashboard/LGADwellingApprovalsConfigForm';
+import { createComponentLogger } from '@/lib/logger';
 
 interface ChartDataPoint {
   month: string;
@@ -24,6 +25,8 @@ interface LGADwellingApprovalsChartProps {
 export interface LGADwellingApprovalsChartRef {
   openConfig: () => void;
 }
+
+const logger = createComponentLogger('LGADwellingApprovalsChart');
 
 export const LGADwellingApprovalsChart = forwardRef<LGADwellingApprovalsChartRef, LGADwellingApprovalsChartProps>(
   function LGADwellingApprovalsChart({ selectedLGA }, ref) {
@@ -44,7 +47,7 @@ export const LGADwellingApprovalsChart = forwardRef<LGADwellingApprovalsChartRef
       try {
         return JSON.parse(stored);
       } catch (e) {
-        console.error('Failed to parse stored config:', e);
+        logger.error('Failed to parse stored config', { error: e });
       }
     }
     return getDefaultConfig();
@@ -97,7 +100,7 @@ export const LGADwellingApprovalsChart = forwardRef<LGADwellingApprovalsChartRef
       try {
         setLoading(true);
 
-        console.log('[LGADwellingApprovalsChart] selectedLGA changed:', selectedLGA);
+        logger.debug('selectedLGA changed', { selectedLGA });
 
         if (!selectedLGA) {
           setData([]);
@@ -106,7 +109,7 @@ export const LGADwellingApprovalsChart = forwardRef<LGADwellingApprovalsChartRef
           return;
         }
 
-        console.log('[LGADwellingApprovalsChart] Fetching data for LGA:', {
+        logger.info('Fetching data for LGA', {
           id: selectedLGA.id,
           name: selectedLGA.name
         });
@@ -115,12 +118,12 @@ export const LGADwellingApprovalsChart = forwardRef<LGADwellingApprovalsChartRef
         // Pass LGA code for filtering, and name for display
         const apiUrl = `/api/lga-dwelling-approvals?lgaCode=${encodeURIComponent(selectedLGA.id)}&lgaName=${encodeURIComponent(selectedLGA.name)}`;
 
-        console.log('[LGADwellingApprovalsChart] API URL:', apiUrl);
+        logger.debug('API URL', { apiUrl });
 
         const response = await fetch(apiUrl);
         const dbData = await response.json();
 
-        console.log('[LGADwellingApprovalsChart] API response:', dbData);
+        logger.debug('API response received', { dbData });
 
         if (dbData.success && dbData.data.length > 0) {
           // Use database data
@@ -139,7 +142,7 @@ export const LGADwellingApprovalsChart = forwardRef<LGADwellingApprovalsChartRef
           setError(dbData.message || 'No dwelling approvals data available for this LGA');
         }
       } catch (err) {
-        console.error('Error fetching LGA dwelling approvals data:', err);
+        logger.error('Error fetching LGA dwelling approvals data', { error: err });
 
         let errorMessage = 'Failed to load dwelling approvals data from database';
         if (err instanceof Error) {

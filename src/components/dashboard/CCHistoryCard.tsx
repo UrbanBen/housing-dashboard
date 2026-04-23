@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp, Calendar, FileCheck } from 'lucide-react';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('CCHistoryCard');
 
 interface CCHistoryData {
   period_start: string;
@@ -86,7 +89,7 @@ export default function CCHistoryCard({ selectedLGA, cardWidth = 600 }: CCHistor
           throw new Error(result.error || 'Failed to fetch data');
         }
       } catch (err: any) {
-        console.error('[CC History Card] Error:', err);
+        logger.error('[CC History Card] Error', { error: err);
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

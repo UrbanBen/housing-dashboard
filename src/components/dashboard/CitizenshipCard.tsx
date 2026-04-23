@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, AlertCircle } from "lucide-react";
 import { ResponsivePie } from '@nivo/pie';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('CitizenshipCard');
 
 interface CitizenshipCardProps {
   selectedLGA: LGA | null;
@@ -124,7 +127,7 @@ export function CitizenshipCard({ selectedLGA, isAdminMode = false, onAdminClick
           setError(result.error || 'Failed to fetch citizenship data');
         }
       } catch (err) {
-        console.error('Error fetching citizenship data:', err);
+        logger.error('Error fetching citizenship data', { error: err);
         setError('Network error');
       } finally {
         setIsLoading(false);

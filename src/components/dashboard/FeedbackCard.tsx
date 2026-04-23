@@ -5,6 +5,9 @@ import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Send, CheckCircle, AlertCircle } from "lucide-react";
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('FeedbackCard');
 
 interface FeedbackCardProps {
   selectedLGA: LGA | null;
@@ -66,7 +69,7 @@ export function FeedbackCard({ selectedLGA }: FeedbackCardProps) {
       }, 5000);
 
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      logger.error('Error submitting feedback', { error: error);
       setSubmitStatus('error');
       setErrorMessage(error instanceof Error ? error.message : 'Failed to submit feedback');
     } finally {

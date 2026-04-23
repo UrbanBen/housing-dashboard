@@ -6,6 +6,9 @@ import { MapPin, Settings, Database, RefreshCw, AlertCircle } from "lucide-react
 import { LGAMap } from '@/components/maps/LGAMap';
 import { ABSLGAMapConfigForm } from './ABSLGAMapConfigForm';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('ABSLGAMap');
 
 interface ABSLGAMapProps {
   selectedLGA: LGA | null;
@@ -58,7 +61,7 @@ export function ABSLGAMap({
       try {
         return JSON.parse(stored);
       } catch (e) {
-        console.error('Failed to parse stored map config:', e);
+        logger.error('Failed to parse stored map config', { error: e });
       }
     }
     return {
@@ -139,7 +142,7 @@ export function ABSLGAMap({
         setSelectedLGA(lgaData); // Set without geometry on error
       }
     } catch (err) {
-      console.error('Error fetching LGA geometry:', err);
+      logger.error('Error fetching LGA geometry', { error: err });
       setError(err instanceof Error ? err.message : 'Network error');
       setSelectedLGA(lgaData); // Set without geometry on error
     } finally {
@@ -156,7 +159,7 @@ export function ABSLGAMap({
           config.filterIntegration.sourceCardId === 'search-geography-card') {
         const { lgaName, lgaCode } = event.detail;
 
-        console.log('[ABSLGAMap] Received LGA selection:', { lgaName, lgaCode });
+        logger.info('Received LGA selection', { lgaName, lgaCode });
 
         const lgaData = {
           id: lgaCode || '',

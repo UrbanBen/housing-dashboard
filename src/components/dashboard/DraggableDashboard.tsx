@@ -5,6 +5,9 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 import { DraggableCard } from './DraggableCard';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('DraggableDashboard');
 
 // Define card types
 export type CardType =
@@ -161,7 +164,7 @@ function DroppableDashboardGrid({
       )}
       {cards.map((card) => {
         if (card.type === 'lga-dwelling-approvals') {
-          console.log('[DroppableDashboardGrid] Rendering lga-dwelling-approvals card:', {
+          logger.debug('Rendering lga-dwelling-approvals card', {
             cardId: card.id,
             cardType: card.type,
             selectedLGA: selectedLGA
@@ -362,7 +365,7 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
 
     // Check if the card being deleted is currently being dragged
     if (activeCard?.id === cardId) {
-      console.warn('[DraggableDashboard] Attempted to delete card that is currently being dragged');
+      logger.warn('Attempted to delete card that is currently being dragged', { cardId, activeCardId: activeCard.id });
       return;
     }
 
@@ -415,7 +418,7 @@ export function DraggableDashboard({ selectedLGA, onLGAChange, maxColumns, isEdi
 
     const updateColumns = () => {
       const newColumns = getEffectiveColumns();
-      console.log('Updating columns:', { width: window.innerWidth, maxColumns, naturalColumns: Math.min(6, Math.max(1, Math.floor(window.innerWidth / 350))), effectiveColumns: newColumns });
+      logger.debug('Updating columns', { width: window.innerWidth, maxColumns, naturalColumns: Math.min(6, Math.max(1, Math.floor(window.innerWidth / 350))), effectiveColumns: newColumns });
       setEffectiveColumns(newColumns);
     };
 

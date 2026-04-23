@@ -6,10 +6,13 @@ import { Users, BarChart3, Square } from "lucide-react";
 import type { LGA } from '@/components/filters/LGALookup';
 import { LGADetailsConfigForm, type LGADetailsConfig } from './LGADetailsConfigForm';
 import { DataItemConfigForm, type DataItemDetailedConfig } from './DataItemConfigForm';
+import { createComponentLogger } from '@/lib/logger';
 
 interface LGADetailsProps {
   selectedLGA: LGA | null;
 }
+
+const logger = createComponentLogger('LGADetails');
 
 export function LGADetails({ selectedLGA }: LGADetailsProps) {
   const [showConfigForm, setShowConfigForm] = useState(false);
@@ -74,7 +77,7 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
           }
         };
       } catch (e) {
-        console.error('Failed to parse stored LGA details config:', e);
+        logger.error('Failed to parse stored LGA details config', { error: e });
       }
     }
     return defaultConfig;
@@ -103,7 +106,7 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
       try {
         itemConfig = JSON.parse(stored);
       } catch (e) {
-        console.error('Failed to parse data item config:', e);
+        logger.error('Failed to parse data item config', { error: e });
       }
     }
 
@@ -146,11 +149,11 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
         if (result.success && result.data) {
           setAreaData(result.data.area_sqkm);
         } else {
-          console.warn('Area data not found, using fallback:', result.error);
+          logger.warn('Area data not found, using fallback', { error: result.error });
           setAreaData(selectedLGA.area || 0);
         }
       } catch (error) {
-        console.error('Error fetching area data:', error);
+        logger.error('Error fetching area data', { error });
         setAreaData(selectedLGA.area || 0);
       } finally {
         setIsLoadingArea(false);
@@ -178,11 +181,11 @@ export function LGADetails({ selectedLGA }: LGADetailsProps) {
         if (result.success && result.data) {
           setCensusData(result.data);
         } else {
-          console.warn('Census data not found:', result.error);
+          logger.warn('Census data not found', { error: result.error });
           setCensusData(null);
         }
       } catch (error) {
-        console.error('Error fetching census data:', error);
+        logger.error('Error fetching census data', { error });
         setCensusData(null);
       } finally {
         setIsLoadingCensus(false);

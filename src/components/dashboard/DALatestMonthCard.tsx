@@ -69,7 +69,7 @@ export default function DALatestMonthCard({ selectedLGA, cardWidth = 600 }: DALa
           throw new Error(result.error || 'No data available');
         }
       } catch (err: any) {
-        console.error('[DA Latest Month Card] Error:', err);
+        logger.error('[DA Latest Month Card] Error', { error: err);
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

@@ -3,6 +3,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, MapPin, ChevronDown, Loader2 } from "lucide-react";
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('LGALookup');
 
 export interface LGA {
   id: string;
@@ -92,19 +95,19 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
           if (!cancelled) {
             setLgaData([nswStateWide, ...transformedLGAs]);
             setError(null);
-            console.log(`Loaded ${transformedLGAs.length} LGAs from Azure PostgreSQL database`);
+            logger.info('Loaded LGAs from Azure PostgreSQL database', { count: transformedLGAs.length });
           }
         } else {
           // Database connection failed
           if (!cancelled) {
             setLgaData([]);
             setError(data.error || 'Database connection failed');
-            console.error('Failed to load LGAs from database:', data.error);
+            logger.error('Failed to load LGAs from database', { error: data.error });
           }
         }
       } catch (err) {
         if (cancelled) return;
-        console.error('Error fetching LGAs from database:', err);
+        logger.error('Error fetching LGAs from database', { error: err });
         setLgaData([]);
         setError('Database connection error');
       } finally {
@@ -187,7 +190,7 @@ export function LGALookup({ onLGAChange, selectedLGA }: LGALookupProps) {
           }
         }
       } catch (error) {
-        console.error('Failed to fetch LGA details:', error);
+        logger.error('Failed to fetch LGA details', { error });
       }
     }
 

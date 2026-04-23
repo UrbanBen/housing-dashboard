@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Building, TrendingUp } from 'lucide-react';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('CDCBuildingCodePieCard');
 
 interface BuildingClassData {
   building_class: string;
@@ -79,7 +82,7 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
           throw new Error(result.error || 'Failed to fetch data');
         }
       } catch (err: any) {
-        console.error('[CDC Building Code Pie Card] Error:', err);
+        logger.error('[CDC Building Code Pie Card] Error', { error: err);
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

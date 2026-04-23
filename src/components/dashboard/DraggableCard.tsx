@@ -6,6 +6,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Move, Trash2 } from 'lucide-react';
 import type { DashboardCard } from './DraggableDashboard';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('DraggableCard');
 
 // Import all the dashboard components
 import { LGALookup } from '@/components/filters/LGALookup';
@@ -149,7 +152,7 @@ export function DraggableCard({
       case 'lga-dwelling-approvals': {
         // Data Source: Database research&insights, Schema housing_dashboard, Table building_approvals_nsw_lga
         // Shows LGA-specific dwelling approvals (requires database permissions)
-        console.log('[DraggableCard lga-dwelling-approvals] Rendering with selectedLGA:', selectedLGA);
+        logger.debug('Rendering lga-dwelling-approvals card', { selectedLGA });
         const chartRef = useRef<LGADwellingApprovalsChartRef>(null);
 
         return (
@@ -398,7 +401,9 @@ export function DraggableCard({
       const calculatedRowSpan = Math.ceil((cardHeight + gap) / (rowHeight + gap));
 
       // DIAGNOSTIC LOGGING
-      console.log(`🔍 Card: ${card.id} (size: ${card.size})`, {
+      logger.debug('Card metrics', {
+        cardId: card.id,
+        size: card.size,
         offsetHeight: cardHeight,
         calculatedRowSpan,
         gridHeight: calculatedRowSpan * (rowHeight + gap),

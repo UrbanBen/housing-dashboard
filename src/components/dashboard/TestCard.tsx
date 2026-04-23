@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Database, RefreshCw, AlertCircle } from "lucide-react";
 import { TestCardConnectionForm } from './TestCardConnectionForm';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('TestCard');
 
 interface TestCardProps {
   isAdminMode?: boolean;
@@ -53,7 +56,7 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
       try {
         return JSON.parse(stored);
       } catch (e) {
-        console.error('Failed to parse stored config:', e);
+        logger.error('Failed to parse stored config', e instanceof Error ? e : new Error(String(e)));
       }
     }
     return {
@@ -67,12 +70,13 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
   const fetchData = async () => {
     // Prevent multiple simultaneous requests
     if (isGloballyLoading) {
-      console.log('[TestCard] Already loading, skipping request');
+      logger.debug('Already loading, skipping request');
       return;
     }
 
     const fetchId = Math.random().toString(36).substr(2, 9);
-    console.log(`[TestCard-${fetchId}] fetchData called:`, {
+    logger.debug('fetchData called', {
+      fetchId,
       timestamp: new Date().toISOString(),
       isGloballyLoading,
       hasError: !!globalError,
@@ -86,7 +90,7 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
       globalError = null;
 
       const config = getStoredConfig();
-      console.log(`[TestCard-${fetchId}] Using config:`, config);
+      logger.debug('Using config', { fetchId, config });
 
       const params = new URLSearchParams({
         schema: config.schema,
@@ -95,11 +99,12 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
         row: config.row.toString()
       });
 
-      console.log(`[TestCard-${fetchId}] Making API request:`, `/api/test-data?${params}`);
+      logger.debug('Making API request', { fetchId, endpoint: `/api/test-data?${params}` });
       const response = await fetch(`/api/test-data?${params}`);
       const result = await response.json();
 
-      console.log(`[TestCard-${fetchId}] API response:`, {
+      logger.debug('API response', {
+        fetchId,
         success: result.success,
         value: result.data?.value?.slice(0, 30),
         diagnostics: result.diagnostics
@@ -128,7 +133,7 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
         };
         localStorage.setItem(cacheKey, JSON.stringify(cacheData));
 
-        console.log(`[TestCard-${fetchId}] Data cached successfully`);
+        logger.debug('Data cached successfully', { fetchId });
       } else {
         globalError = result.error || 'Failed to fetch data';
         globalConnection = result.connection || null;
@@ -139,7 +144,7 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
         setData(null);
       }
     } catch (err) {
-      console.log(`[TestCard-${fetchId}] Fetch error:`, err);
+      logger.error('Fetch error', err instanceof Error ? err : new Error(String(err)), { fetchId });
       const errorMessage = err instanceof Error ? err.message : 'Network error';
 
       globalError = errorMessage;
@@ -168,7 +173,7 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
         const maxAge = 5 * 60 * 1000; // 5 minutes cache
 
         if (cacheAge < maxAge) {
-          console.log('[TestCard] Loading from cache:', { age: Math.round(cacheAge / 1000) + 's' });
+          logger.debug('Loading from cache', { age: Math.round(cacheAge / 1000) + 's' });
 
           // Update global state
           globalData = cacheData.data;
@@ -183,11 +188,11 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
           setError(null);
           return true; // Cache was loaded
         } else {
-          console.log('[TestCard] Cache expired, will fetch fresh data');
+          logger.debug('Cache expired, will fetch fresh data');
           localStorage.removeItem(cacheKey);
         }
       } catch (e) {
-        console.log('[TestCard] Cache parse error:', e);
+        logger.warn('Cache parse error', e instanceof Error ? e : new Error(String(e)));
         localStorage.removeItem(cacheKey);
       }
     }
@@ -198,11 +203,11 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
   useEffect(() => {
     if (isInitialized) return;
 
-    console.log('[TestCard] Component initialization started');
+    logger.debug('Component initialization started');
 
     // Check if global data already exists (from another component instance)
     if (globalData && globalConnection) {
-      console.log('[TestCard] Using existing global data');
+      logger.debug('Using existing global data');
       setData(globalData);
       setConnection(globalConnection);
       setLastUpdated(globalLastUpdated);
@@ -216,25 +221,25 @@ export function TestCard({ isAdminMode = false, onAdminClick, title = "Test" }: 
 
     // Only fetch if no cache was loaded and no other instance is loading
     if (!cacheLoaded && !isGloballyLoading) {
-      console.log('[TestCard] No cache available, fetching fresh data');
+      logger.debug('No cache available, fetching fresh data');
       fetchData();
     }
 
     setIsInitialized(true);
-    console.log('[TestCard] Component initialized');
+    logger.debug('Component initialized');
   }, [isInitialized]);
 
   // Listen for config changes
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'test-card-config') {
-        console.log('[TestCard] Test card config changed, refetching data');
+        logger.info('Test card config changed, refetching data');
         fetchData();
       }
     };
 
     const handleConfigChange = () => {
-      console.log('[TestCard] Custom config change event received');
+      logger.info('Custom config change event received');
       fetchData();
     };
 

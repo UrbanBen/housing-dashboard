@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, TrendingUp, TrendingDown } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('OCDailyCard');
 
 interface OCDailyCardProps {
   selectedLGA: LGA | null;
@@ -24,16 +27,16 @@ export function OCDailyCard({ selectedLGA }: OCDailyCardProps) {
   const [summary, setSummary] = useState<any>(null);
 
   useEffect(() => {
-    console.log('[OCDailyCard] useEffect triggered, selectedLGA:', selectedLGA);
+    logger.debug('useEffect triggered', { selectedLGA });
     if (!selectedLGA) {
       setData([]);
       setSummary(null);
-      console.log('[OCDailyCard] No LGA selected, returning early');
+      logger.debug('No LGA selected, returning early');
       return;
     }
 
     const fetchData = async () => {
-      console.log('[OCDailyCard] Fetching data for LGA:', selectedLGA.name);
+      logger.info('Fetching data for LGA', { lgaName: selectedLGA.name });
       setLoading(true);
       setError(null);
 

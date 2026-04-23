@@ -6,6 +6,9 @@ import { TrendingUp, TrendingDown, Home, Building2, Users, Target, Clock, CheckC
 import type { LGA } from '@/components/filters/LGALookup';
 import { LGAMetricsConfigForm, type LGAMetricsConfig } from './LGAMetricsConfigForm';
 import { DataItemConfigForm, type DataItemDetailedConfig } from './DataItemConfigForm';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('LGAMetrics');
 
 interface LGAMetricsProps {
   selectedLGA: LGA | null;
@@ -183,7 +186,7 @@ export function LGAMetrics({ selectedLGA }: LGAMetricsProps) {
           }
         };
       } catch (e) {
-        console.error('Failed to parse stored LGA metrics config:', e);
+        logger.error('Failed to parse stored LGA metrics config', { error: e });
       }
     }
     return defaultConfig;
@@ -212,7 +215,7 @@ export function LGAMetrics({ selectedLGA }: LGAMetricsProps) {
       try {
         itemConfig = JSON.parse(stored);
       } catch (e) {
-        console.error('Failed to parse data item config:', e);
+        logger.error('Failed to parse data item config', { error: e });
       }
     }
 

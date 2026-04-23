@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('PopulationGrowthCard');
 
 interface PopulationGrowthCardProps {
   selectedLGA: LGA | null;
@@ -45,7 +48,7 @@ export default function PopulationGrowthCard({ selectedLGA, cardWidth = 600 }: P
           throw new Error(result.error || 'No census data available');
         }
       } catch (err: any) {
-        console.error('[Population Growth Card] Error:', err);
+        logger.error('[Population Growth Card] Error', { error: err);
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, TrendingUp, TrendingDown } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
 
 interface BADailyCardProps {
   selectedLGA: LGA | null;
@@ -15,6 +16,8 @@ interface DailyData {
   total_approvals: number;
 }
 
+const logger = createComponentLogger('BADailyCard');
+
 export function BADailyCard({ selectedLGA }: BADailyCardProps) {
   const [data, setData] = useState<DailyData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -22,16 +25,16 @@ export function BADailyCard({ selectedLGA }: BADailyCardProps) {
   const [summary, setSummary] = useState<any>(null);
 
   useEffect(() => {
-    console.log('[BADailyCard] useEffect triggered, selectedLGA:', selectedLGA);
+    logger.debug('useEffect triggered', { selectedLGA });
     if (!selectedLGA) {
       setData([]);
       setSummary(null);
-      console.log('[BADailyCard] No LGA selected, returning early');
+      logger.debug('No LGA selected, returning early');
       return;
     }
 
     const fetchData = async () => {
-      console.log('[BADailyCard] Fetching data for LGA:', selectedLGA.name);
+      logger.info('Fetching data for LGA', { lgaName: selectedLGA.name });
       setLoading(true);
       setError(null);
 
@@ -46,7 +49,7 @@ export function BADailyCard({ selectedLGA }: BADailyCardProps) {
         });
 
         const result = await response.json();
-        console.log('[BADailyCard] API Response:', result);
+        logger.debug('API Response received', { result });
 
         if (!response.ok) {
           throw new Error(result.error || 'Failed to fetch data');
@@ -55,7 +58,7 @@ export function BADailyCard({ selectedLGA }: BADailyCardProps) {
         setData(result.data || []);
         setSummary(result.summary || null);
       } catch (err) {
-        console.error('[BADailyCard] Error fetching data:', err);
+        logger.error('Error fetching data', { error: err });
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);

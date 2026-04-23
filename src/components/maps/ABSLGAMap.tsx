@@ -2,6 +2,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import type { ABSLGA } from '@/components/filters/ABSLGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('ABSLGAMap');
 
 interface ABSLGAMapProps {
   selectedLGA: ABSLGA | null;
@@ -44,7 +47,7 @@ export function ABSLGAMap({ selectedLGA, height, effectiveColumns }: ABSLGAMapPr
         setLeaflet(L);
         setIsLoading(false);
       } catch (error) {
-        console.error('Failed to load Leaflet:', error);
+        logger.error('Failed to load Leaflet', error instanceof Error ? error : new Error(String(error)));
         setIsLoading(false);
       }
     };
@@ -77,7 +80,7 @@ export function ABSLGAMap({ selectedLGA, height, effectiveColumns }: ABSLGAMapPr
         // Default view of Australia for ABS data
         mapRef.current.setView([-25.0, 135.0], 5);
       } catch (error) {
-        console.error('Error initializing ABS map:', error);
+        logger.error('Error initializing ABS map', error instanceof Error ? error : new Error(String(error)));
         mapRef.current = null;
       }
     }
@@ -88,7 +91,7 @@ export function ABSLGAMap({ selectedLGA, height, effectiveColumns }: ABSLGAMapPr
         try {
           mapRef.current.remove();
         } catch (error) {
-          console.warn('Map cleanup warning:', error);
+          logger.warn('Map cleanup warning', error instanceof Error ? error : new Error(String(error)));
         }
         mapRef.current = null;
       }
@@ -106,20 +109,20 @@ export function ABSLGAMap({ selectedLGA, height, effectiveColumns }: ABSLGAMapPr
     const fetchBoundaryData = async () => {
       try {
         setBoundaryError(null);
-        console.log('Fetching ABS boundary data for:', selectedLGA.name);
+        logger.info('Fetching ABS boundary data for', { lgaName: selectedLGA.name });
 
         const response = await fetch(`/api/abs-census-lga?lga=${encodeURIComponent(selectedLGA.name)}&geometry=true`);
         const data = await response.json();
 
         if (response.ok && data.boundaries) {
           setBoundaryData(data.boundaries);
-          console.log('ABS boundary data loaded successfully:', data.boundaries.name);
+          logger.debug('ABS boundary data loaded successfully', { lgaName: data.boundaries.name });
         } else {
           throw new Error(data.error || 'No boundary data available');
         }
 
       } catch (error) {
-        console.error('Error fetching ABS boundary data:', error);
+        logger.error('Error fetching ABS boundary data', error instanceof Error ? error : new Error(String(error)));
         setBoundaryError(error instanceof Error ? error.message : 'Failed to load boundary data');
         setBoundaryData(null);
       }
@@ -141,7 +144,7 @@ export function ABSLGAMap({ selectedLGA, height, effectiveColumns }: ABSLGAMapPr
               mapRef.current.invalidateSize();
             }
           } catch (error) {
-            console.warn('Map resize warning:', error);
+            logger.warn('Map resize warning', error instanceof Error ? error : new Error(String(error)));
           }
         }, 100);
       }
@@ -166,7 +169,7 @@ export function ABSLGAMap({ selectedLGA, height, effectiveColumns }: ABSLGAMapPr
             mapRef.current.invalidateSize();
           }
         } catch (error) {
-          console.warn('Map effectiveColumns resize warning:', error);
+          logger.warn('Map effectiveColumns resize warning', error instanceof Error ? error : new Error(String(error)));
         }
       }, 200);
     }
@@ -234,7 +237,7 @@ export function ABSLGAMap({ selectedLGA, height, effectiveColumns }: ABSLGAMapPr
         }
 
       } catch (error) {
-        console.error('Error rendering ABS boundary:', error);
+        logger.error('Error rendering ABS boundary', error instanceof Error ? error : new Error(String(error)));
         // Fallback to center point
         mapRef.current.setView([-25.0, 135.0], 5);
 

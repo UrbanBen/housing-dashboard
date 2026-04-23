@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, AlertCircle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('CitizenshipTrendCard');
 
 interface CitizenshipTrendCardProps {
   selectedLGA: LGA | null;
@@ -71,7 +74,7 @@ export function CitizenshipTrendCard({ selectedLGA, isAdminMode = false, onAdmin
           setError(result.error || 'Failed to fetch citizenship data');
         }
       } catch (err) {
-        console.error('Error fetching citizenship data:', err);
+        logger.error('Error fetching citizenship data', { error: err);
         setError('Network error');
       } finally {
         setIsLoading(false);

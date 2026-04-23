@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp, Calendar, Activity } from 'lucide-react';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('DAHistoryCard');
 
 interface DAHistoryData {
   period_start: string;
@@ -87,7 +90,7 @@ export default function DAHistoryCard({ selectedLGA, cardWidth = 600 }: DAHistor
           throw new Error(result.error || 'Failed to fetch data');
         }
       } catch (err: any) {
-        console.error('[DA History Card] Error:', err);
+        logger.error('[DA History Card] Error', { error: err);
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

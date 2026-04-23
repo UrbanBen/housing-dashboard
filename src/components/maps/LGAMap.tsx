@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
 
 interface LGAMapProps {
   selectedLGA: LGA | null;
@@ -17,6 +18,8 @@ interface BoundaryData {
   bounds: [[number, number], [number, number]];
   urbanity?: string; // Optional urbanity field from NSW Spatial Services
 }
+
+const logger = createComponentLogger('LGAMap');
 
 // Helper function to filter out eastern islands (like Lord Howe Island) from GeoJSON
 function filterEasternIslands(geometry: any, maxLongitude: number): any {
@@ -40,12 +43,12 @@ function filterEasternIslands(geometry: any, maxLongitude: number): any {
       // Exclude polygons that are too far east
       const keep = maxLng <= maxLongitude;
       if (!keep) {
-        console.log(`[LGAMap] Filtering out polygon with max longitude ${maxLng.toFixed(2)}° (exceeds ${maxLongitude}°)`);
+        logger.debug(`Filtering out polygon with max longitude ${maxLng.toFixed(2)}° (exceeds ${maxLongitude}°)`);
       }
       return keep;
     });
 
-    console.log(`[LGAMap] Filtered MultiPolygon: ${originalCount} → ${filteredCoordinates.length} polygons`);
+    logger.debug(`Filtered MultiPolygon: ${originalCount} → ${filteredCoordinates.length} polygons`);
 
     return {
       type: 'MultiPolygon',
@@ -68,7 +71,7 @@ function filterEasternIslands(geometry: any, maxLongitude: number): any {
     // Return null if too far east, otherwise return as-is
     const keep = maxLng <= maxLongitude;
     if (!keep) {
-      console.log(`[LGAMap] Filtering out Polygon with max longitude ${maxLng.toFixed(2)}° (exceeds ${maxLongitude}°)`);
+      logger.debug(`Filtering out Polygon with max longitude ${maxLng.toFixed(2)}° (exceeds ${maxLongitude}°)`);
     }
     return keep ? geometry : null;
   }
@@ -250,7 +253,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         setLeaflet(L);
         setIsLoading(false);
       } catch (error) {
-        console.error('Failed to load Leaflet:', error);
+        logger.error('Failed to load Leaflet', error instanceof Error ? error : new Error(String(error)));
         setIsLoading(false);
       }
     };
@@ -290,7 +293,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         // Default view of NSW - centered on mainland (excludes remote islands)
         mapRef.current.setView([-32.5, 147.0], 6);
       } catch (error) {
-        console.error('Error initializing LGA map:', error);
+        logger.error('Error initializing LGA map', error instanceof Error ? error : new Error(String(error)));
         mapRef.current = null;
       }
     }
@@ -301,7 +304,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         try {
           mapRef.current.remove();
         } catch (error) {
-          console.warn('LGA map cleanup warning:', error);
+          logger.warn('LGA map cleanup warning', error instanceof Error ? error : new Error(String(error)));
         }
         mapRef.current = null;
       }
@@ -338,11 +341,11 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
     const fetchBoundaryData = async () => {
       try {
         setBoundaryError(null);
-        console.log('Fetching boundary data for:', selectedLGA.name);
+        logger.info('Fetching boundary data for:', { lgaName: selectedLGA.name });
 
         // First check if LGA has geometry from database
         if (selectedLGA.geometry) {
-          console.log('Using database geometry for:', selectedLGA.name);
+          logger.debug('Using database geometry for:', { lgaName: selectedLGA.name });
 
           // Parse geometry if it's a string
           let geometry = selectedLGA.geometry;
@@ -386,7 +389,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
             bounds: bounds,
             urbanity: 'Database'
           });
-          console.log('Database boundary data loaded successfully:', selectedLGA.name);
+          logger.debug('Database boundary data loaded successfully', { lgaName: selectedLGA.name });
           return;
         }
 
@@ -406,7 +409,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         // Handle NSW state-wide view - load from database
         if (selectedLGA.id === 'nsw-state' || selectedLGA.id === 'NSW' || selectedLGA.name === 'New South Wales') {
           try {
-            console.log('Fetching NSW boundary from database...');
+            logger.info('Fetching NSW boundary from database');
 
             const dbResponse = await fetch(
               `/api/lga-geometry?` +
@@ -419,7 +422,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
 
             if (dbResponse.ok) {
               const dbData = await dbResponse.json();
-              console.log('Database NSW boundary response:', dbData);
+              logger.debug('Database NSW boundary response', { success: dbData.success, hasGeometry: !!dbData.geometry });
 
               if (dbData.success && dbData.geometry) {
                 // Filter out Lord Howe Island and other far-east islands (longitude > 154°E)
@@ -433,12 +436,12 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
                   bounds: [[-37.0, 141.0], [-28.5, 153.0]] as [[number, number], [number, number]],
                   urbanity: 'Database'
                 });
-                console.log('NSW boundary loaded successfully from database');
+                logger.info('NSW boundary loaded successfully from database');
                 return;
               }
             }
 
-            console.warn('Database NSW boundary not available, using fallback bounds');
+            logger.warn('Database NSW boundary not available, using fallback bounds');
             // Fallback if database fails
             setBoundaryData({
               name: 'New South Wales',
@@ -451,7 +454,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
             return;
 
           } catch (error) {
-            console.error('Error fetching NSW boundary from database:', error);
+            logger.error('Error fetching NSW boundary from database', error instanceof Error ? error : new Error(String(error)));
             // Fallback if database fails
             setBoundaryData({
               name: 'New South Wales',
@@ -476,12 +479,12 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
             ...data.boundaries,
             boundary: filteredBoundary
           });
-          console.log('ArcGIS boundary data loaded successfully:', data.boundaries.name);
+          logger.debug('ArcGIS boundary data loaded successfully', { lgaName: data.boundaries.name });
           return;
         }
 
         // Fallback to NSW Spatial Services
-        console.log('ArcGIS data not available, trying NSW Spatial Services...');
+        logger.debug('ArcGIS data not available, trying NSW Spatial Services');
         response = await fetch(`/api/nsw-boundaries?lga=${encodeURIComponent(selectedLGA.name)}&geometry=true`);
         data = await response.json();
 
@@ -492,12 +495,12 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
             ...data.boundaries,
             boundary: filteredBoundary
           });
-          console.log('NSW Spatial boundary data loaded successfully:', data.boundaries.name);
+          logger.debug('NSW Spatial boundary data loaded successfully', { lgaName: data.boundaries.name });
           return;
         }
 
         // Fallback to our simplified boundary data
-        console.log('NSW Spatial data not available, trying fallback...');
+        logger.debug('NSW Spatial data not available, trying fallback');
         response = await fetch(`/api/lga-boundaries?lga=${encodeURIComponent(selectedLGA.name)}`);
         data = await response.json();
 
@@ -512,14 +515,14 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
           } else {
             setBoundaryData(data.boundaries);
           }
-          console.log('Fallback boundary data loaded successfully:', data.boundaries.name);
+          logger.debug('Fallback boundary data loaded successfully', { lgaName: data.boundaries.name });
           return;
         }
-        
+
         throw new Error(data.error || 'No boundary data available');
-        
+
       } catch (error) {
-        console.error('Error fetching boundary data:', error);
+        logger.error('Error fetching boundary data', error instanceof Error ? error : new Error(String(error)));
         setBoundaryError(error instanceof Error ? error.message : 'Failed to load boundary data');
         setBoundaryData(null);
       }
@@ -541,7 +544,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
               mapRef.current.invalidateSize();
             }
           } catch (error) {
-            console.warn('LGA map resize warning:', error);
+            logger.warn('LGA map resize warning', error instanceof Error ? error : new Error(String(error)));
           }
         }, 100);
       }
@@ -566,7 +569,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
             mapRef.current.invalidateSize();
           }
         } catch (error) {
-          console.warn('LGA map effectiveColumns resize warning:', error);
+          logger.warn('LGA map effectiveColumns resize warning', error instanceof Error ? error : new Error(String(error)));
         }
       }, 200);
     }
@@ -609,7 +612,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         else if (boundaryData.boundary) {
           // Debug log to see what Australia's boundaryData looks like
           if (boundaryData.name && (boundaryData.name.toLowerCase().includes('australia') || boundaryData.code === 'AUS')) {
-            console.log('[LGAMap] AUSTRALIA DETECTED - boundaryData:', {
+            logger.debug('AUSTRALIA DETECTED - boundaryData', {
               name: boundaryData.name,
               code: boundaryData.code,
               hasGeometry: !!boundaryData.boundary,
@@ -687,7 +690,7 @@ export function LGAMap({ selectedLGA, height, effectiveColumns }: LGAMapProps) {
         }
 
       } catch (error) {
-        console.error('Error rendering boundary:', error);
+        logger.error('Error rendering boundary', error instanceof Error ? error : new Error(String(error)));
         // Fallback to bounds if GeoJSON fails
         if (boundaryData.bounds) {
           const bounds = leaflet.latLngBounds(boundaryData.bounds as [[number, number], [number, number]]);

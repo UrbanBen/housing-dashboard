@@ -11,6 +11,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tool
 import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import type { LGA } from '@/components/filters/LGALookup';
 import { BuildingApprovalsConfigForm, type BuildingApprovalsConfig } from '@/components/dashboard/BuildingApprovalsConfigForm';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('TrendChart');
 
 interface ChartDataPoint {
   month: string;
@@ -46,7 +49,7 @@ export const TrendChart = forwardRef<TrendChartRef, TrendChartProps>(
       try {
         return JSON.parse(stored);
       } catch (e) {
-        console.error('Failed to parse stored config:', e);
+        logger.error('Failed to parse stored config', { error: e });
       }
     }
     return getDefaultConfig();
@@ -122,7 +125,7 @@ export const TrendChart = forwardRef<TrendChartRef, TrendChartProps>(
           setError('No building approvals data available from database');
         }
       } catch (err) {
-        console.error('Error fetching building approvals data from database:', err);
+        logger.error('Error fetching building approvals data from database', { error: err });
 
         let errorMessage = 'Failed to load building approvals data from database';
         if (err instanceof Error) {

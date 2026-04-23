@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('AustraliaStateMap');
 
 interface AustraliaStateMapProps {
   selectedState: string;
@@ -105,7 +108,7 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
 
         setSvgPaths(paths);
       })
-      .catch(err => console.error('Error loading GeoJSON:', err));
+      .catch(err => logger.error('Error loading GeoJSON', { error: err));
   }, []);
 
   // Calculate approximate area of a polygon (using shoelace formula)

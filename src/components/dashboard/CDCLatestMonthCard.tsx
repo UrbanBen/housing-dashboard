@@ -65,7 +65,7 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
           throw new Error(result.error || 'No data available');
         }
       } catch (err: any) {
-        console.error('[CDC Latest Month Card] Error:', err);
+        logger.error('[CDC Latest Month Card] Error', { error: err);
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

@@ -6,6 +6,9 @@ import { Home, TrendingUp, Users, MapPin, BarChart3, Square, Database, AlertCirc
 import type { LGA } from '@/components/filters/LGALookup';
 import { KeyMetricsConfigForm, type KeyMetricsConfig } from './KeyMetricsConfigForm';
 import { DataItemConfigForm, type DataItemDetailedConfig } from './DataItemConfigForm';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('KeyMetrics');
 
 interface KeyMetricsProps {
   selectedLGA: LGA | null;
@@ -188,7 +191,7 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
           }
         };
       } catch (e) {
-        console.error('Failed to parse stored key metrics config:', e);
+        logger.error('Failed to parse stored key metrics config', e instanceof Error ? e : new Error(String(e)));
       }
     }
     return defaultConfig;
@@ -224,7 +227,7 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
         setConnection(result.connection || null);
       }
     } catch (err) {
-      console.error('Error fetching area data:', err);
+      logger.error('Error fetching area data', err instanceof Error ? err : new Error(String(err)));
       setError(err instanceof Error ? err.message : 'Network error');
     } finally {
       setIsLoading(false);
@@ -261,7 +264,7 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
         setConnection(result.connection || null);
       }
     } catch (err) {
-      console.error('Error fetching accord target data:', err);
+      logger.error('Error fetching accord target data', err instanceof Error ? err : new Error(String(err)));
       setAccordTargetError(err instanceof Error ? err.message : 'Network error');
     } finally {
       setIsLoadingAccordTarget(false);
@@ -276,7 +279,7 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
 
     // Skip if building approvals is disabled
     if (!config.buildingApprovals.enabled) {
-      console.log('[KeyMetrics] Building approvals data is disabled in config');
+      logger.debug('Building approvals data is disabled in config');
       return;
     }
 
@@ -292,7 +295,7 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
         lgaName: lgaName
       });
 
-      console.log('[KeyMetrics] Fetching building approvals data:', {
+      logger.debug('Fetching building approvals data', {
         lgaName,
         schema: config.buildingApprovals.schema,
         table: config.buildingApprovals.table
@@ -304,14 +307,14 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
       if (result.success) {
         setBuildingApprovalsData(result.data);
         setConnection(result.connection);
-        console.log('[KeyMetrics] Building approvals data loaded:', result.data);
+        logger.debug('Building approvals data loaded', { data: result.data });
       } else {
         setBuildingApprovalsError(result.error || 'Failed to fetch building approvals data');
         setConnection(result.connection || null);
-        console.error('[KeyMetrics] Building approvals error:', result.error);
+        logger.error('Building approvals error', new Error(result.error || 'Unknown error'));
       }
     } catch (err) {
-      console.error('Error fetching building approvals data:', err);
+      logger.error('Error fetching building approvals data', err instanceof Error ? err : new Error(String(err)));
       setBuildingApprovalsError(err instanceof Error ? err.message : 'Network error');
     } finally {
       setIsLoadingBuildingApprovals(false);
@@ -327,7 +330,7 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
           config.filterIntegration.sourceCardId === 'search-geography-card') {
         const { lgaName, lgaCode } = event.detail;
 
-        console.log('[KeyMetrics] Received LGA selection:', { lgaName, lgaCode });
+        logger.debug('Received LGA selection', { lgaName, lgaCode });
 
         setSelectedLGA({
           id: lgaCode || lgaName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
@@ -386,11 +389,11 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
         if (result.success && result.data) {
           setCensusData(result.data);
         } else {
-          console.warn('Census data not found:', result.error);
+          logger.warn('Census data not found', new Error(result.error || 'Unknown error'));
           setCensusData(null);
         }
       } catch (error) {
-        console.error('Error fetching census data:', error);
+        logger.error('Error fetching census data', error instanceof Error ? error : new Error(String(error)));
         setCensusData(null);
       } finally {
         setIsLoadingCensus(false);
@@ -433,7 +436,7 @@ export function KeyMetrics({ selectedLGA: externalSelectedLGA, isAdminMode = fal
       try {
         itemConfig = JSON.parse(stored);
       } catch (e) {
-        console.error('Failed to parse data item config:', e);
+        logger.error('Failed to parse data item config', e instanceof Error ? e : new Error(String(e)));
       }
     }
 

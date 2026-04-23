@@ -3,6 +3,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, MapPin, ChevronDown, Loader2 } from "lucide-react";
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('ABSLGALookup');
 
 export interface ABSLGA {
   id: string;
@@ -46,7 +49,7 @@ export function ABSLGALookup({ onLGAChange, selectedLGA }: ABSLGALookupProps) {
           setLgaData(transformedLGAs);
           setError(null);
 
-          console.log(`Loaded ${transformedLGAs.length} LGAs from ABS Census 2024 (Mosaic_pro)`);
+          logger.info('Loaded LGAs from ABS Census 2024', { count: transformedLGAs.length, source: 'Mosaic_pro' });
         } else {
           if (data.error && data.error.includes('permission denied')) {
             setError('Database permissions required: Need access to boundaries schema');
@@ -55,7 +58,7 @@ export function ABSLGALookup({ onLGAChange, selectedLGA }: ABSLGALookupProps) {
           }
         }
       } catch (err) {
-        console.error('Error fetching ABS Census LGAs:', err);
+        logger.error('Error fetching ABS Census LGAs', { error: err });
         if (err instanceof Error && err.message.includes('permission denied')) {
           setError('Database permissions required: mosaic_readonly user needs boundaries schema access');
         } else {

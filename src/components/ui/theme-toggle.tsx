@@ -3,6 +3,9 @@
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('ThemeToggle');
 
 export function ThemeToggle() {
   const { data: session, status } = useSession();
@@ -28,7 +31,7 @@ export function ThemeToggle() {
             }
           }
         } catch (error) {
-          console.error('[ThemeToggle] Failed to load theme from API:', error);
+          logger.error('Failed to load theme from API', { error });
         }
       }
 
@@ -92,7 +95,7 @@ export function ThemeToggle() {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
 
-    console.log('[ThemeToggle] Switching to:', newTheme);
+    logger.debug('Switching theme', { newTheme });
 
     // Apply theme immediately
     if (newTheme === 'light') {
@@ -111,9 +114,9 @@ export function ThemeToggle() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ theme: newTheme })
         });
-        console.log('[ThemeToggle] Saved theme to API:', newTheme);
+        logger.info('Saved theme to API', { newTheme });
       } catch (error) {
-        console.error('[ThemeToggle] Failed to save theme to API:', error);
+        logger.error('Failed to save theme to API', { error });
         // Fallback to localStorage
         localStorage.setItem('theme', newTheme);
       }
@@ -121,7 +124,7 @@ export function ThemeToggle() {
       localStorage.setItem('theme', newTheme);
     }
 
-    console.log('[ThemeToggle] HTML classes after toggle:', document.documentElement.className);
+    logger.debug('HTML classes after toggle', { className: document.documentElement.className });
   };
 
   // Prevent flash during SSR
