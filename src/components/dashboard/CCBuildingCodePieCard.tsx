@@ -70,7 +70,7 @@ export default function CCBuildingCodePieCard({ selectedLGA, cardWidth = 600 }: 
           throw new Error(result.error || 'Failed to fetch data');
         }
       } catch (err: any) {
-        logger.error('[CC Building Code Pie Card] Error', { error: err);
+        logger.error('[CC Building Code Pie Card] Error', { error: err });
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

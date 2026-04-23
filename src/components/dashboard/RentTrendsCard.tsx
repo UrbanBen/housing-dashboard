@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Info } from "lucide-react";
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('RentTrendsCard');
 
 interface RentTrendsCardProps {
   selectedLGA: LGA | null;
@@ -35,7 +38,7 @@ export function RentTrendsCard({ selectedLGA }: RentTrendsCardProps) {
           setQuarter(result.summary?.quarter || '');
         }
       } catch (err) {
-        logger.error('Error fetching rent trends', { error: err);
+        logger.error('Error fetching rent trends', { error: err });
       } finally {
         setLoading(false);
       }

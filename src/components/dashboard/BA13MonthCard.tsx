@@ -54,7 +54,7 @@ export function BA13MonthCard({ selectedLGA }: BA13MonthCardProps) {
         setData(result.data || []);
         setSummary(result.summary || null);
       } catch (err) {
-        logger.error('[BA13MonthCard] Error', { error: err);
+        logger.error('[BA13MonthCard] Error', { error: err });
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);

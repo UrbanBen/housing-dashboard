@@ -82,7 +82,7 @@ export default function CDCBuildingCodePieCard({ selectedLGA, cardWidth = 600, c
           throw new Error(result.error || 'Failed to fetch data');
         }
       } catch (err: any) {
-        logger.error('[CDC Building Code Pie Card] Error', { error: err);
+        logger.error('[CDC Building Code Pie Card] Error', { error: err });
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

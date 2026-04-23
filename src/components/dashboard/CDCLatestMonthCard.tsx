@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Calendar, CheckCircle, Building, DollarSign } from 'lucide-react';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('CDCLatestMonthCard');
 
 interface CDCLatestMonthData {
   lga_code: string;
@@ -65,7 +68,7 @@ export default function CDCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CDC
           throw new Error(result.error || 'No data available');
         }
       } catch (err: any) {
-        logger.error('[CDC Latest Month Card] Error', { error: err);
+        logger.error('[CDC Latest Month Card] Error', { error: err });
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

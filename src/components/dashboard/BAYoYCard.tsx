@@ -56,7 +56,7 @@ export function BAYoYCard({ selectedLGA }: BAYoYCardProps) {
         setData(result.data || []);
         setSummary(result.summary || null);
       } catch (err) {
-        logger.error('[BAYoYCard] Error', { error: err);
+        logger.error('[BAYoYCard] Error', { error: err });
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);

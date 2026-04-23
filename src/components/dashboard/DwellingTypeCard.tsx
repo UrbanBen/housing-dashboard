@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, Settings } from "lucide-react";
 import { ResponsivePie } from '@nivo/pie';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('DwellingTypeCard');
 
 interface DwellingTypeCardProps {
   selectedLGA?: { name: string; id: string } | null;
@@ -105,7 +108,7 @@ export function DwellingTypeCard({ selectedLGA, isAdminMode = false, onAdminClic
           setError('No data available for this LGA');
         }
       } catch (err) {
-        logger.error('Error fetching dwelling type data', { error: err);
+        logger.error('Error fetching dwelling type data', { error: err });
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);

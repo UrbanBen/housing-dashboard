@@ -89,7 +89,7 @@ export default function CCHistoryCard({ selectedLGA, cardWidth = 600 }: CCHistor
           throw new Error(result.error || 'Failed to fetch data');
         }
       } catch (err: any) {
-        logger.error('[CC History Card] Error', { error: err);
+        logger.error('[CC History Card] Error', { error: err });
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

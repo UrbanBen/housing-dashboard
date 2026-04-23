@@ -108,7 +108,7 @@ export function AustraliaStateMap({ selectedState, onStateClick }: AustraliaStat
 
         setSvgPaths(paths);
       })
-      .catch(err => logger.error('Error loading GeoJSON', { error: err));
+      .catch(err => logger.error('Error loading GeoJSON', { error: err }));
   }, []);
 
   // Calculate approximate area of a polygon (using shoelace formula)

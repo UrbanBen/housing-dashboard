@@ -16,6 +16,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { RegisterModal } from './RegisterModal';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('LoginModal');
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -36,7 +39,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         const config = await response.json();
         setOAuthConfig(config);
       } catch (error) {
-        logger.error('[LoginModal] Error fetching OAuth config', { error: error);
+        logger.error('[LoginModal] Error fetching OAuth config', { error: error });
       }
     };
     fetchOAuthConfig();

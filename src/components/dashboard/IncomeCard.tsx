@@ -61,7 +61,7 @@ export function IncomeCard({ selectedLGA, isAdminMode = false, onAdminClick }: I
 
         setData(result.data);
       } catch (err) {
-        logger.error('Error fetching income data', { error: err);
+        logger.error('Error fetching income data', { error: err });
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);

@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Settings } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('DevelopmentApplicationsCard');
 
 interface DevelopmentApplicationsCardProps {
   selectedLGA?: { name: string; id: string } | null;
@@ -87,7 +90,7 @@ export function DevelopmentApplicationsCard({ selectedLGA, isAdminMode = false, 
           setError('No data available for this LGA');
         }
       } catch (err) {
-        logger.error('Error fetching development applications data', { error: err);
+        logger.error('Error fetching development applications data', { error: err });
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);

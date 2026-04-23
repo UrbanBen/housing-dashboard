@@ -74,7 +74,7 @@ export function CitizenshipTrendCard({ selectedLGA, isAdminMode = false, onAdmin
           setError(result.error || 'Failed to fetch citizenship data');
         }
       } catch (err) {
-        logger.error('Error fetching citizenship data', { error: err);
+        logger.error('Error fetching citizenship data', { error: err });
         setError('Network error');
       } finally {
         setIsLoading(false);

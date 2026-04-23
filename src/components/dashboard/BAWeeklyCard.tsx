@@ -54,7 +54,7 @@ export function BAWeeklyCard({ selectedLGA }: BAWeeklyCardProps) {
         setData(result.data || []);
         setSummary(result.summary || null);
       } catch (err) {
-        logger.error('[BAWeeklyCard] Error', { error: err);
+        logger.error('[BAWeeklyCard] Error', { error: err });
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setLoading(false);

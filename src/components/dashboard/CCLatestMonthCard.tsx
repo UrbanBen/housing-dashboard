@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Calendar, CheckCircle, XCircle, Building } from 'lucide-react';
 import type { LGA } from '@/components/filters/LGALookup';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('CCLatestMonthCard');
 
 interface CCLatestMonthData {
   lga_code: string;
@@ -70,7 +73,7 @@ export default function CCLatestMonthCard({ selectedLGA, cardWidth = 600 }: CCLa
           throw new Error(result.error || 'No data available');
         }
       } catch (err: any) {
-        logger.error('[CC Latest Month Card] Error', { error: err);
+        logger.error('[CC Latest Month Card] Error', { error: err });
         setError(err.message || 'Failed to load data');
       } finally {
         setLoading(false);

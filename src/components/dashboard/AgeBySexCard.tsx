@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Settings } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { createComponentLogger } from '@/lib/logger';
+
+const logger = createComponentLogger('AgeBySexCard');
 
 interface AgeBySexCardProps {
   selectedLGA?: { name: string; id: string } | null;
@@ -127,7 +130,7 @@ export function AgeBySexCard({ selectedLGA, isAdminMode = false, onAdminClick }:
           setError('No data available for this LGA');
         }
       } catch (err) {
-        logger.error('Error fetching age by sex data', { error: err);
+        logger.error('Error fetching age by sex data', { error: err });
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);
