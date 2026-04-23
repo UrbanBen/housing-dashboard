@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 // ArcGIS REST service URLs for Australian LGA boundaries
 const ARCGIS_LGA_BASE_URL = 'https://geo.abs.gov.au/arcgis/rest/services/ASGS2021/LGA/MapServer/0/query';
 
 export async function GET(request: Request) {
+  const logger = createAPILogger('/api/arcgis-lga', generateRequestId());
   const { searchParams } = new URL(request.url);
   const lgaName = searchParams.get('lga');
   const includeGeometry = searchParams.get('geometry') !== 'false';
@@ -48,7 +50,7 @@ export async function GET(request: Request) {
 
     query = `${ARCGIS_LGA_BASE_URL}?${params.toString()}`;
 
-    console.log('Querying ArcGIS ASGS2021 LGA service:', query);
+    logger.debug('Querying ArcGIS ASGS2021 LGA service', { query });
 
     const response = await fetch(query, {
       headers: {
@@ -171,7 +173,7 @@ export async function GET(request: Request) {
     }
 
   } catch (error) {
-    console.error('Error querying ArcGIS LGA service:', error);
+    logger.error('Error querying ArcGIS LGA service', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       {
         error: 'Failed to fetch LGA data from ArcGIS service',

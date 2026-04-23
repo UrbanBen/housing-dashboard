@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReadonlyPool } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 /**
  * Comprehensive Occupation Certificates API
@@ -19,6 +20,8 @@ import { getReadonlyPool } from '@/lib/db-pool';
  */
 
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/oc-comprehensive', generateRequestId());
+
   try {
     const body = await request.json();
     const { type, lgaCode, lgaName } = body;
@@ -89,7 +92,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('[OC Comprehensive API] Error:', error);
+    logger.error('[OC Comprehensive API] Error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       {
         success: false,

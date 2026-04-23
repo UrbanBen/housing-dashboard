@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUser } from '@/lib/auth-helpers';
 import { z } from 'zod';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 /**
  * Registration request schema
@@ -28,6 +29,8 @@ const registerSchema = z.object({
  * Create a new user account
  */
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/auth/register', generateRequestId());
+
   try {
     // Parse and validate request body
     const body = await request.json();
@@ -73,7 +76,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('[Registration API] Error:', error);
+    logger.error('[Registration API] Error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       {
         success: false,

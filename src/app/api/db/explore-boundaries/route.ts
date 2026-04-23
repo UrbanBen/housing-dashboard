@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET() {
+  const logger = createAPILogger('/api/db/explore-boundaries', generateRequestId());
   try {
     // Look for tables that might contain LGA boundaries or geographic data
     const geographyTables = await query(`
@@ -59,7 +61,7 @@ export async function GET() {
       `);
       sampleLGAData = sample.rows;
     } catch (error) {
-      console.warn('Could not get sample LGA table structure:', error);
+      logger.warn('Could not get sample LGA table structure', error instanceof Error ? error : new Error(String(error)));
     }
 
     // Check if PostGIS is available (geometry functions)
@@ -68,7 +70,7 @@ export async function GET() {
       await query('SELECT PostGIS_Version()');
       hasPostGIS = true;
     } catch (error) {
-      console.log('PostGIS not available or not accessible');
+      logger.debug('PostGIS not available or not accessible');
     }
 
     return NextResponse.json({

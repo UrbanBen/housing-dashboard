@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReadonlyPool, executeQuery } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 interface RequestBody {
   lgaName: string;
@@ -9,6 +10,8 @@ interface RequestBody {
 }
 
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/age-by-sex', generateRequestId());
+
   try {
     const body: RequestBody = await request.json();
     const { lgaName, schema, table, lgaColumn } = body;
@@ -41,7 +44,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching age by sex data:', error);
+    logger.error('Error fetching age by sex data', error instanceof Error ? error : new Error(String(error)));
 
     return NextResponse.json(
       {

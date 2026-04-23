@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/database';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET() {
+  const logger = createAPILogger('/api/lgas', generateRequestId());
+
   try {
     // Get all unique LGA names from the housing targets table
     const lgasResult = await query(`
@@ -64,7 +67,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('LGA fetch error:', error);
+    logger.error('LGA fetch error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch LGA data',

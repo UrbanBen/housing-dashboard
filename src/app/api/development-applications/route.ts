@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReadonlyPool } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 interface RequestBody {
   lgaName: string;
@@ -18,6 +19,8 @@ interface DARecord {
 }
 
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/development-applications', generateRequestId());
+
   try {
     const body: RequestBody = await request.json();
     const { lgaName, lgaCode, startDate, endDate, monthsBack = 12 } = body;
@@ -114,7 +117,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching development applications data:', error);
+    logger.error('Error fetching development applications data', error instanceof Error ? error : new Error(String(error)));
 
     return NextResponse.json(
       {

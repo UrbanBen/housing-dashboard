@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, getReadonlyPool } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
+  const logger = createAPILogger('/api/census-data', generateRequestId());
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const lgaName = searchParams.get('lgaName');
@@ -95,7 +98,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching census data:', error);
+    logger.error('Error fetching census data', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Failed to fetch census data', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

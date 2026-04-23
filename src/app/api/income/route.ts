@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReadonlyPool } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 interface RequestBody {
   lgaName: string;
@@ -86,6 +87,8 @@ function calculateWeightedAverage(row: any, brackets: { column: string; midpoint
 }
 
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/income', generateRequestId());
+
   try {
     const body: RequestBody = await request.json();
     const { lgaName } = body;
@@ -197,7 +200,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching income data:', error);
+    logger.error('Error fetching income data', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       {
         success: false,

@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/database';
 import { getAdminPool } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET(request: Request) {
+  const logger = createAPILogger('/api/housing-data', generateRequestId());
   const { searchParams } = new URL(request.url);
   const lgaName = searchParams.get('lga');
   const dataType = searchParams.get('type') || 'building-approvals';
-  
+
   try {
     switch (dataType) {
       case 'building-approvals':
@@ -19,7 +21,7 @@ export async function GET(request: Request) {
         }, { status: 400 });
     }
   } catch (error) {
-    console.error('Housing data fetch error:', error);
+    logger.error('Housing data fetch error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({
       error: 'Failed to fetch housing data',
       details: error instanceof Error ? error.message : 'Unknown error'

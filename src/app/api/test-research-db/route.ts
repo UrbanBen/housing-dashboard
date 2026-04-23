@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET() {
+  const logger = createAPILogger('/api/test-research-db', generateRequestId());
   let pool: Pool | null = null;
 
   try {
@@ -49,7 +51,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Research DB test error:', error);
+    logger.error('Research DB test error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({
       error: 'Failed to connect to research&insights database',
       details: error instanceof Error ? error.message : 'Unknown error'

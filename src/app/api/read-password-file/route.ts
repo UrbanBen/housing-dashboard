@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/read-password-file', generateRequestId());
+
   try {
     const { filePath } = await request.json();
 
@@ -93,7 +96,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error reading password file:', error);
+    logger.error('Error reading password file', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'

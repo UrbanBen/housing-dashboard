@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createOAuthUser, linkOAuthAccount } from '@/lib/auth-helpers';
 import { z } from 'zod';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 /**
  * OAuth signup request schema
@@ -30,6 +31,8 @@ const oauthSignupSchema = z.object({
  * Create a new user account from OAuth provider
  */
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/auth/oauth-signup', generateRequestId());
+
   try {
     // Parse and validate request body
     const body = await request.json();
@@ -42,7 +45,7 @@ export async function POST(request: NextRequest) {
         ? `${firstError[0]}: ${firstError[1]?.[0]}`
         : 'Validation failed';
 
-      console.error('[OAuth Signup] Validation failed:', {
+      logger.error('[OAuth Signup] Validation failed', new Error('Validation failed'), {
         body,
         errors,
       });
@@ -104,7 +107,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('[OAuth Signup API] Error:', error);
+    logger.error('[OAuth Signup API] Error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       {
         success: false,

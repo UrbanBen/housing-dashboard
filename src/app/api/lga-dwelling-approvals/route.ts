@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getReadonlyPool, executeQuery } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET(request: Request) {
+  const logger = createAPILogger('/api/lga-dwelling-approvals', generateRequestId());
   const { searchParams } = new URL(request.url);
   const lgaCode = searchParams.get('lgaCode');
   const lgaName = searchParams.get('lgaName'); // For display purposes
@@ -67,7 +69,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('LGA dwelling approvals fetch error:', error);
+    logger.error('LGA dwelling approvals fetch error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json({
       success: false,
       error: 'Failed to fetch LGA dwelling approvals data',

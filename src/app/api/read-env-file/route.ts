@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/read-env-file', generateRequestId());
+
   try {
     const { filePath } = await request.json();
 
@@ -72,7 +75,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error reading .env file:', error);
+    logger.error('Error reading .env file', error instanceof Error ? error : new Error(String(error)));
 
     if (error instanceof Error) {
       if (error.message.includes('ENOENT')) {

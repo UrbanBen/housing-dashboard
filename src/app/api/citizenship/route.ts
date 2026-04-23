@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReadonlyPool } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/citizenship', generateRequestId());
   const pool = getReadonlyPool();
 
   try {
@@ -162,7 +164,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching citizenship data:', error);
+    logger.error('Error fetching citizenship data', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       {
         success: false,

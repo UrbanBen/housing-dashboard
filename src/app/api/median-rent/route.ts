@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReadonlyPool } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
+  const logger = createAPILogger('/api/median-rent', generateRequestId());
+
   try {
     const body = await request.json();
     const { lgaName } = body;
@@ -105,7 +108,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching median rent data:', error);
+    logger.error('Error fetching median rent data', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       {
         success: false,

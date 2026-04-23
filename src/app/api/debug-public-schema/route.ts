@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 // Mosaic_pro server connection configuration
 const pool = new Pool({
@@ -12,6 +13,8 @@ const pool = new Pool({
 });
 
 export async function GET(request: Request) {
+  const logger = createAPILogger('/api/debug-public-schema', generateRequestId());
+
   try {
     // Check column structure of key LGA tables
     const columnsQuery = `
@@ -38,7 +41,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Public schema debug error:', error);
+    logger.error('Public schema debug error', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       {
         error: 'Failed to analyze public schema',

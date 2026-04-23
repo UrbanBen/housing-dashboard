@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 // Mosaic_pro server connection configuration
 const pool = new Pool({
@@ -12,6 +13,7 @@ const pool = new Pool({
 });
 
 export async function GET(request: Request) {
+  const logger = createAPILogger('/api/abs-census-lga-public', generateRequestId());
   const { searchParams } = new URL(request.url);
   const lgaName = searchParams.get('lga');
 
@@ -51,7 +53,7 @@ export async function GET(request: Request) {
       `;
     }
 
-    console.log('Querying Mosaic_pro public schema:', query, params);
+    logger.debug('Querying Mosaic_pro public schema', { query, params });
 
     const result = await pool.query(query, params);
 
@@ -92,7 +94,7 @@ export async function GET(request: Request) {
     }
 
   } catch (error) {
-    console.error('Error querying Mosaic_pro public schema:', error);
+    logger.error('Error querying Mosaic_pro public schema', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       {
         error: 'Failed to fetch ABS Census 2024 data from Mosaic_pro',
