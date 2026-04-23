@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth-config';
 import Anthropic from '@anthropic-ai/sdk';
 import nodemailer from 'nodemailer';
 import { executeQuery, getAdminPool } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -26,10 +27,12 @@ interface FeedbackAnalysis {
   summary: string;
 }
 
+const logger = createAPILogger('/api/feedback', 'feedback');
+
 async function analyzeFeedbackWithClaude(feedbackText: string): Promise<FeedbackAnalysis> {
   // Skip Claude analysis if API key not configured
   if (!anthropic) {
-    console.log('[Feedback] Anthropic API key not configured, using default analysis');
+    logger.info('Anthropic API key not configured, using default analysis');
     return {
       category: 'General Feedback',
       priority: 'Medium',
@@ -75,7 +78,7 @@ Respond in this exact JSON format:
       summary: analysis.summary || feedbackText.substring(0, 100)
     };
   } catch (error) {
-    console.error('Error analyzing feedback with Claude:', error);
+    logger.error('Error analyzing feedback with Claude', error instanceof Error ? error : new Error(String(error)));
     return {
       category: 'General Feedback',
       priority: 'Medium',
@@ -167,9 +170,9 @@ export async function POST(request: NextRequest) {
     const ipAddress = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || null;
 
     // Analyze feedback with Claude
-    console.log('📝 Analyzing feedback with Claude...');
+    logger.info('Analyzing feedback with Claude...');
     const analysis = await analyzeFeedbackWithClaude(feedback);
-    console.log('✓ Analysis complete:', analysis);
+    logger.info('Analysis complete', analysis);
 
     // User information
     const userInfo = {
@@ -188,7 +191,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Store feedback in database
-    console.log('💾 Storing feedback in database...');
+    logger.info('Storing feedback in database...');
     const pool = getAdminPool();
     await executeQuery(
       pool,
@@ -212,19 +215,19 @@ export async function POST(request: NextRequest) {
         selectedLGA,
       ]
     );
-    console.log('✓ Feedback stored');
+    logger.info('Feedback stored');
 
     // Send immediate email (optional - skip if SMTP not configured)
     if (process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
-      console.log('📧 Sending email notification...');
+      logger.info('Sending email notification...');
       try {
         await sendFeedbackEmail(feedback, analysis, userInfo, contextInfo);
-        console.log('✓ Email sent');
+        logger.info('Email sent');
       } catch (emailError) {
-        console.error('⚠️ Email failed (continuing anyway):', emailError instanceof Error ? emailError.message : emailError);
+        logger.error('Email failed (continuing anyway)', emailError instanceof Error ? emailError : new Error(String(emailError)));
       }
     } else {
-      console.log('⚠️ SMTP not configured, skipping email notification');
+      logger.info('SMTP not configured, skipping email notification');
     }
 
     return NextResponse.json({
@@ -234,7 +237,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error processing feedback:', error);
+    logger.error('Error processing feedback', error instanceof Error ? error : new Error(String(error)));
     return NextResponse.json(
       { error: 'Failed to process feedback', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getReadonlyPool, executeQuery } from '@/lib/db-pool';
+import { createAPILogger, generateRequestId } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const action = searchParams.get('action');
 
-  const requestId = Math.random().toString(36).substr(2, 9);
-  console.log(`[${requestId}] Test Search API Request:`, {
+  const requestId = generateRequestId();
+  const logger = createAPILogger('/api/test-search-data', requestId);
+
+  logger.info('Test Search API Request', {
     action,
     params: Object.fromEntries(searchParams.entries()),
     timestamp: new Date().toISOString()
@@ -33,11 +36,11 @@ export async function GET(request: NextRequest) {
         ORDER BY ${lgaColumn}
       `;
 
-      console.log(`[${requestId}] Executing LGA query:`, { query, stateValue });
+      logger.debug('Executing LGA query', { query, stateValue });
 
       const result = await pool.query(query, [stateValue]);
 
-      console.log(`[${requestId}] Found ${result.rows.length} LGAs`);
+      logger.info(`Found ${result.rows.length} LGAs`);
 
       return NextResponse.json({
         success: true,
@@ -74,7 +77,7 @@ export async function GET(request: NextRequest) {
         LIMIT 1
       `;
 
-      console.log(`[${requestId}] Executing data query for LGA:`, { query, lgaValue });
+      logger.debug('Executing data query for LGA', { query, lgaValue });
 
       const result = await pool.query(query, [lgaValue]);
 
@@ -87,7 +90,7 @@ export async function GET(request: NextRequest) {
           key.includes('total')
         ) || Object.keys(row)[0];
 
-        console.log(`[${requestId}] Data found for LGA:`, { lgaValue, valueColumn });
+        logger.info('Data found for LGA', { lgaValue, valueColumn });
 
         return NextResponse.json({
           success: true,
@@ -140,14 +143,14 @@ export async function GET(request: NextRequest) {
         LIMIT 1
       `;
 
-      console.log(`[${requestId}] Executing area query for LGA:`, { query, lgaName });
+      logger.debug('Executing area query for LGA', { query, lgaName });
 
       const result = await pool.query(query, [lgaName]);
 
       if (result.rows.length > 0) {
         const row = result.rows[0];
 
-        console.log(`[${requestId}] Area data found for LGA:`, { lgaName, area: row.area_sqkm });
+        logger.info('Area data found for LGA', { lgaName, area: row.area_sqkm });
 
         return NextResponse.json({
           success: true,
@@ -203,14 +206,14 @@ export async function GET(request: NextRequest) {
         LIMIT 1
       `;
 
-      console.log(`[${requestId}] Executing accord target query for LGA:`, { query, lgaName });
+      logger.debug('Executing accord target query for LGA', { query, lgaName });
 
       const result = await pool.query(query, [lgaName]);
 
       if (result.rows.length > 0) {
         const row = result.rows[0];
 
-        console.log(`[${requestId}] Accord target data found for LGA:`, { lgaName, accordTarget: row.accord_target });
+        logger.info('Accord target data found for LGA', { lgaName, accordTarget: row.accord_target });
 
         return NextResponse.json({
           success: true,
@@ -300,7 +303,7 @@ export async function GET(request: NextRequest) {
         queryParams = [`%${lgaName}%`];
       }
 
-      console.log(`[${requestId}] Executing building approvals query:`, {
+      logger.debug('Executing building approvals query', {
         query,
         lgaName,
         isStateWide
@@ -311,7 +314,7 @@ export async function GET(request: NextRequest) {
       if (result.rows.length > 0) {
         const row = result.rows[0];
 
-        console.log(`[${requestId}] Building approvals data found:`, {
+        logger.info('Building approvals data found', {
           lgaName,
           totalDwellings: row.total_dwellings,
           newHouses: row.new_houses,
@@ -360,7 +363,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error: any) {
-    console.error(`[${requestId}] Test Search API error:`, error);
+    logger.error('Test Search API error', error instanceof Error ? error : new Error(String(error)));
 
     return NextResponse.json({
       success: false,
